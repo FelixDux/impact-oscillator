@@ -100,15 +100,16 @@ defmodule EvolutionCoefficients do
   """
 
   @doc """
-  ':gamma': the coefficient of the forcing term of the displacement
+  `:omega`: the forcing frequency
+  `:gamma`: the coefficient of the forcing term of the displacement
   `:cos_coeff`: the coefficient of the cosine term of the displacement
   `:sin_coeff`: the coefficient of the sine term of the displacement
   """
 
-  defstruct gamma: -1/3.0, cos_coeff: 1, sin_coeff: 0
+  defstruct omega: 2, gamma: -1/3.0, cos_coeff: 1, sin_coeff: 0
 
   @doc """
-  Derives evolution coefficients from the system parameter and the coordinates of the previous impact
+  Derives evolution coefficients from the system parameters and the coordinates of the previous impact
   """
   @spec derive(SystemParameters.t(), ImpactPoint.t()) :: EvolutionCoefficients.t()
   def derive(%SystemParameters{} = parameters, %ImpactPoint{} = point) do
@@ -117,4 +118,42 @@ defmodule EvolutionCoefficients do
     result = %{result | sin_coeff: -parameters.r * point.v + parameters.omega * result.gamma * :math.sin(parameters.omega * point.phi)}
     result
   end
+end
+
+defmodule StateOfMotion do
+  @moduledoc """
+  State and phase variables for the motion between impacts
+  """
+
+  @doc """
+  `:x`: the displacement
+  `:v`: the velocity = dx/dt
+  `:t`: the time
+  """
+
+  defstruct x: 0, v: 0, t: 0
+
+end
+
+defmodule MotionBetweenImpacts do
+  @moduledoc """
+  Computes the time evolution of the system from one impact to the next
+  """
+
+  @doc """
+  Gives the state of motion (position, velocity, time) at a given time after an impact
+  """
+  @spec motion_at_time(number, ImpactPoint.t(), EvolutionCoefficients.t()) :: StateOfMotion.t()
+  def motion_at_time(t, %ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs) do
+    lambda = t - previous_impact.phi
+    result = %StateOfMotion{t: t}
+    result = %{result| x: coeffs.cos_coeff * :math.cos(lambda) + coeffs.sin_coeff * :math.sin(lambda) + coeffs.gamma * :math.cos(coeffs.omega * t)}
+    result = %{result| x: coeffs.sin_coeff * :math.cos(lambda) - coeffs.cos_coeff * :math.sin(lambda) - coeffs.omega * coeffs.gamma * :math.sin(coeffs.omega * t)}
+    result
+  end
+
+  def next_impact(%ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs, sigma, step_size) do
+
+  end
+
 end
