@@ -148,12 +148,32 @@ defmodule MotionBetweenImpacts do
     lambda = t - previous_impact.phi
     result = %StateOfMotion{t: t}
     result = %{result| x: coeffs.cos_coeff * :math.cos(lambda) + coeffs.sin_coeff * :math.sin(lambda) + coeffs.gamma * :math.cos(coeffs.omega * t)}
-    result = %{result| x: coeffs.sin_coeff * :math.cos(lambda) - coeffs.cos_coeff * :math.sin(lambda) - coeffs.omega * coeffs.gamma * :math.sin(coeffs.omega * t)}
+    result = %{result| v: coeffs.sin_coeff * :math.cos(lambda) - coeffs.cos_coeff * :math.sin(lambda) - coeffs.omega * coeffs.gamma * :math.sin(coeffs.omega * t)}
     result
   end
 
-  def next_impact(%ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs, sigma, step_size) do
+  def next_impact(%ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs, %SystemParameters{} = params, step_size, limit) do
+    start_state = %StateOfMotion{t: previous_impact.phi, x: params.sigma, v: -params.r * previous_impact.v}
+    find_next_impact(start_state, previous_impact, coeffs, params.sigma, step_size, limit)
+  end
 
+  def find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = _previous_impact, %EvolutionCoefficients{} = _coeffs, _sigma, step_size, limit) when abs(step_size) < limit do
+    state
+  end
+
+  def find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs, sigma, step_size, limit) do
+    new_step_size = step_size
+    cond do
+      state.x < sigma and step_size < 0 ->
+        new_step_size = -0.5*step_size
+      state.x >= sigma and step_size > 0 ->
+        new_step_size = -0.5*step_size
+      true ->
+        new_step_size = step_size
+    end
+    new_time = state.time + new_step_size
+    new_state = motion_at_time(new_time, previous_impact, coeffs)
+    find_next_impact(new_state, previous_impact, coeffs, sigma, new_step_size, limit)
   end
 
 end
