@@ -6,6 +6,18 @@
     "configurations": [
         {
             "type": "mix_task",
+            "request": "launch",
+            "name": "mix scatter",
+            "task": "scatter",
+            "startApps": true,
+            "taskArgs": [],
+            "projectDir": "${workspaceRoot}/imposc",
+            "requireFiles": [
+                "charts.exs"
+            ]
+        },
+        {
+            "type": "mix_task",
             "name": "mix (Default task)",
             "request": "launch",
             "projectDir": "${workspaceRoot}/imposc"
