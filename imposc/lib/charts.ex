@@ -30,7 +30,7 @@ defmodule Mix.Tasks.Scatter do
     #   [:plot, "-", :with, :points]
     # ], [dataset])
     initial_point = %ImpactPoint{phi: 0.5, v: 0.5}
-    params = %SystemParameters{omega: 2, r: 0.8, sigma: -0.6}
+    params = %SystemParameters{omega: 2.8, r: 0.8, sigma: 0}
     num_iterations = 10000
 
     ImpactMap.chart_impacts(initial_point, params, num_iterations)
