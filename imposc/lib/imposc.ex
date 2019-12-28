@@ -118,7 +118,7 @@ defmodule EvolutionCoefficients do
   """
   @spec derive(SystemParameters.t(), ImpactPoint.t()) :: EvolutionCoefficients.t()
   def derive(%SystemParameters{} = parameters, %ImpactPoint{} = point) do
-    result = %EvolutionCoefficients{gamma: Imposc.gamma(parameters.omega)}
+    result = %EvolutionCoefficients{gamma: Imposc.gamma(parameters.omega), omega: parameters.omega}
     result = %{result | cos_coeff: parameters.sigma - result.gamma * :math.cos(parameters.omega * point.phi)}
     result = %{result | sin_coeff: -parameters.r * point.v + parameters.omega * result.gamma * :math.sin(parameters.omega * point.phi)}
     result

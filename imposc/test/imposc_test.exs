@@ -8,6 +8,8 @@ defmodule ImposcTest do
 
   test "phi is modulo" do
     assert Imposc.phi(3, :math.pi) == 1
+
+    for t <- 0..100, do: assert Imposc.phi(t, 2.8) >= 0
   end
 
   test "gamma(0) is 1" do
