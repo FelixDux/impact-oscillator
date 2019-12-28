@@ -22,3 +22,12 @@ defmodule ImposcTest do
     assert Imposc.gamma(1) == 1
   end
 end
+
+defmodule ImpactPointTest do
+  use ExUnit.Case
+  doctest ImpactPoint
+
+  test "impact point maps to list" do
+    assert ImpactPoint.point_to_list(%ImpactPoint{phi: 1.6, v: 0.7}) == [1.6, 0.7]
+  end
+end
