@@ -7,5 +7,4 @@ erl_crash.dump
 *.ez
 *.beam
 /config/*.secret.exs
-imposc/.elixir_ls/build/test/lib/imposc/.mix/compile.elixir
-imposc/.elixir_ls/dialyzer_manifest_21.3_elixir-1.9.2_test
+imposc/.elixir_ls

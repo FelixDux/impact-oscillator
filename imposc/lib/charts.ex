@@ -11,11 +11,11 @@ defmodule ImpactMap do
 
    def chart_impacts(%ImpactPoint{}=initial_point, %SystemParameters{} = params, num_iterations \\ 1000) do
     dataset = MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations) |> Enum.map(& ImpactPoint.point_to_list(&1))
-    {:ok, _cmd} = Gnuplot.plot([
+    {:ok, cmd} = Gnuplot.plot([
       [:set, :title, "Impact map"],
-      [:plot, "-", :with, :points]
+      [:plot, "-", :with, :points, :pointtype, 7, :ps, 0.1]
     ], [dataset])
-    # IO.puts(dataset)
+    IO.puts(cmd)
   end
 end
 
@@ -25,7 +25,7 @@ defmodule Mix.Tasks.Scatter do
   @spec run(any) :: {:ok, binary}
   def run(_) do
     # dataset = for _ <- 0..1000, do: [:rand.uniform(), :rand.normal()]
-    # {:ok, _cmd} = Gnuplot.plot([
+    # {:ok, cmd} = Gnuplot.plot([
     #   [:set, :title, "Impact map"],
     #   [:plot, "-", :with, :points]
     # ], [dataset])
