@@ -1,5 +1,5 @@
 import Gnuplot
-import Imposc
+import ImposcUtils
 import ImpactPoint
 import SystemParameters
 import MotionBetweenImpacts
@@ -24,11 +24,6 @@ defmodule Mix.Tasks.Scatter do
 
   @spec run(any) :: {:ok, binary}
   def run(_) do
-    # dataset = for _ <- 0..1000, do: [:rand.uniform(), :rand.normal()]
-    # {:ok, cmd} = Gnuplot.plot([
-    #   [:set, :title, "Impact map"],
-    #   [:plot, "-", :with, :points]
-    # ], [dataset])
     initial_point = %ImpactPoint{phi: 0.5, v: 0.5}
     params = %SystemParameters{omega: 2.8, r: 0.8, sigma: 0}
     num_iterations = 10000

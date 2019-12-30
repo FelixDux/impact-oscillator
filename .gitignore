@@ -8,3 +8,5 @@ erl_crash.dump
 *.beam
 /config/*.secret.exs
 imposc/.elixir_ls
+*.elixir
+*.app

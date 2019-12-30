@@ -1,27 +1,23 @@
 defmodule ImposcTest do
   use ExUnit.Case
-  doctest Imposc
-
-  test "greets the world" do
-    assert Imposc.hello() == :world
-  end
+  doctest ImposcUtils
 
   test "phi is modulo" do
-    assert Imposc.phi(3, :math.pi) == 1
+    assert ImposcUtils.phi(3, :math.pi) == 1
 
-    for t <- 0..100, do: assert Imposc.phi(t, 2.8) >= 0
+    for t <- 0..100, do: assert ImposcUtils.phi(t, 2.8) >= 0
   end
 
   test "gamma(0) is 1" do
-    assert Imposc.gamma(0) == 1
+    assert ImposcUtils.gamma(0) == 1
   end
 
   test "modulo(x, 0) is x" do
-    for x <- [7.3, 4, -2.5], do: assert Imposc.modulo(x, 0) == x
+    for x <- [7.3, 4, -2.5], do: assert ImposcUtils.modulo(x, 0) == x
   end
 
   test "gamma(1) is 1" do
-    assert Imposc.gamma(1) == 1
+    assert ImposcUtils.gamma(1) == 1
   end
 end
 

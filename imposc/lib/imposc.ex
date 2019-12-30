@@ -1,20 +1,7 @@
-defmodule Imposc do
+defmodule ImposcUtils do
   @moduledoc """
-  Documentation for Imposc.
+  Documentation for ImposcUtils.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Imposc.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 
   @doc """
   Returns the fractional part of a floating point number
@@ -118,7 +105,7 @@ defmodule EvolutionCoefficients do
   """
   @spec derive(SystemParameters.t(), ImpactPoint.t()) :: EvolutionCoefficients.t()
   def derive(%SystemParameters{} = parameters, %ImpactPoint{} = point) do
-    result = %EvolutionCoefficients{gamma: Imposc.gamma(parameters.omega), omega: parameters.omega}
+    result = %EvolutionCoefficients{gamma: ImposcUtils.gamma(parameters.omega), omega: parameters.omega}
     result = %{result | cos_coeff: parameters.sigma - result.gamma * :math.cos(parameters.omega * point.phi)}
     result = %{result | sin_coeff: -parameters.r * point.v + parameters.omega * result.gamma * :math.sin(parameters.omega * point.phi)}
     result
@@ -139,7 +126,7 @@ defmodule StateOfMotion do
   defstruct x: 0, v: 0, t: 0
 
   def point_from_state(%StateOfMotion{} = state, omega) do
-    %ImpactPoint{phi: Imposc.phi(state.t, omega), v: state.v}
+    %ImpactPoint{phi: ImposcUtils.phi(state.t, omega), v: state.v}
   end
 end
 
