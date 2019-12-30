@@ -22,7 +22,7 @@ end
 
 defmodule Curves do
 
-  def sigma_ellipse(n, omega, r, num_points \\ 100) do
+  def sigma_ellipse(n, omega, r, num_points \\ 1000) do
     dataset = OneNLoci.curves_for_fixed_omega(n, omega, r, num_points)
     {:ok, cmd} = Gnuplot.plot([
       [:set, :title, "Sigma response curve for (1, #{n}) orbits for omega = #{omega}, r = #{r}"],

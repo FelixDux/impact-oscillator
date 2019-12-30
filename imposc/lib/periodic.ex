@@ -68,14 +68,31 @@ defmodule OneNParams do
     %ImpactPoint{phi: phase_for_velocity(velocity, params), v: velocity}
   end
 
-  @spec velocities(number, OneNParams.t()) :: [any]
+  @spec velocities(number, OneNParams.t()) :: {nil | float, nil | float}
   def velocities(sigma, %OneNParams{} = params) do
-    velocities_for_discr(sigma, discriminant(sigma, params), params)
+    Tuple.to_list(velocities_for_discr(sigma, discriminant(sigma, params), params)) |> Enum.map(&nullify_unphysical(&1)) |> List.to_tuple
   end
 
   @spec orbits(number, OneNParams.t()) :: [any]
   def orbits(sigma, %OneNParams{} = params) do
     Enum.map(velocities(sigma, params), & point_for_velocity(&1 , params))
+  end
+
+  @spec nullify_unphysical(any) ::nil | float
+  def nullify_unphysical(velocity) do
+    if is_physical(velocity) do
+      velocity
+    else
+      nil
+    end
+  end
+
+  def is_physical(velocity) when velocity < 0 do
+    false
+  end
+
+  def is_physical(velocity) do
+    true
   end
 end
 
@@ -83,7 +100,7 @@ defmodule OneNLoci do
   @moduledoc """
   """
 
-  def curves_for_fixed_omega(n, omega, r, num_points \\ 100) do
+  def curves_for_fixed_omega(n, omega, r, num_points \\ 1000) do
     params = OneNParams.derive(omega, r, n)
 
     delta_s = 2 * params.sigma_s / num_points
