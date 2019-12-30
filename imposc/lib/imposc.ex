@@ -125,6 +125,7 @@ defmodule StateOfMotion do
 
   defstruct x: 0, v: 0, t: 0
 
+  @spec point_from_state(StateOfMotion.t(), float) :: ImpactPoint.t()
   def point_from_state(%StateOfMotion{} = state, omega) do
     %ImpactPoint{phi: ImposcUtils.phi(state.t, omega), v: state.v}
   end
