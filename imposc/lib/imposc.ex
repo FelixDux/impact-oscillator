@@ -41,6 +41,10 @@ defmodule ImposcUtils do
   def gamma(omega) do
     1.0/(1.0-:math.pow(omega, 2))
   end
+
+  defmacro const_small do
+    quote do: 0.000001
+  end
 end
 
 defmodule ImpactPoint do

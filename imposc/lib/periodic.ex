@@ -32,7 +32,11 @@ defmodule OneNParams do
 
   @spec discriminant(number, OneNParams.t()) :: number
   defp discriminant(sigma, %OneNParams{} = params) do
-    4 * (params.gamma2*params.cs*params.cs - (sigma  * sigma - params.gamma2) * params.r_minus)
+    if abs(sigma) == params.sigma_s do
+      0
+    else
+      4 * (params.gamma2*params.cs*params.cs - (sigma  * sigma - params.gamma2) * params.r_minus * params.r_minus)
+    end
   end
 
   @spec velocities_for_discr(number, number, OneNParams.t()) :: [nil | float, ...]
@@ -44,11 +48,11 @@ defmodule OneNParams do
     intercept = -2 * params.cs * sigma
     divisor = params.cs * params.cs + params.r_minus * params.r_minus
 
-    aa = intercept/divisor
+    vs = intercept/divisor
 
     d = :math.sqrt(discriminant) / divisor
 
-    {aa + d, aa - d}
+    {vs + d, vs - d}
   end
 
   @spec phase_for_velocity( float | nil, OneNParams.t()) :: float
@@ -108,5 +112,11 @@ defmodule OneNLoci do
     pairs = 0..num_points |> Enum.map(&(&1 * delta_s - params.sigma_s)) |> Enum.map(&({&1, OneNParams.velocities(&1, params)}))
 
     [pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), 0)}) |> Enum.filter(&!is_nil(elem(&1,1))), pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), 1)}) |> Enum.filter(&!is_nil(elem(&1,1)))]
+  end
+
+  def vs(n, omega, r) do
+    params = OneNParams.derive(omega, r, n)
+
+    OneNParams.velocities(-params.sigma_s, params)
   end
 end
