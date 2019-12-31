@@ -32,11 +32,7 @@ defmodule OneNParams do
 
   @spec discriminant(number, OneNParams.t()) :: number
   defp discriminant(sigma, %OneNParams{} = params) do
-    if abs(sigma) == params.sigma_s do
-      0
-    else
-      4 * (params.gamma2*params.cs*params.cs - (sigma  * sigma - params.gamma2) * params.r_minus * params.r_minus)
-    end
+    4 * (params.gamma2*params.cs*params.cs - (sigma  * sigma - params.gamma2) * params.r_minus * params.r_minus)
   end
 
   @spec velocities_for_discr(number, number, OneNParams.t()) :: [nil | float, ...]
