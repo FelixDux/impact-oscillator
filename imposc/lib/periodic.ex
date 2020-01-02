@@ -7,7 +7,7 @@ defmodule OneNParams do
   Structure for parameters for analysing single-impact (1, n) periodic orbits
   """
 
-  defstruct omega: 2, gamma2: 1/9.0, r_minus: 0.1, n: 1, cs: 0, phase_coeff: 0, sigma_s: 0
+  defstruct omega: 2, r: 0.8, gamma2: 1/9.0, r_minus: 0.1, n: 1, cs: 0, phase_coeff: 0, sigma_s: 0
 
   defp derive_cs(cn, _sn, _r) when cn == 1 do
     0
@@ -24,7 +24,7 @@ defmodule OneNParams do
     sn = :math.sin(arg)
     gamma = :math.pow(ImposcUtils.gamma(omega),2)
 
-    result = %OneNParams{omega: omega, gamma2: gamma * gamma, r_minus: (1-r)/omega, cs: derive_cs(cn, sn, r)}
+    result = %OneNParams{omega: omega, r: r, gamma2: gamma * gamma, r_minus: (1-r)/omega, cs: derive_cs(cn, sn, r)}
     result = %OneNParams{result | phase_coeff: -result.r_minus / gamma / 2}
     result = %OneNParams{result | sigma_s: :math.sqrt(result.gamma2*(1 + :math.pow(result.cs/result.r_minus, 2)))}
     result
@@ -70,7 +70,7 @@ defmodule OneNParams do
 
   @spec velocities(number, OneNParams.t()) :: {nil | float, nil | float}
   def velocities(sigma, %OneNParams{} = params) do
-    Tuple.to_list(velocities_for_discr(sigma, discriminant(sigma, params), params)) |> Enum.map(&nullify_unphysical(&1)) |> List.to_tuple
+    Tuple.to_list(velocities_for_discr(sigma, discriminant(sigma, params), params)) |> Enum.map(&nullify_unphysical(&1, sigma, params)) |> List.to_tuple
   end
 
   @spec orbits(number, OneNParams.t()) :: [any]
@@ -78,20 +78,29 @@ defmodule OneNParams do
     Enum.map(velocities(sigma, params), & point_for_velocity(&1 , params))
   end
 
-  @spec nullify_unphysical(any) ::nil | float
-  def nullify_unphysical(velocity) do
-    if is_physical(velocity) do
+  @spec nullify_unphysical(any, any, OneNParams.t()) :: any
+  def nullify_unphysical(velocity, sigma, %OneNParams{} = params) do
+    if is_physical?(velocity, sigma, params) do
       velocity
     else
       nil
     end
   end
 
-  def is_physical(velocity) when velocity < 0 do
+  def is_physical?(velocity, _sigma, %OneNParams{} = _params) when velocity < 0 do
     false
   end
 
-  def is_physical(velocity) do
+  def is_physical?(velocity, sigma, %OneNParams{} = params) do
+    point = point_for_velocity(velocity, params)
+
+    sys_params = %SystemParameters{omega: params.omega, r: params.r, sigma: sigma}
+
+    import MotionBetweenImpacts
+
+    next_point = MotionBetweenImpacts.next_impact(point, sys_params)
+
+    # abs(point.v - next_point.v) < 0.1 #ImposcUtils.const_small()
     true
   end
 end
@@ -105,7 +114,7 @@ defmodule OneNLoci do
 
     delta_s = 2 * params.sigma_s / num_points
 
-    pairs = 0..num_points |> Enum.map(&(&1 * delta_s - params.sigma_s)) |> Enum.map(&({&1, OneNParams.velocities(&1, params)}))
+    pairs = 0..num_points |> Stream.map(&(&1 * delta_s - params.sigma_s)) |> Stream.map(&({&1, OneNParams.velocities(&1, params)}))
 
     [pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), 0)}) |> Enum.filter(&!is_nil(elem(&1,1))), pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), 1)}) |> Enum.filter(&!is_nil(elem(&1,1)))]
   end

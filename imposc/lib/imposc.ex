@@ -45,6 +45,14 @@ defmodule ImposcUtils do
   defmacro const_small do
     quote do: 0.000001
   end
+
+  defmacro const_sigma do
+    quote do: List.to_string([<<207_131::utf8>>])
+  end
+
+  defmacro const_omega do
+    quote do: List.to_string([<<207_137::utf8>>])
+  end
 end
 
 defmodule ImpactPoint do
@@ -152,21 +160,36 @@ defmodule MotionBetweenImpacts do
     result
   end
 
-  def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = params, step_size \\ 0.1, limit \\ 0.001) do
+  def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = params, record_states \\ false, step_size \\ 0.1, limit \\ 0.001) do
     coeffs = EvolutionCoefficients.derive(params, previous_impact)
     start_state = %StateOfMotion{t: previous_impact.phi, x: params.sigma, v: -params.r * previous_impact.v}
-    StateOfMotion.point_from_state(find_next_impact(start_state, previous_impact, coeffs, params.sigma, step_size, limit), params.omega)
+    states = find_next_impact(start_state, previous_impact, coeffs, params.sigma, record_states, step_size, limit)
+    {StateOfMotion.point_from_state(Enum.at(states, -1), params.omega), states}
   end
 
-  def find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = _previous_impact, %EvolutionCoefficients{} = _coeffs, _sigma, step_size, limit) when abs(step_size) < limit do
-    state
+  defp states_for_step(%StateOfMotion{} = state, sigma, record_states) do
+    if state.x <= sigma and record_states do
+      [state]
+    else
+      []
+    end
   end
 
-  def find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs, sigma, step_size, limit) do
+  defp find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = _previous_impact, %EvolutionCoefficients{} = _coeffs, _sigma,
+    _record_states, step_size, limit) when abs(step_size) < limit do
+
+    [state]
+  end
+
+  defp find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs, sigma,
+    record_states, step_size, limit) do
+
+    states = states_for_step(state, sigma, record_states)
+
     step_size = new_step_size(step_size, state.x, sigma)
     new_time = state.t + step_size
     new_state = motion_at_time(new_time, previous_impact, coeffs)
-    find_next_impact(new_state, previous_impact, coeffs, sigma, step_size, limit)
+    states ++ find_next_impact(new_state, previous_impact, coeffs, sigma, states, step_size, limit)
   end
 
   def new_step_size(step_size, x, sigma) when x <= sigma and step_size < 0 do
@@ -182,7 +205,7 @@ defmodule MotionBetweenImpacts do
   end
 
   def iterate_impacts(%ImpactPoint{} = start_impact, %SystemParameters{} = params, num_iterations \\ 1000) do
-    stream = Stream.unfold(start_impact, &{&1, next_impact(&1, params)})
+    stream = Stream.unfold(start_impact, &{&1, elem(next_impact(&1, params),0)})
     Enum.take(stream, num_iterations)
   end
 
