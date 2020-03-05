@@ -1,4 +1,4 @@
-from math import pi
+from math import pi, cos, sin
 from dataclasses import dataclass
 
 SMALL = 0.001
@@ -29,8 +29,24 @@ class SystemParameters:
     sigma: float  # the offset from the centre of motion at which an impact occurs
 
 
+@dataclass
+class ImpactPoint:
+    """
+    A point on the impact surface
+    """
+    phi: float
+    v: float
+
+
 class EvolutionCoefficients:
     """ Coefficients for time evolution of the system from one impact to the next """
+
+    def __init__(self, parameters: SystemParameters, point: ImpactPoint):
+        self._parameters = parameters
+        self._gamma = gamma(parameters.omega)  # the coefficient of the forcing term of the displacement
+        self._cos_coeff = parameters.sigma - result.gamma * cos(parameters.omega * point.phi)
+        self._sin_coeff = -parameters.r * point.v + parameters.omega * result.gamma * sin(parameters.omega * point.phi)
+
 
 
 if __name__ == "__main__":
