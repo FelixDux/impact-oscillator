@@ -31,6 +31,7 @@ defmodule Curves do
         ["-", :title, "Unstable", :with, :lines]
         ])], dataset)
     IO.puts(cmd)
+    IO.inspect dataset
   end
 end
 
@@ -43,6 +44,7 @@ defmodule TimeSeries do
       [:set, :title, "Time series for omega = #{params.omega}, sigma = #{params.sigma}, r = #{params.r}"],
       [:plot, "-", :with, :lines]], [dataset])
     IO.puts(cmd)
+    IO.inspect dataset
   end
 end
 
@@ -53,6 +55,8 @@ defmodule Mix.Tasks.Scatter do
   def run(_) do
     initial_point = %ImpactPoint{phi: 0.5, v: 0.5}
     params = %SystemParameters{omega: 2.8, r: 0.8, sigma: 0}
+    # points = OneNLoci.orbits_for_params(params, 1)
+    # initial_point = Enum.at(points, 0)
     num_iterations = 10000
 
     ImpactMap.chart_impacts(initial_point, params, num_iterations)
@@ -65,7 +69,7 @@ defmodule Mix.Tasks.Ellipse do
 
   @spec run(any) :: {:ok, binary}
   def run(_) do
-    Curves.sigma_ellipse(1, 2.8, 0.8)
+    Curves.sigma_ellipse(1, 2.0, 0.8)
   end
 end
 
@@ -75,9 +79,12 @@ defmodule Mix.Tasks.Timeseries do
 
   @spec run(any) :: {:ok, binary}
   def run(_) do
-    initial_point = %ImpactPoint{phi: 0.5, v: 0.5}
     params = %SystemParameters{omega: 2.0, r: 0.8, sigma: 0}
+    points = OneNLoci.orbits_for_params(params, 1)
+    # IO.inspect points
+    initial_point = Enum.at(points, 0)
 
     TimeSeries.time_series(initial_point, params)
+    # IO.inspect points
   end
 end

@@ -18,8 +18,16 @@ defmodule ImposcUtils do
     x
   end
 
+  def modulo(x, y) when y < 0 do
+   modulo(x, abs(y))
+  end
+
+  def modulo(x, y) when x < 0 do
+   modulo(x + y, y)
+  end
+
   def modulo(x, y) do
-    frac_part(x/y)*y
+    x - trunc(x/y)*y
   end
 
   @doc """
@@ -43,7 +51,7 @@ defmodule ImposcUtils do
   end
 
   defmacro const_small do
-    quote do: 0.000001
+    quote do: 0.001
   end
 
   defmacro const_sigma do

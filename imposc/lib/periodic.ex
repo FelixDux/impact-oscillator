@@ -22,7 +22,7 @@ defmodule OneNParams do
     arg = 2*:math.pi*n/omega
     cn = :math.cos(arg)
     sn = :math.sin(arg)
-    gamma = :math.pow(ImposcUtils.gamma(omega),2)
+    gamma = ImposcUtils.gamma(omega)
 
     result = %OneNParams{omega: omega, r: r, gamma2: gamma * gamma, r_minus: (1-r)/omega, cs: derive_cs(cn, sn, r)}
     result = %OneNParams{result | phase_coeff: -result.r_minus / gamma / 2}
@@ -37,7 +37,7 @@ defmodule OneNParams do
 
   @spec velocities_for_discr(number, number, OneNParams.t()) :: [nil | float, ...]
   defp velocities_for_discr(_sigma, discriminant, %OneNParams{} = _params) when discriminant < 0 do
-    {nil, nil}
+    [nil, nil]
   end
 
   defp velocities_for_discr(sigma, discriminant, %OneNParams{} = params) do
@@ -48,7 +48,7 @@ defmodule OneNParams do
 
     d = :math.sqrt(discriminant) / divisor
 
-    {vs + d, vs - d}
+    [vs + d, vs - d]
   end
 
   @spec phase_for_velocity( float | nil, OneNParams.t()) :: float
@@ -57,7 +57,7 @@ defmodule OneNParams do
   end
 
   defp phase_for_velocity(velocity, %OneNParams{} = params) do
-    :math.asin(params.phase_coeff * velocity) / params.omega
+    ImposcUtils.phi(:math.asin(params.phase_coeff * velocity) / params.omega, params.omega)
   end
 
   def point_for_velocity(nil, %OneNParams{} = _params) do
@@ -70,12 +70,12 @@ defmodule OneNParams do
 
   @spec velocities(number, OneNParams.t()) :: {nil | float, nil | float}
   def velocities(sigma, %OneNParams{} = params) do
-    Tuple.to_list(velocities_for_discr(sigma, discriminant(sigma, params), params)) |> Enum.map(&nullify_unphysical(&1, sigma, params)) |> List.to_tuple
+    velocities_for_discr(sigma, discriminant(sigma, params), params) |> Enum.map(&nullify_unphysical(&1, sigma, params)) |> List.to_tuple
   end
 
   @spec orbits(number, OneNParams.t()) :: [any]
   def orbits(sigma, %OneNParams{} = params) do
-    Enum.map(velocities(sigma, params), & point_for_velocity(&1 , params))
+    velocities(sigma, params) |> Tuple.to_list |> Enum.map(& point_for_velocity(&1 , params))
   end
 
   @spec nullify_unphysical(any, any, OneNParams.t()) :: any
@@ -98,10 +98,13 @@ defmodule OneNParams do
 
     import MotionBetweenImpacts
 
-    next_point = MotionBetweenImpacts.next_impact(point, sys_params)
+    {next_point, _} = MotionBetweenImpacts.next_impact(point, sys_params)
 
-    # abs(point.v - next_point.v) < 0.1 #ImposcUtils.const_small()
-    true
+    if abs(point.v - next_point.v) <  ImposcUtils.const_small() do
+      true
+    else
+      true #false
+    end
   end
 end
 
@@ -123,5 +126,9 @@ defmodule OneNLoci do
     params = OneNParams.derive(omega, r, n)
 
     OneNParams.velocities(-params.sigma_s, params)
+  end
+
+  def orbits_for_params(%SystemParameters{} = params, n) do
+    OneNParams.orbits(params.sigma, OneNParams.derive(params.omega, params.r, n))
   end
 end
