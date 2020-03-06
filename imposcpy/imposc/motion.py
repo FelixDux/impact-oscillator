@@ -35,7 +35,7 @@ class StateOfMotion:
 class MotionBetweenImpacts:
     """ Coefficients and methods for time evolution of the system from one impact to the next """
 
-    def __init__(self, parameters: SystemParameters, point: ImpactPoint, recording = False):
+    def __init__(self, parameters: SystemParameters, point: ImpactPoint, recording = False, step_size = 0.1, limit = 0.001):
         self._parameters = parameters
         self._gamma = parameters.gamma()
         self._point: ImpactPoint = None
@@ -43,6 +43,8 @@ class MotionBetweenImpacts:
         self._sin_coeff = 0.0
         self._steps = []
         self._recording = recording
+        self._step_size = step_size
+        self._limit = limit
 
         self.set_impact(point)
 
@@ -91,13 +93,15 @@ class MotionBetweenImpacts:
             v=self._sin_coeff * cos_lamda - self._cos_coeff * sin_lamda - self._parameters.omega * self._gamma * 
             sin(self._parameters.omega * t))
 
-    def next_impact(self, step_size = 0.1, limit = 0.001) -> ImpactPoint:
+    def next_impact(self) -> ImpactPoint:
 
         t = self._point.phi
 
         penetrating = False
 
-        while abs(step_size) > limit:
+        step_size = self._step_size
+
+        while abs(step_size) > self._limit:
             t += step_size
 
             state = self.motion_at_time(t)
@@ -114,7 +118,18 @@ class MotionBetweenImpacts:
 
                 penetrating = False
 
-                if self.recording:
-                    self._steps.append(state)
+                self._record_state(state)
 
         return ImpactPoint(phi=phi(t, self._parameters.omega), state.v)
+
+    def iterate(self) -> ImpactPoint:
+        next_point = self.next_impact()
+
+        self.set_impact(next_point)
+
+        return next_point
+
+    def _record_state(self, state: StateOfMotion):
+
+        if self.recording:
+            self._steps.append(state)
