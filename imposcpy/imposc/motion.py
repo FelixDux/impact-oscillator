@@ -2,7 +2,7 @@ from math import cos, sin, pi
 from dataclasses import dataclass
 from typing import List
 
-from .parameters import SystemParameters
+from imposcpy.imposc.parameters import SystemParameters
 
 def phi(t: float, omega: float) -> float:
     """
@@ -21,6 +21,7 @@ class ImpactPoint:
     phi: float
     v: float
 
+
 @dataclass
 class StateOfMotion:
     """ State and phase variables for the motion between impacts """
@@ -35,7 +36,7 @@ class StateOfMotion:
 class MotionBetweenImpacts:
     """ Coefficients and methods for time evolution of the system from one impact to the next """
 
-    def __init__(self, parameters: SystemParameters, point: ImpactPoint, recording = False, step_size = 0.1, limit = 0.001):
+    def __init__(self, parameters: SystemParameters, point: ImpactPoint, recording = False, step_size = 0.01, limit = 0.000001):
         self._parameters = parameters
         self._gamma = parameters.gamma()
         self._point: ImpactPoint = None
@@ -51,8 +52,7 @@ class MotionBetweenImpacts:
     def set_impact(self, point: ImpactPoint) -> None:
         self._point = point
         self._cos_coeff = self._parameters.sigma - self._gamma * cos(self._parameters.omega * point.phi) 
-        self._sin_coeff = -self._parameters.r * point.v + self._parameters.omega * self._gamma * 
-            sin(self._parameters.omega * point.phi)
+        self._sin_coeff = -self._parameters.r * point.v + self._parameters.omega * self._gamma * sin(self._parameters.omega * point.phi)
 
     @property
     def recording(self) -> bool:
@@ -120,7 +120,7 @@ class MotionBetweenImpacts:
 
                 self._record_state(state)
 
-        return ImpactPoint(phi=phi(t, self._parameters.omega), state.v)
+        return state.point_from_state(self._parameters.omega)
 
     def iterate(self) -> ImpactPoint:
         next_point = self.next_impact()

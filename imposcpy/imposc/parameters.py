@@ -1,7 +1,7 @@
 from math import pow
 from dataclasses import dataclass
 
-SMALL = 0.001
+from imposcpy.imposc.constants import SMALL, SMALL_OMEGA, SMALL_SIGMA
 
 
 @dataclass
@@ -18,3 +18,6 @@ class SystemParameters:
             return 1
         else:
             return 1.0/(1.0-pow(self.omega, 2))
+
+    def __str__(self) -> str:
+        return f"{SMALL_OMEGA} = {self.omega}, {SMALL_SIGMA} = {self.sigma}, r = {self.r}"
