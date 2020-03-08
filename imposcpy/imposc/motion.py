@@ -3,6 +3,10 @@ from dataclasses import dataclass
 from typing import List
 
 from imposcpy.imposc.parameters import SystemParameters
+from imposcpy.imposc.constants import SMALL
+
+def forcing_period(omega: float) -> float:
+    return 2.0 * pi / omega
 
 def phi(t: float, omega: float) -> float:
     """
@@ -11,7 +15,7 @@ def phi(t: float, omega: float) -> float:
     if omega == 0:
         return t
     else:
-        return t % 2.0 * pi / omega
+        return t % forcing_period(omega)
 
 @dataclass
 class ImpactPoint:
@@ -97,7 +101,7 @@ class MotionBetweenImpacts:
 
         t = self._point.phi
 
-        penetrating = False
+        self._record_state(self.motion_at_time(t))
 
         step_size = self._step_size
 
@@ -107,16 +111,12 @@ class MotionBetweenImpacts:
             state = self.motion_at_time(t)
 
             if state.x > self._parameters.sigma:
-                if not penetrating:
+                if step_size > 0:
                     step_size *= -0.5
-
-                penetrating = True
 
             else:
-                if penetrating:
+                if step_size < 0:
                     step_size *= -0.5
-
-                penetrating = False
 
                 self._record_state(state)
 
@@ -132,4 +132,13 @@ class MotionBetweenImpacts:
     def _record_state(self, state: StateOfMotion):
 
         if self.recording:
+
+            if self._steps:
+                prev_time = self._steps[-1].t
+
+                period = forcing_period(self._parameters.omega)
+
+                while prev_time > state.t + SMALL:
+                    state.t += period
+
             self._steps.append(state)
