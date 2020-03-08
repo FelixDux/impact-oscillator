@@ -13,9 +13,9 @@ class AxesForTimeSeries:
         self._axes.set_xlabel('t')
         self._axes.set_ylabel('x')
 
-        # self._axes.set_ybound(upper=0)
-
         self._axes.set_title(str(parameters))
+
+        self._parameters = parameters
 
     @property
     def axes(self) -> Axes:
@@ -26,7 +26,9 @@ class AxesForTimeSeries:
         t_values = [state.t for state in states]
         x_values = [state.x for state in states]
 
-        self._axes.plot(t_values, x_values)
+        self._axes.plot(t_values, x_values, label=states[0].point_from_state(self._parameters.omega))
+
+        self._axes.set_ybound(upper=self._parameters.sigma)
 
 
 if __name__ == "__main__":
@@ -49,5 +51,7 @@ if __name__ == "__main__":
     [motion.iterate() for i in range(5)]
 
     axes.add_sequence(motion.steps)
+
+    axes.axes.legend()
 
     py.show()

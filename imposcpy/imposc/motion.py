@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List
 
 from imposcpy.imposc.parameters import SystemParameters
-from imposcpy.imposc.constants import SMALL
+from imposcpy.imposc.constants import SMALL, SMALL_PHI
 
 def forcing_period(omega: float) -> float:
     return 2.0 * pi / omega
@@ -24,6 +24,9 @@ class ImpactPoint:
     """
     phi: float
     v: float
+
+    def __str__(self) -> str:
+        return f"{SMALL_PHI} = {self.phi}, v = {self.v}"
 
 
 @dataclass

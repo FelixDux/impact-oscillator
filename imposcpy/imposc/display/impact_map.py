@@ -29,7 +29,7 @@ class AxesForImpactMap:
         phi_values = [point.phi for point in points]
         v_values = [point.v for point in points]
 
-        self._axes.scatter(phi_values, v_values, marker='.', s=1)
+        self._axes.scatter(phi_values, v_values, marker='.', s=1, label=str(points[0]))
 
 
 if __name__ == "__main__":
@@ -48,6 +48,8 @@ if __name__ == "__main__":
     points = [motion.iterate() for i in range(1000)]
 
     axes.add_sequence(points)
+
+    axes.axes.legend()
 
     py.show()
 
