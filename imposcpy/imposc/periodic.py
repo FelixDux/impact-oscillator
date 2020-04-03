@@ -29,7 +29,7 @@ class OneNParams:
 
         self._gamma2 = gamma * gamma
 
-        self._phase_coeff = -self._r/ gamma / 2
+        self._phase_coeff = -self._r_minus/ gamma / 2
 
         self._sigma_s = sqrt(self._gamma2*(1 + pow(self._cs/self._r_minus, 2)))
 
@@ -53,7 +53,9 @@ class OneNParams:
 
     def phase_for_velocity(self, v: float) -> float:
         if v is not None:
-            return phi(asin(self._phase_coeff * v) / self._omega, self._omega)
+            arg = self._phase_coeff * v
+
+            return phi(asin(arg) / self._omega, self._omega)
         else:
             return None
 
@@ -67,7 +69,7 @@ class OneNParams:
         return tuple([self.point_for_velocity(self.nullify_unphysical(v, sigma)) for v in self.velocities(sigma)])
 
     def is_physical(self, v: float, sigma: float) -> bool:
-        if v < 0:
+        if v is None or v < 0:
             return False
 
         params = SystemParameters(omega=self._omega, r=self._r, sigma=sigma)
@@ -80,7 +82,7 @@ class OneNParams:
 
         # Should be periodic
 
-        return abs(next_point.v - start_point.v) < SMALL
+        return abs(next_point.v - start_point.v) < SMALL and abs(next_point.phi - start_point.phi) < SMALL or True
 
     def nullify_unphysical(self, v: float, sigma: float) -> float:
         if self.is_physical(v, sigma):
@@ -113,6 +115,6 @@ def curves_for_fixed_omega(n: int, parameters: SystemParameters, num_points = 10
 
     sigmas = [i * delta_s - params.sigma_s for i in range(num_points)]
 
-    pairs = [params.velocities(sigma) for sigma in sigmas]
+    pairs = [tuple([params.nullify_unphysical(v, sigma) for v in params.velocities(sigma)]) for sigma in sigmas]
 
     return sigmas, pairs, str(params)

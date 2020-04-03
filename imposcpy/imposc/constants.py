@@ -1,6 +1,6 @@
 
 
-SMALL = 0.001
+SMALL = 0.0001
 
 # Greek letters
 SMALL_ALPHA = "\u03B1"
