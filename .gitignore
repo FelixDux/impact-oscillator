@@ -10,3 +10,6 @@ erl_crash.dump
 imposc/.elixir_ls
 *.elixir
 *.app
+*.pyc
+imposcpy/venv
+.vscode
