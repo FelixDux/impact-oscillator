@@ -35,7 +35,7 @@ class AxesForImpactMap:
 if __name__ == "__main__":
     from imposcpy.imposc.motion import MotionBetweenImpacts
 
-    params = SystemParameters(omega=2.2, r=0.8, sigma=0)
+    params = SystemParameters(omega=2.8, r=0.8, sigma=0)
 
     start_point = ImpactPoint(phi=1, v=1)
 
@@ -45,7 +45,9 @@ if __name__ == "__main__":
 
     motion = MotionBetweenImpacts(params, start_point)
 
-    points = [motion.iterate() for i in range(1000)]
+    [motion.iterate() for i in range(100)]
+
+    points = [motion.iterate() for i in range(10000)]
 
     axes.add_sequence(points)
 
