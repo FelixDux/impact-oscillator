@@ -33,21 +33,29 @@ class AxesForTimeSeries:
 
 if __name__ == "__main__":
     from imposcpy.imposc.motion import MotionBetweenImpacts, ImpactPoint
+    from imposcpy.imposc.periodic import OneNParams
 
-    params = SystemParameters(omega=2.8, r=0.8, sigma=0)
+    params = SystemParameters(omega=2, r=0.8, sigma=0.1)
+    one_n_params = OneNParams(parameters=params, n=1)
 
-    start_point = ImpactPoint(phi=1, v=1)
+    v = [v for v in one_n_params.velocities(params.sigma) if v > 0][0]
+
+    start_point = one_n_params.point_for_velocity(v, params.sigma)
+
+    # start_point = ImpactPoint(phi=1, v=1)
 
     fig = py.figure()
 
     axes = AxesForTimeSeries(fig.add_subplot(), params)
+    #
+    # transient = MotionBetweenImpacts(params, start_point)
+    #
+    # [transient.iterate() for i in range(1000)]
+    #
+    # motion = MotionBetweenImpacts(params, transient.next_impact(), recording=True)
 
-    transient = MotionBetweenImpacts(params, start_point)
+    motion = MotionBetweenImpacts(params, start_point, recording=True)
 
-    [transient.iterate() for i in range(1000)]
-
-    motion = MotionBetweenImpacts(params, transient.next_impact(), recording=True)
-    
     [motion.iterate() for i in range(5)]
 
     axes.add_sequence(motion.steps)

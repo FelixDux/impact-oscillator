@@ -34,10 +34,15 @@ class AxesForImpactMap:
 
 if __name__ == "__main__":
     from imposcpy.imposc.motion import MotionBetweenImpacts
+    from imposcpy.imposc.motion import MotionBetweenImpacts, ImpactPoint
+    from imposcpy.imposc.periodic import OneNParams
 
-    params = SystemParameters(omega=2.8, r=0.8, sigma=0)
+    params = SystemParameters(omega=2, r=0.8, sigma=0.1)
+    one_n_params = OneNParams(parameters=params, n=1)
 
-    start_point = ImpactPoint(phi=1, v=1)
+    v = [v for v in one_n_params.velocities(params.sigma) if v > 0][0]
+
+    start_point = one_n_params.point_for_velocity(v, params.sigma)
 
     fig = py.figure()
 
@@ -45,9 +50,9 @@ if __name__ == "__main__":
 
     motion = MotionBetweenImpacts(params, start_point)
 
-    [motion.iterate() for i in range(100)]
+    # [motion.iterate() for i in range(100)]
 
-    points = [motion.iterate() for i in range(10000)]
+    points = [motion.iterate() for i in range(1000)]
 
     axes.add_sequence(points)
 

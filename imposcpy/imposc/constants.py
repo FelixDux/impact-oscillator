@@ -2,6 +2,8 @@
 
 SMALL = 0.0001
 
+SMALLISH = 0.05
+
 # Greek letters
 SMALL_ALPHA = "\u03B1"
 SMALL_BETA = "\u03B2"
