@@ -57,6 +57,12 @@ class OneNParams:
 
             angle = acos(arg)
 
+            # Check for phase correction. sin(angle) should have opposite sign to v/gamma
+            s = sin(angle)
+            vg = v / self._gamma
+            if (vg > 0 and s > 0) or (vg < 0 and s < 0):
+                angle = 2 * pi - angle
+
             return phi(angle / self._omega, self._omega)
         else:
             return None
