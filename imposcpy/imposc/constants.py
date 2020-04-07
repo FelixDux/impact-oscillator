@@ -1,7 +1,7 @@
+""" Frequently used constants """
 
-
+# Tolerances for floating point comparisons
 SMALL = 0.0001
-
 SMALLISH = 0.05
 
 # Greek letters
