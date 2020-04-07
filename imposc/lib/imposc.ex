@@ -1,11 +1,12 @@
 defmodule ImposcUtils do
   @moduledoc """
-  Documentation for ImposcUtils.
+  Utility functions and constants for impact oscilaator computations.
   """
 
   @doc """
   Returns the fractional part of a floating point number
   """
+  @spec frac_part(float) :: float
   def frac_part(x) do
     x - trunc(x)
   end
@@ -13,7 +14,7 @@ defmodule ImposcUtils do
   @doc """
   Returns the remainder of `x` divided by `y` - like `Kernel.rem` but for floats
   """
-#  @spec modulo(float, float) :: float
+  @spec modulo(float, float) :: float
   def modulo(x, y) when y == 0 do
     x
   end
@@ -33,15 +34,16 @@ defmodule ImposcUtils do
   @doc """
   For a given time `t` returns the phase relative to the forcing period 2 pi /`omega`
   """
-#  @spec phi(float, float) :: float
+  @spec phi(float, float) :: float
   def phi(t, omega) do
     modulo(t,2.0*:math.pi/omega)
   end
 
   @doc """
-  For a forcing frequency `omega` returns 1/(1 - omega ** 2)
+  For a forcing frequency `omega` returns 1/(1 - omega ** 2), the coefficient of the forcing term in the equation for
+  the displacement between impacts
   """
-#  @spec gamma(number) :: float
+  @spec gamma(number) :: float
   def gamma(omega) when omega in [1, -1] do
     1
   end
@@ -82,7 +84,10 @@ defmodule ImpactPoint do
 
   defstruct phi: 0, v: 0
 
-#  @spec point_to_list(ImpactPoint.t()) :: [...]
+  @doc """
+  Converts the struct to a list [`phi`, `v`].
+  """
+  @spec point_to_list(ImpactPoint) :: [float]
   def point_to_list(%ImpactPoint{} = point) do
     [point.phi, point.v]
   end
@@ -123,7 +128,7 @@ defmodule EvolutionCoefficients do
   @doc """
   Derives evolution coefficients from the system parameters and the coordinates of the previous impact
   """
-#  @spec derive(SystemParameters.t(), ImpactPoint.t()) :: EvolutionCoefficients.t()
+  @spec derive(SystemParameters, ImpactPoint) :: EvolutionCoefficients
   def derive(%SystemParameters{} = parameters, %ImpactPoint{} = point) do
     result = %EvolutionCoefficients{gamma: ImposcUtils.gamma(parameters.omega), omega: parameters.omega}
     result = %{result | cos_coeff: parameters.sigma - result.gamma * :math.cos(parameters.omega * point.phi)}
@@ -145,7 +150,7 @@ defmodule StateOfMotion do
 
   defstruct x: 0, v: 0, t: 0
 
-#  @spec point_from_state(StateOfMotion.t(), float) :: ImpactPoint.t()
+  @spec point_from_state(StateOfMotion, float) :: ImpactPoint
   def point_from_state(%StateOfMotion{} = state, omega) do
     %ImpactPoint{phi: ImposcUtils.phi(state.t, omega), v: state.v}
   end
@@ -156,10 +161,12 @@ defmodule MotionBetweenImpacts do
   Computes the time evolution of the system from one impact to the next
   """
 
+  @type point_with_states :: {ImpactPoint, [StateOfMotion]}
+
   @doc """
   Gives the state of motion (position, velocity, time) at a given time after an impact
   """
-#  @spec motion_at_time(number, ImpactPoint.t(), EvolutionCoefficients.t()) :: StateOfMotion.t()
+  @spec motion_at_time(number, ImpactPoint, EvolutionCoefficients) :: StateOfMotion
   def motion_at_time(t, %ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs) do
     lambda = t - previous_impact.phi
     result = %StateOfMotion{t: t}
@@ -168,6 +175,7 @@ defmodule MotionBetweenImpacts do
     result
   end
 
+  @spec next_impact(ImpactPoint, SystemParameters, Boolean, number, number) :: point_with_states
   def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = params, record_states \\ false, step_size \\ 0.1, limit \\ 0.001) do
     coeffs = EvolutionCoefficients.derive(params, previous_impact)
     start_state = %StateOfMotion{t: previous_impact.phi, x: params.sigma, v: -params.r * previous_impact.v}
@@ -175,6 +183,7 @@ defmodule MotionBetweenImpacts do
     {StateOfMotion.point_from_state(Enum.at(states, -1), params.omega), states}
   end
 
+  @spec states_for_step(StateOfMotion, float, Boolean) :: [StateOfMotion]
   defp states_for_step(%StateOfMotion{} = state, sigma, record_states) do
     if state.x <= sigma and record_states do
       [state]
@@ -183,8 +192,9 @@ defmodule MotionBetweenImpacts do
     end
   end
 
-  defp find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = _previous_impact, %EvolutionCoefficients{} = _coeffs, _sigma,
-    _record_states, step_size, limit) when abs(step_size) < limit do
+  @spec find_next_impact(StateOfMotion, ImpactPoint, EvolutionCoefficients, float, Boolean, float, float) :: [StateOfMotion]
+  defp find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = _previous_impact, %EvolutionCoefficients{} = _coeffs,
+         _sigma, _record_states, step_size, limit) when abs(step_size) < limit do
 
     [state]
   end
@@ -200,6 +210,7 @@ defmodule MotionBetweenImpacts do
     states ++ find_next_impact(new_state, previous_impact, coeffs, sigma, states, step_size, limit)
   end
 
+  @spec new_step_size(float, float, float) :: float
   def new_step_size(step_size, x, sigma) when x <= sigma and step_size < 0 do
     -0.5 * step_size
   end
@@ -212,6 +223,7 @@ defmodule MotionBetweenImpacts do
     step_size
   end
 
+  @spec iterate_impacts(ImpactPoint, SystemParameters, integer) :: [ImpactPoint]
   def iterate_impacts(%ImpactPoint{} = start_impact, %SystemParameters{} = params, num_iterations \\ 1000) do
     stream = Stream.unfold(start_impact, &{&1, elem(next_impact(&1, params),0)})
     Enum.take(stream, num_iterations)
