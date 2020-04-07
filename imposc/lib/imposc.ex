@@ -13,7 +13,7 @@ defmodule ImposcUtils do
   @doc """
   Returns the remainder of `x` divided by `y` - like `Kernel.rem` but for floats
   """
-  @spec modulo(float, float) :: float
+#  @spec modulo(float, float) :: float
   def modulo(x, y) when y == 0 do
     x
   end
@@ -33,7 +33,7 @@ defmodule ImposcUtils do
   @doc """
   For a given time `t` returns the phase relative to the forcing period 2 pi /`omega`
   """
-  @spec phi(float, float) :: float
+#  @spec phi(float, float) :: float
   def phi(t, omega) do
     modulo(t,2.0*:math.pi/omega)
   end
@@ -41,7 +41,7 @@ defmodule ImposcUtils do
   @doc """
   For a forcing frequency `omega` returns 1/(1 - omega ** 2)
   """
-  @spec gamma(number) :: float
+#  @spec gamma(number) :: float
   def gamma(omega) when omega in [1, -1] do
     1
   end
@@ -82,7 +82,7 @@ defmodule ImpactPoint do
 
   defstruct phi: 0, v: 0
 
-  @spec point_to_list(ImpactPoint.t()) :: [...]
+#  @spec point_to_list(ImpactPoint.t()) :: [...]
   def point_to_list(%ImpactPoint{} = point) do
     [point.phi, point.v]
   end
@@ -123,7 +123,7 @@ defmodule EvolutionCoefficients do
   @doc """
   Derives evolution coefficients from the system parameters and the coordinates of the previous impact
   """
-  @spec derive(SystemParameters.t(), ImpactPoint.t()) :: EvolutionCoefficients.t()
+#  @spec derive(SystemParameters.t(), ImpactPoint.t()) :: EvolutionCoefficients.t()
   def derive(%SystemParameters{} = parameters, %ImpactPoint{} = point) do
     result = %EvolutionCoefficients{gamma: ImposcUtils.gamma(parameters.omega), omega: parameters.omega}
     result = %{result | cos_coeff: parameters.sigma - result.gamma * :math.cos(parameters.omega * point.phi)}
@@ -145,7 +145,7 @@ defmodule StateOfMotion do
 
   defstruct x: 0, v: 0, t: 0
 
-  @spec point_from_state(StateOfMotion.t(), float) :: ImpactPoint.t()
+#  @spec point_from_state(StateOfMotion.t(), float) :: ImpactPoint.t()
   def point_from_state(%StateOfMotion{} = state, omega) do
     %ImpactPoint{phi: ImposcUtils.phi(state.t, omega), v: state.v}
   end
@@ -159,7 +159,7 @@ defmodule MotionBetweenImpacts do
   @doc """
   Gives the state of motion (position, velocity, time) at a given time after an impact
   """
-  @spec motion_at_time(number, ImpactPoint.t(), EvolutionCoefficients.t()) :: StateOfMotion.t()
+#  @spec motion_at_time(number, ImpactPoint.t(), EvolutionCoefficients.t()) :: StateOfMotion.t()
   def motion_at_time(t, %ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs) do
     lambda = t - previous_impact.phi
     result = %StateOfMotion{t: t}

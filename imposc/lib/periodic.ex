@@ -17,7 +17,7 @@ defmodule OneNParams do
    sn*(1+r)/(1-cn)
   end
 
-  @spec derive(float, float, integer) :: OneNParams.t()
+#  @spec derive(float, float, integer) :: OneNParams.t()
   def derive(omega, r, n) do
     arg = 2*:math.pi*n/omega
     cn = :math.cos(arg)
@@ -30,12 +30,12 @@ defmodule OneNParams do
     result
   end
 
-  @spec discriminant(number, OneNParams.t()) :: number
+#  @spec discriminant(number, OneNParams.t()) :: number
   defp discriminant(sigma, %OneNParams{} = params) do
     4 * (params.gamma2*params.cs*params.cs - (sigma  * sigma - params.gamma2) * params.r_minus * params.r_minus)
   end
 
-  @spec velocities_for_discr(number, number, OneNParams.t()) :: [nil | float, ...]
+#  @spec velocities_for_discr(number, number, OneNParams.t()) :: [nil | float, ...]
   defp velocities_for_discr(_sigma, discriminant, %OneNParams{} = _params) when discriminant < 0 do
     [nil, nil]
   end
@@ -51,7 +51,7 @@ defmodule OneNParams do
     [vs + d, vs - d]
   end
 
-  @spec phase_for_velocity( float | nil, OneNParams.t()) :: float
+#  @spec phase_for_velocity( float | nil, OneNParams.t()) :: float
   defp phase_for_velocity(nil, %OneNParams{} = _params) do
     nil
   end
@@ -68,17 +68,17 @@ defmodule OneNParams do
     %ImpactPoint{phi: phase_for_velocity(velocity, params), v: velocity}
   end
 
-  @spec velocities(number, OneNParams.t()) :: {nil | float, nil | float}
+#  @spec velocities(number, OneNParams.t()) :: {nil | float, nil | float}
   def velocities(sigma, %OneNParams{} = params) do
     velocities_for_discr(sigma, discriminant(sigma, params), params) |> Enum.map(&nullify_unphysical(&1, sigma, params)) |> List.to_tuple
   end
 
-  @spec orbits(number, OneNParams.t()) :: [any]
+#  @spec orbits(number, OneNParams.t()) :: [any]
   def orbits(sigma, %OneNParams{} = params) do
     velocities(sigma, params) |> Tuple.to_list |> Enum.map(& point_for_velocity(&1 , params))
   end
 
-  @spec nullify_unphysical(any, any, OneNParams.t()) :: any
+#  @spec nullify_unphysical(any, any, OneNParams.t()) :: any
   def nullify_unphysical(velocity, sigma, %OneNParams{} = params) do
     if is_physical?(velocity, sigma, params) do
       velocity

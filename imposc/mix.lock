@@ -1,4 +1,4 @@
 %{
-  "gnuplot": {:hex, :gnuplot, "1.19.96", "8bdb733cd2d037593886c0962693f48d35baf62af193bdbb3395a0fbac17c2c5", [:mix], [], "hexpm"},
+  "gnuplot": {:hex, :gnuplot, "1.19.96", "8bdb733cd2d037593886c0962693f48d35baf62af193bdbb3395a0fbac17c2c5", [:mix], [], "hexpm", "8e5bfc0f77d5a173e8099c56f0a3b6e9c0bb68a340fed69be2d0a0846ba00b65"},
   "plotex": {:hex, :plotex, "0.2.4", "bdc1ba443a0d85aa67f56f67b2245800a196359921c4b4a7b2e43f71fc8cc116", [:mix], [{:calendar, "~> 1.0.0", [hex: :calendar, repo: "hexpm", optional: true]}, {:ex_cldr_dates_times, "~> 2.2", [hex: :ex_cldr_dates_times, repo: "hexpm", optional: true]}, {:phoenix_html, "~> 2.13", [hex: :phoenix_html, repo: "hexpm", optional: true]}, {:phoenix_live_view, "~> 0.4.1", [hex: :phoenix_live_view, repo: "hexpm", optional: true]}, {:tzdata, "~> 1.0", [hex: :tzdata, repo: "hexpm", optional: true]}], "hexpm"},
 }
