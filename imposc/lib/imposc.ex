@@ -6,6 +6,7 @@ defmodule ImposcUtils do
   @doc """
   Returns the fractional part of a floating point number
   """
+
   @spec frac_part(float) :: float
   def frac_part(x) do
     x - trunc(x)
@@ -14,6 +15,7 @@ defmodule ImposcUtils do
   @doc """
   Returns the remainder of `:x` divided by `:y` - like `Kernel.rem` but for floats
   """
+
   @spec modulo(float, float) :: float
   def modulo(x, y) when y == 0 do
     x
@@ -34,6 +36,7 @@ defmodule ImposcUtils do
   @doc """
   For a given time `:t` returns the phase relative to the forcing period 2 `math.pi` /`:omega`
   """
+
   @spec phi(float, float) :: float
   def phi(t, omega) do
     modulo(t,2.0*:math.pi/omega)
@@ -43,6 +46,7 @@ defmodule ImposcUtils do
   For a forcing frequency `:omega` returns 1/(1 - `:omega` ** 2), the coefficient of the forcing term in the equation for
   the displacement between impacts
   """
+
   @spec gamma(number) :: float
   def gamma(omega) when omega in [1, -1] do
     1
@@ -55,6 +59,7 @@ defmodule ImposcUtils do
   @doc """
   Tolerance for floating point comparisons
   """
+
   defmacro const_small do
     quote do: 0.001
   end
@@ -62,6 +67,7 @@ defmodule ImposcUtils do
   @doc """
   Unicode Greek letter sigma
   """
+
   defmacro const_sigma do
     quote do: List.to_string([<<207_131::utf8>>])
   end
@@ -69,6 +75,7 @@ defmodule ImposcUtils do
   @doc """
   Unicode Greek letter omega
   """
+
   defmacro const_omega do
     quote do: List.to_string([<<207_137::utf8>>])
   end
@@ -96,6 +103,7 @@ defmodule ImpactPoint do
   @doc """
   Converts the struct to a list [`:phi`, `:v`].
   """
+
   @spec point_to_list(ImpactPoint) :: [float]
   def point_to_list(%ImpactPoint{} = point) do
     [point.phi, point.v]
@@ -142,6 +150,7 @@ defmodule EvolutionCoefficients do
 
   Returns `:EvolutionCoefficients` for the motion after the impact
   """
+
   @spec derive(SystemParameters, ImpactPoint) :: EvolutionCoefficients
   def derive(%SystemParameters{} = parameters, %ImpactPoint{} = point) do
     result = %EvolutionCoefficients{gamma: ImposcUtils.gamma(parameters.omega), omega: parameters.omega}
@@ -174,6 +183,7 @@ defmodule StateOfMotion do
 
   Returns a point on the impact surface `:state.x`=`:SystemParameters.sigma`
   """
+
   @spec point_from_state(StateOfMotion, float) :: ImpactPoint
   def point_from_state(%StateOfMotion{} = state, omega) do
     %ImpactPoint{phi: ImposcUtils.phi(state.t, omega), v: state.v}
@@ -189,6 +199,7 @@ defmodule MotionBetweenImpacts do
   Tuple comprising an `:ImpactPoint` and a list which optionally contains `:StateOfMotion` instances for time steps
   from the previous impact.
   """
+
   @type point_with_states :: {ImpactPoint, [StateOfMotion]}
 
   @doc """
@@ -200,6 +211,7 @@ defmodule MotionBetweenImpacts do
 
   Returns the `:StateOfMotion` at time `:t`
   """
+
   @spec motion_at_time(number, ImpactPoint, EvolutionCoefficients) :: StateOfMotion
   def motion_at_time(t, %ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs) do
     # Time since the previous impact
@@ -228,6 +240,7 @@ defmodule MotionBetweenImpacts do
 
   Returns a `t:point_with_states/0` with the next impact point and optionally the intermediate states of motion
   """
+
   @spec next_impact(ImpactPoint, SystemParameters, Boolean, number, number) :: point_with_states
   def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = params, record_states \\ false, step_size \\ 0.1, limit \\ 0.001) do
     coeffs = EvolutionCoefficients.derive(params, previous_impact)
@@ -240,6 +253,7 @@ defmodule MotionBetweenImpacts do
   If intermediate states are being recorded AND the current displacement is less than or equal to to obstacle offset,
   returns a list containing the current state of motion. Otherwise, returns an empty list.
   """
+
   @spec states_for_step(StateOfMotion, float, Boolean) :: [StateOfMotion]
   defp states_for_step(%StateOfMotion{} = state, sigma, record_states) do
     if state.x <= sigma and record_states do
@@ -254,6 +268,7 @@ defmodule MotionBetweenImpacts do
   the next impact. Optionally, the returned list will also contain the states corresponding to the intermediate time
   steps.  The current state of motion is needed because the function is recursive.
   """
+
   @spec find_next_impact(StateOfMotion, ImpactPoint, EvolutionCoefficients, float, Boolean, float, float) :: [StateOfMotion]
   defp find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = _previous_impact, %EvolutionCoefficients{} = _coeffs,
          _sigma, _record_states, step_size, limit) when abs(step_size) < limit do
@@ -284,6 +299,7 @@ defmodule MotionBetweenImpacts do
   Where appropriate, refines the step size and reverses its direction. This effectively implements the bisection
   algorithm which seeks the time of the next impact
   """
+
   @spec new_step_size(float, float, float) :: float
   def new_step_size(step_size, x, sigma) when x <= sigma and step_size < 0 do
     # If we get here then previous displacement was above the offset, so continue to apply bisection algorithm
@@ -332,6 +348,7 @@ defmodule MotionBetweenImpacts do
   ]
 
   """
+
   @spec iterate_impacts(ImpactPoint, SystemParameters, integer) :: [ImpactPoint]
   def iterate_impacts(%ImpactPoint{} = start_impact, %SystemParameters{} = params, num_iterations \\ 1000) do
     stream = Stream.unfold(start_impact, &{&1, elem(next_impact(&1, params),0)})

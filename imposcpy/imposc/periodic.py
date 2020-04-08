@@ -113,7 +113,7 @@ class OneNParams:
 
     def point_for_velocity(self, v: float, sigma: float) -> Optional[ImpactPoint, None]:
         """
-        Returns in `ImpactPoint` corresponding to a solution of the quadratic equation for the velocity of a (1, n)
+        Returns an `ImpactPoint` corresponding to a solution of the quadratic equation for the velocity of a (1, n)
         orbit.
 
         :param v: the candidate velocity
