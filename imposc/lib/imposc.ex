@@ -43,7 +43,7 @@ defmodule ImposcUtils do
   end
 
   @doc """
-  For a forcing frequency `:omega` returns 1/(1 - `:omega` ** 2), the coefficient of the forcing term in the equation for
+  For a forcing frequency `:omega` returns the coefficient of the forcing term in the equation for
   the displacement between impacts
   """
 
@@ -249,12 +249,9 @@ defmodule MotionBetweenImpacts do
     {StateOfMotion.point_from_state(Enum.at(states, -1), params.omega), states}
   end
 
-  @doc """
-  If intermediate states are being recorded AND the current displacement is less than or equal to to obstacle offset,
-  returns a list containing the current state of motion. Otherwise, returns an empty list.
-  """
-
   @spec states_for_step(StateOfMotion, float, Boolean) :: [StateOfMotion]
+#  If intermediate states are being recorded AND the current displacement is less than or equal to to obstacle offset,
+#  returns a list containing the current state of motion. Otherwise, returns an empty list.
   defp states_for_step(%StateOfMotion{} = state, sigma, record_states) do
     if state.x <= sigma and record_states do
       [state]
@@ -263,13 +260,10 @@ defmodule MotionBetweenImpacts do
     end
   end
 
-  @doc """
-  For a given impact point and current state of motion, returns a list containing the state of motion corresponding to
-  the next impact. Optionally, the returned list will also contain the states corresponding to the intermediate time
-  steps.  The current state of motion is needed because the function is recursive.
-  """
-
   @spec find_next_impact(StateOfMotion, ImpactPoint, EvolutionCoefficients, float, Boolean, float, float) :: [StateOfMotion]
+#  For a given impact point and current state of motion, returns a list containing the state of motion corresponding to
+#  the next impact. Optionally, the returned list will also contain the states corresponding to the intermediate time
+#  steps.  The current state of motion is needed because the function is recursive.
   defp find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = _previous_impact, %EvolutionCoefficients{} = _coeffs,
          _sigma, _record_states, step_size, limit) when abs(step_size) < limit do
     # Termination criterion: return the state of motion corresponding to the next impact
