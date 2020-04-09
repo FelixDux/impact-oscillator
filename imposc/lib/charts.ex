@@ -1,9 +1,4 @@
-import Gnuplot
-import ImposcUtils
-import ImpactPoint
 import SystemParameters
-import MotionBetweenImpacts
-import OneNLoci
 
 defmodule ImpactMap do
   @moduledoc """

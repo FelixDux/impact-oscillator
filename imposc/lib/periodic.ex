@@ -1,6 +1,5 @@
 import ImposcUtils
 import SystemParameters
-import ImpactPoint
 
 defmodule OneNParams do
   @moduledoc """
@@ -10,6 +9,7 @@ defmodule OneNParams do
   @doc """
   `:omega`: the forcing frequency
   `:r`: the coefficient of restitution at an impact
+  `:gamma`: the coefficient of the forcing term in the equation for the displacement between impacts
   `:gamma2`: square of the coefficient of the forcing term in the equation for the displacement between impacts
   `:r_minus`: (1 - r)/omega - a coefficient used in the analysis
   `:n`: the number of forcing cycles between each impact
@@ -19,7 +19,7 @@ defmodule OneNParams do
   `:period`: The period between impacts
   """
 
-  defstruct omega: 2, r: 0.8, gamma2: 1/9.0, r_minus: 0.1, n: 1, cs: 0, phase_coeff: 0, sigma_s: 0, period: :math.pi
+  defstruct omega: 2, r: 0.8, gamma: 1/3.0, gamma2: 1/9.0, r_minus: 0.1, n: 1, cs: 0, phase_coeff: 0, sigma_s: 0, period: :math.pi
 
   defp derive_cs(cn, _sn, _r) when cn == 1 do
     0
@@ -39,7 +39,7 @@ defmodule OneNParams do
 
   @spec derive(float, float, integer) :: OneNParams
   def derive(omega, r, n) do
-    period = 2*:math.pi*n/omega
+    period = n * ImposcUtils.forcing_period(omega)
     cn = :math.cos(period)
     sn = :math.sin(period)
     gamma = ImposcUtils.gamma(omega)
@@ -47,36 +47,20 @@ defmodule OneNParams do
     result = %OneNParams{omega: omega, r: r, gamma2: gamma * gamma, r_minus: (1-r)/omega, cs: derive_cs(cn, sn, r)}
     result = %OneNParams{result | phase_coeff: -result.r_minus / gamma / 2}
     result = %OneNParams{result | sigma_s: :math.sqrt(result.gamma2*(1 + :math.pow(result.cs/result.r_minus, 2)))}
-    result = %OneNParams{result | period: period}
+    result = %OneNParams{result | period: period, gamma: gamma}
     result
   end
 
-  @doc """
-  The discriminant of the quadratic equation for the impact velocity for a given value of the obstacle offset.
-
-  `:sigma`: the obstacle offset
-  `:params`: parameters held fixes as the offset varies for a specified (1, n) orbit
-  """
-
   @spec discriminant(number, OneNParams) :: number
   defp discriminant(sigma, %OneNParams{} = params) do
+    # The discriminant of the quadratic equation for the impact velocity for a given value of the obstacle offset.
     4 * (params.gamma2*params.cs*params.cs - (sigma  * sigma - params.gamma2) * params.r_minus * params.r_minus)
   end
 
-  @doc """
-  Solves the quadratic equation to return the velocities for candidate (1, n) orbits for a given obstacle offset and
-  discriminant. Depending on the value of the discriminant, there will be either zero, one (in the case of a double
-  root) or two such velocities. Unphysical or negative-velocity orbits are not filtered out.
-
-  `:sigma`: the obstacle offset
-  `:discriminant`: the discriminant of the quadratic for the impact velocities
-  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
-
-  Returns a list comprising the two velocities or two `:nil`s if there are no real roots. In the case of a double
-        root the two velocities will be the same.
-  """
-
   @spec velocities_for_discr(number, number, OneNParams) :: [nil | float, ...]
+  #  Solves the quadratic equation to return the velocities for candidate (1, n) orbits for a given obstacle offset and
+  #  discriminant. Depending on the value of the discriminant, there will be either zero, one (in the case of a double
+  #  root) or two such velocities. Unphysical or negative-velocity orbits are not filtered out.
   defp velocities_for_discr(_sigma, discriminant, %OneNParams{} = _params) when discriminant < 0 do
     # Complex roots
     [nil, nil]
@@ -94,21 +78,30 @@ defmodule OneNParams do
     [vs + d, vs - d]
   end
 
-  @doc """
-  Returns the phase corresponding to a solution of the quadratic equation for the velocity of a (1, n) orbit.
-
-  `:velocity`: impact velocity for a candidate (1, n) orbit
-  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
-  """
-
-  @spec phase_for_velocity( float | nil, OneNParams) :: float
-  defp phase_for_velocity(nil, %OneNParams{} = _params) do
+  @spec phase_for_velocity( float | nil, float, OneNParams) :: float
+  # Returns the phase corresponding to a solution of the quadratic equation for the velocity of a (1, n) orbit.
+  defp phase_for_velocity(nil, _sigma, %OneNParams{} = _params) do
+    # Return `nil` for a `nil` velocity
     nil
   end
 
-  defp phase_for_velocity(velocity, %OneNParams{} = params) do
+  defp phase_for_velocity(velocity, sigma, %OneNParams{} = params) do
     # TODO: modify to use cos formula
-    ImposcUtils.phi(:math.asin(params.phase_coeff * velocity) / params.omega, params.omega)
+    arg = (sigma + params.cs * velocity / 2.0) / params.gamma
+
+    angle = :math.acos(arg)
+
+    # Check for phase correction. sin(angle) should have opposite sign to v/gamma
+    s = :math.sin(angle)
+    vg = velocity / params.gamma
+    angle =
+      cond do
+        (vg > 0 and s > 0) or (vg < 0 and s < 0) -> 2 * :math.pi - angle
+        true -> angle
+      end
+
+    ImposcUtils.phi(angle / params.omega, params.omega)
+#    ImposcUtils.phi(:math.asin(params.phase_coeff * velocity) / params.omega, params.omega)
   end
 
   @doc """
@@ -116,15 +109,18 @@ defmodule OneNParams do
   orbit.
 
   `:velocity`: impact velocity for a candidate (1, n) orbit
+  `:sigma`: the obstacle offset
   `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
   """
 
-  def point_for_velocity(nil, %OneNParams{} = _params) do
+  def point_for_velocity(nil, _sigma, %OneNParams{} = _params) do
     nil
   end
 
-  def point_for_velocity(velocity, %OneNParams{} = params) do
-    %ImpactPoint{phi: phase_for_velocity(velocity, params), v: velocity}
+  def point_for_velocity(velocity, sigma, %OneNParams{} = params) do
+    phi = phase_for_velocity(velocity, sigma, params)
+
+    %ImpactPoint{phi: phi, v: velocity}
   end
 
   @doc """
@@ -150,7 +146,7 @@ defmodule OneNParams do
 
   @spec orbits(number, OneNParams) :: [any]
   def orbits(sigma, %OneNParams{} = params) do
-    velocities(sigma, params) |> Tuple.to_list |> Enum.map(& point_for_velocity(&1 , params))
+    velocities(sigma, params) |> Tuple.to_list |> Enum.map(& point_for_velocity(&1, sigma, params))
   end
 
   @doc """
@@ -190,20 +186,17 @@ defmodule OneNParams do
 
   def is_physical?(velocity, sigma, %OneNParams{} = params) do
     # Verify numerically by computing next impact
-    point = point_for_velocity(velocity, params)
+    point = point_for_velocity(velocity, sigma, params)
 
     sys_params = %SystemParameters{omega: params.omega, r: params.r, sigma: sigma}
-
-    import MotionBetweenImpacts
 
     {next_point, _} = MotionBetweenImpacts.next_impact(point, sys_params)
 
     # Should be periodic
-    if abs(point.v - point.v) < ImposcUtils.const_small() and
-       abs(point.phi - next_point.phi) <  ImposcUtils.const_small() * params.period do
-      true
-    else
-      false
+    cond do
+      abs(point.v - next_point.v) > ImposcUtils.const_small() -> false
+      abs(point.phi - next_point.phi) >  ImposcUtils.const_small() * params.period -> false
+      true -> true
     end
   end
 end
