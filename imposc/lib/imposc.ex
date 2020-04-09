@@ -34,12 +34,39 @@ defmodule ImposcUtils do
   end
 
   @doc """
-  For a given time `:t` returns the phase relative to the forcing period 2 `math.pi` /`:omega`
+  For a given forcing frequency `:omega` returns the the forcing period
+  """
+
+  @spec forcing_period(float) :: float
+  def forcing_period(omega) do
+    case omega do
+      0 -> nil  # TODO use {:ok, result}/:error pattern AND handle negative case
+      _ -> 2.0*:math.pi/omega
+    end
+  end
+
+  @doc """
+  For a given time `:t` and forcing frequency `:omega` returns the phase relative to the forcing period
   """
 
   @spec phi(float, float) :: float
   def phi(t, omega) do
-    modulo(t,2.0*:math.pi/omega)
+    modulo(t,forcing_period(omega))
+  end
+
+  @doc """
+  Returns the lowest time greater than or equal to time `:t` for which the phase relative to `:period` is `:phi`
+  """
+
+  @spec forward_to_phase(float, float, float)::float
+  def forward_to_phase(t, phi, period) do
+    phase_difference = modulo(t, period) - phi
+
+    cond do
+      phase_difference >= 0 -> t + phase_difference
+
+      true -> t + :math.pi + phase_difference
+    end
   end
 
   @doc """
@@ -128,38 +155,6 @@ defmodule SystemParameters do
 
 end
 
-defmodule EvolutionCoefficients do
-  @moduledoc """
-  Coefficients for time evolution of the system from one impact to the next
-  """
-
-  @doc """
-  `:omega`: the forcing frequency
-  `:gamma`: the coefficient of the forcing term of the displacement
-  `:cos_coeff`: the coefficient of the cosine term of the displacement
-  `:sin_coeff`: the coefficient of the sine term of the displacement
-  """
-
-  defstruct omega: 2, gamma: -1/3.0, cos_coeff: 1, sin_coeff: 0
-
-  @doc """
-  Derives evolution coefficients from the system parameters and the coordinates of the previous impact
-
-  `:parameters`: system parameters for the oscillator
-  `:point`: coordinates of the previous impact on the impact surface
-
-  Returns `:EvolutionCoefficients` for the motion after the impact
-  """
-
-  @spec derive(SystemParameters, ImpactPoint) :: EvolutionCoefficients
-  def derive(%SystemParameters{} = parameters, %ImpactPoint{} = point) do
-    result = %EvolutionCoefficients{gamma: ImposcUtils.gamma(parameters.omega), omega: parameters.omega}
-    result = %{result | cos_coeff: parameters.sigma - result.gamma * :math.cos(parameters.omega * point.phi)}
-    result = %{result | sin_coeff: -parameters.r * point.v + parameters.omega * result.gamma * :math.sin(parameters.omega * point.phi)}
-    result
-  end
-end
-
 defmodule StateOfMotion do
   @moduledoc """
   State and phase variables for the motion between impacts
@@ -187,6 +182,124 @@ defmodule StateOfMotion do
   @spec point_from_state(StateOfMotion, float) :: ImpactPoint
   def point_from_state(%StateOfMotion{} = state, omega) do
     %ImpactPoint{phi: ImposcUtils.phi(state.t, omega), v: state.v}
+  end
+end
+
+defmodule StickingRegion do
+  @moduledoc """
+  The interval of phases over which  zero-velocity impacts have non-negative acceleration.
+
+  For such impacts, the forcing holds the mass against the obstacle until the acceleration changes sign. This
+  phenomenon can only occur if the obstacle offset is < 1.
+  """
+  @doc """
+  `:phi_in`: the minimum phase (modulo the forcing period) for which zero-velocity impacts have non-negative acceleration
+  `:phi_out`: the maximum phase (modulo the forcing period) for which zero-velocity impacts have non-negative acceleration
+  `:period`: the forcing period
+
+  The acceleration is actually zero for both `:phi_in` and `:phi_out` but its rate of change is positived for the former
+  and negative for the latter.
+  """
+
+  defstruct phi_in: 0, phi_out: 0, period: 1
+
+  @doc """
+  Derive a `:StickingRegion` from `:SystemParameters`
+  """
+
+  @spec derive(SystemParameters) :: StickingRegion
+  def derive(%SystemParameters{} = parameters) do
+
+    # Zero velocity and zero acceleration condition
+    angle = :math.acos(parameters.sigma)
+
+    cond do
+      # No sticking region
+      parameters.sigma > 1 -> %StickingRegion{phi_in: nil, phi_out: nil,
+                                period: ImposcUtils.forcing_period(parameters.omega)}
+
+      # Sticking region is a single point
+      parameters.sigma == 1 -> %StickingRegion{phi_in: 0, phi_out: 0,
+                                 period: ImposcUtils.forcing_period(parameters.omega)}
+
+      # Condition on rate of change of acceleration
+      :math.sin(angle) < 0 -> %StickingRegion{phi_in: angle/parameters.omega,
+                                phi_out: (:math.pi - angle)/parameters.omega,
+                                period: ImposcUtils.forcing_period(parameters.omega)}
+      true ->  %StickingRegion{phi_out: angle/parameters.omega, phi_in: (:math.pi - angle)/parameters.omega,
+                 period: ImposcUtils.forcing_period(parameters.omega)}
+    end
+  end
+
+  @doc """
+  Check if the phase `:phi` is in the `:sticking_region`
+  """
+
+  @spec is_sticking?(float, StickingRegion) :: Boolean
+  def is_sticking?(phi, %StickingRegion{} = sticking_region) do
+    cond do
+      # No sticking region
+      sticking_region.phi_out == nil -> false
+
+      # Recurse if phi not expressed as a phase
+      phi < 0 or phi >= sticking_region.period -> StickingRegion.is_sticking?(
+                                                    ImposcUtils.modulo(phi, sticking_region.period), sticking_region)
+
+      # phi_out is always <= phi_in, treated as real numbers, but as phases they lie on a circle, so it still makes
+      # sense to check for containment inside the closed interval [phi_in, phi_out] ny reasoning that its complement
+      # is (phi_out, phi_in)
+      phi > sticking_region.phi_out and phi < sticking_region.phi_in -> false
+
+      # Not inside the complement, so inside the sticking region
+      true -> true
+    end
+  end
+
+  def is_sticking_impact?(%ImpactPoint{} = point, %StickingRegion{} = sticking_region) do
+    cond do
+      point.v > 0 -> false
+
+      true -> StickingRegion.is_sticking?(point.phi, sticking_region)
+    end
+  end
+
+  def next_impact_state(t, sigma, %StickingRegion{} = sticking_region) do
+    %StateOfMotion{t: ImposcUtils.forward_to_phase(t, sticking_region.phi_out, sticking_region.period),
+                x: sigma, v: 0}
+  end
+end
+
+defmodule EvolutionCoefficients do
+  @moduledoc """
+  Coefficients for time evolution of the system from one impact to the next
+  """
+
+  @doc """
+  `:omega`: the forcing frequency
+  `:gamma`: the coefficient of the forcing term of the displacement
+  `:cos_coeff`: the coefficient of the cosine term of the displacement
+  `:sin_coeff`: the coefficient of the sine term of the displacement
+  `:sticking_region`: the range of phases for which zero-velocity impacts stick
+  """
+
+  defstruct omega: 2, gamma: -1/3.0, cos_coeff: 1, sin_coeff: 0, sticking_region: %StickingRegion{}
+
+  @doc """
+  Derives evolution coefficients from the system parameters and the coordinates of the previous impact
+
+  `:parameters`: system parameters for the oscillator
+  `:point`: coordinates of the previous impact on the impact surface
+
+  Returns `:EvolutionCoefficients` for the motion after the impact
+  """
+
+  @spec derive(SystemParameters, ImpactPoint) :: EvolutionCoefficients
+  def derive(%SystemParameters{} = parameters, %ImpactPoint{} = point) do
+    result = %EvolutionCoefficients{gamma: ImposcUtils.gamma(parameters.omega), omega: parameters.omega}
+    result = %{result | cos_coeff: parameters.sigma - result.gamma * :math.cos(parameters.omega * point.phi)}
+    result = %{result | sin_coeff: -parameters.r * point.v + parameters.omega * result.gamma * :math.sin(parameters.omega * point.phi)}
+    result = %{result | sticking_region: StickingRegion.derive(parameters)}
+    result
   end
 end
 
@@ -277,16 +390,21 @@ defmodule MotionBetweenImpacts do
     # Record current state if required
     states = states_for_step(state, sigma, record_states)
 
-    # Update step size if necessary. When we are close to the impact, this implements the bisection algorithm which
-    # finds the impact time
-    step_size = new_step_size(step_size, state.x, sigma)
+    # Check for sticking
+    if StickingRegion.is_sticking_impact?(previous_impact, coeffs.sticking_region) do
+      states ++ [StickingRegion.next_impact_state(state.t, state.x, coeffs.sticking_region)]
+    else
+      # Update step size if necessary. When we are close to the impact, this implements the bisection algorithm which
+      # finds the impact time
+      step_size = new_step_size(step_size, state.x, sigma)
 
-    # Get state at new time
-    new_time = state.t + step_size
-    new_state = motion_at_time(new_time, previous_impact, coeffs)
+      # Get state at new time
+      new_time = state.t + step_size
+      new_state = motion_at_time(new_time, previous_impact, coeffs)
 
-    # Recurse
-    states ++ find_next_impact(new_state, previous_impact, coeffs, sigma, states, step_size, limit)
+      # Recurse
+      states ++ find_next_impact(new_state, previous_impact, coeffs, sigma, states, step_size, limit)
+    end
   end
 
   @doc """
