@@ -18,7 +18,7 @@ always unstable
 """
 
 from math import cos, sin, pi, sqrt, pow, acos
-from typing import Tuple, Optional
+from typing import Tuple, Union
 
 from imposcpy.imposc.motion import ImpactPoint, phi, MotionBetweenImpacts
 from imposcpy.imposc.parameters import SystemParameters
@@ -64,7 +64,7 @@ class OneNParams:
         offset `sigma` """
         return 4 * (self._gamma2 * self._cs * self._cs - (sigma * sigma - self._gamma2) * self._r_minus * self._r_minus)
 
-    def velocities(self, sigma: float) -> Tuple[Optional[float, None], Optional[float, None]]:
+    def velocities(self, sigma: float) -> Tuple[Union[float, None], Union[float, None]]:
         """
         Solves the quadratic equation to return the velocities for candidate (1, n) orbits for a given obstacle
         offset. Depending on the value of the discriminant of the quadratic, there will be either zero, one (in the case
@@ -88,7 +88,7 @@ class OneNParams:
 
             return vs + d, vs - d
 
-    def phase_for_velocity(self, v: float, sigma: float) -> Optional[float, None]:
+    def phase_for_velocity(self, v: float, sigma: float) -> Union[float, None]:
         """
         Returns the phase corresponding to a solution of the quadratic equation for the velocity of a (1, n) orbit
 
@@ -111,7 +111,7 @@ class OneNParams:
         else:
             return None
 
-    def point_for_velocity(self, v: float, sigma: float) -> Optional[ImpactPoint, None]:
+    def point_for_velocity(self, v: float, sigma: float) -> Union[ImpactPoint, None]:
         """
         Returns an `ImpactPoint` corresponding to a solution of the quadratic equation for the velocity of a (1, n)
         orbit.
@@ -125,7 +125,7 @@ class OneNParams:
         else:
             return None
 
-    def orbits(self, sigma: float) -> Tuple[Optional[ImpactPoint, None], Optional[ImpactPoint, None]]:
+    def orbits(self, sigma: float) -> Tuple[Union[ImpactPoint, None], Union[ImpactPoint, None]]:
         """
         Returns points on the impact surface corresponding to physical (1, n) orbits for a given obstacle offset. There
         will be either zero, one (in the case of a double root) or two such points.
@@ -160,7 +160,7 @@ class OneNParams:
         return abs(next_point.v - start_point.v) / start_point.v < SMALL and abs(next_point.phi - start_point.phi) < \
                SMALLISH * self._period
 
-    def nullify_unphysical(self, v: float, sigma: float) -> Optional[float, None]:
+    def nullify_unphysical(self, v: float, sigma: float) -> Union[float, None]:
         """
         Filters out a candidate (1, n) orbit if it is unphysical
 
