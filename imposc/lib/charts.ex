@@ -48,8 +48,8 @@ defmodule Mix.Tasks.Scatter do
 
 #  @spec run(any) :: {:ok, binary}
   def run(_) do
-    initial_point = %ImpactPoint{phi: 0.5, v: 0.5}
-    params = %SystemParameters{omega: 2.8, r: 0.8, sigma: 0}
+    initial_point = %ImpactPoint{phi: 0.0, v: 0.01}
+    params = %SystemParameters{omega: 2.7, r: 0.8, sigma: 0}
     # points = OneNLoci.orbits_for_params(params, 1)
     # initial_point = Enum.at(points, 0)
     num_iterations = 10000

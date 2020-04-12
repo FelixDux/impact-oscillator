@@ -60,7 +60,7 @@ defmodule ImposcUtils do
 
   @spec forward_to_phase(float, float, float)::float
   def forward_to_phase(t, phi, period) do
-    phase_difference = modulo(t, period) - phi
+    phase_difference = phi - modulo(t, period)
 
     cond do
       phase_difference >= 0 -> t + phase_difference
@@ -224,9 +224,9 @@ defmodule StickingRegion do
 
       # Condition on rate of change of acceleration
       :math.sin(angle) < 0 -> %StickingRegion{phi_in: angle/parameters.omega,
-                                phi_out: (:math.pi - angle)/parameters.omega,
+                                phi_out: (2*:math.pi - angle)/parameters.omega,
                                 period: ImposcUtils.forcing_period(parameters.omega)}
-      true ->  %StickingRegion{phi_out: angle/parameters.omega, phi_in: (:math.pi - angle)/parameters.omega,
+      true ->  %StickingRegion{phi_out: angle/parameters.omega, phi_in: (2*:math.pi - angle)/parameters.omega,
                  period: ImposcUtils.forcing_period(parameters.omega)}
     end
   end
@@ -246,9 +246,9 @@ defmodule StickingRegion do
                                                     ImposcUtils.modulo(phi, sticking_region.period), sticking_region)
 
       # phi_out is always <= phi_in, treated as real numbers, but as phases they lie on a circle, so it still makes
-      # sense to check for containment inside the closed interval [phi_in, phi_out] ny reasoning that its complement
-      # is (phi_out, phi_in)
-      phi > sticking_region.phi_out and phi < sticking_region.phi_in -> false
+      # sense to check for containment inside the closed interval [phi_in, phi_out) by reasoning that its complement
+      # is [phi_out, phi_in)
+      phi >= sticking_region.phi_out and phi < sticking_region.phi_in -> false
 
       # Not inside the complement, so inside the sticking region
       true -> true
@@ -263,9 +263,80 @@ defmodule StickingRegion do
     end
   end
 
+  @doc """
+  For a given impact time `:t` and obstacle offset `:sigma`, returns a `:StateOfMotion` corresponding to the point
+  when the mass unsticks, according to the `:sticking_region`.
+
+  **Precondition** `:t` is the time of a sticking impact (i.e. the corresponding phase is inside the
+  `:sticking_region`) and the associated velocity is zero
+  """
+
+  @spec next_impact_state(float, float, StickingRegion) :: StateOfMotion
   def next_impact_state(t, sigma, %StickingRegion{} = sticking_region) do
     %StateOfMotion{t: ImposcUtils.forward_to_phase(t, sticking_region.phi_out, sticking_region.period),
                 x: sigma, v: 0}
+  end
+
+  @spec state_if_sticking(StateOfMotion, StickingRegion) :: StateOfMotion
+  def state_if_sticking(%StateOfMotion{} = state, %StickingRegion{} = sticking_region) do
+    if is_sticking?(state.t, sticking_region) do
+      state
+    else
+      nil
+    end
+  end
+end
+
+defmodule Chatter do
+  @moduledoc """
+  Functions and data for numerically approximating 'chatter'.
+
+  'Chatter' is when an infinite sequence of impacts accumulates in a finite time on a 'sticking' impact. It is
+  the analogue in this system to a real-world situation in which the mass judders against the stop. To handle it
+  numerically it is necessary to detect when it is happening and then extrapolate forward to the accumulation point.
+  """
+
+  @spec low_velocity_acceleration(float, float, float)::float
+  defp low_velocity_acceleration(t, x, omega) do
+    # Approximates the acceleration at low velocity
+    :math.cos(omega * t) - x
+  end
+
+  @doc """
+  Returns the `:StateOfMotion` corresponding to the limit of a sequence of chatter impacts.
+
+  `:state`: the `:StateOfMotion` corresponding to a starting impact
+  `:parameters`: system parameters for the oscillator
+
+  **Precondition** `:state` is assumed to correspond to a low velocity impact (i.e. `:state.x` == `:parameters.sigma`
+  and `:state.v` small) but this is not checked. If this conditions are not met, the return value will be meaningless.
+  """
+
+  @spec accumulation_state(StateOfMotion, SystemParameters) :: StateOfMotion
+  def accumulation_state(%StateOfMotion{} = state, %SystemParameters{} = parameters) do
+    g = low_velocity_acceleration(state.t, parameters.sigma, parameters.omega)
+
+    case g do
+      0 -> StickingRegion.next_impact_state(state.t, parameters.sigma,StickingRegion.derive(parameters))
+
+      # TODO: handle case r=0
+      _ -> %StateOfMotion{t: state.t - 2 * state.v / g / (1 - parameters.r), x: parameters.sigma, v: 0}
+    end
+  end
+#
+#  @doc """
+#  The number of successive low velocity impacts after which the test for chatter will be applied.
+#
+#  TODO: make configurable
+#  """
+#
+#  defmacro const_low_v_count_threshold do
+#    quote do: 10
+#  end
+
+  def check_low_v_threshold(v) do
+    import ImposcUtils
+    v != 0 && v < ImposcUtils.const_small()
   end
 end
 
@@ -355,15 +426,26 @@ defmodule MotionBetweenImpacts do
   """
 
   @spec next_impact(ImpactPoint, SystemParameters, Boolean, number, number) :: point_with_states
-  def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = params, record_states \\ false, step_size \\ 0.1, limit \\ 0.001) do
-    coeffs = EvolutionCoefficients.derive(params, previous_impact)
-    start_state = %StateOfMotion{t: previous_impact.phi, x: params.sigma, v: -params.r * previous_impact.v}
-    states = find_next_impact(start_state, previous_impact, coeffs, params.sigma, record_states, step_size, limit)
-    {StateOfMotion.point_from_state(Enum.at(states, -1), params.omega), states}
+  def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = parameters, record_states \\ false, step_size \\ 0.1, limit \\ 0.001) do
+    coeffs = EvolutionCoefficients.derive(parameters, previous_impact)
+    start_state = %StateOfMotion{t: previous_impact.phi, x: parameters.sigma, v: -parameters.r * previous_impact.v}
+
+    # Check for chatter
+    check_chatter = fn state, parameters, sticking_region -> Chatter.accumulation_state(state, parameters) |> (&StickingRegion.state_if_sticking(&1, sticking_region)).() end
+
+    chatter_result = Chatter.check_low_v_threshold(previous_impact.v) && check_chatter.(start_state, parameters, coeffs.sticking_region)
+
+    states = if chatter_result  do
+      states_for_step(start_state, parameters.sigma, record_states) ++ [chatter_result]
+    else
+      find_next_impact(start_state, previous_impact, coeffs, parameters, record_states, step_size, limit)
+    end
+
+    {StateOfMotion.point_from_state(Enum.at(states, -1), parameters.omega), states}
   end
 
   @spec states_for_step(StateOfMotion, float, Boolean) :: [StateOfMotion]
-#  If intermediate states are being recorded AND the current displacement is less than or equal to to obstacle offset,
+#  If intermediate states are being recorded AND the current displacement is less than or equal to the obstacle offset,
 #  returns a list containing the current state of motion. Otherwise, returns an empty list.
   defp states_for_step(%StateOfMotion{} = state, sigma, record_states) do
     if state.x <= sigma and record_states do
@@ -373,22 +455,22 @@ defmodule MotionBetweenImpacts do
     end
   end
 
-  @spec find_next_impact(StateOfMotion, ImpactPoint, EvolutionCoefficients, float, Boolean, float, float) :: [StateOfMotion]
+  @spec find_next_impact(StateOfMotion, ImpactPoint, EvolutionCoefficients, SystemParameters, Boolean, float, float) :: [StateOfMotion]
 #  For a given impact point and current state of motion, returns a list containing the state of motion corresponding to
 #  the next impact. Optionally, the returned list will also contain the states corresponding to the intermediate time
 #  steps.  The current state of motion is needed because the function is recursive.
   defp find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = _previous_impact, %EvolutionCoefficients{} = _coeffs,
-         _sigma, _record_states, step_size, limit) when abs(step_size) < limit do
+         %SystemParameters{} = _parameters, _record_states, step_size, limit) when abs(step_size) < limit do
     # Termination criterion: return the state of motion corresponding to the next impact
 
     [state]
   end
 
   defp find_next_impact(%StateOfMotion{} = state, %ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs,
-         sigma, record_states, step_size, limit) do
+         %SystemParameters{} = parameters, record_states, step_size, limit) do
 
     # Record current state if required
-    states = states_for_step(state, sigma, record_states)
+    states = states_for_step(state, parameters.sigma, record_states)
 
     # Check for sticking
     if StickingRegion.is_sticking_impact?(previous_impact, coeffs.sticking_region) do
@@ -396,14 +478,14 @@ defmodule MotionBetweenImpacts do
     else
       # Update step size if necessary. When we are close to the impact, this implements the bisection algorithm which
       # finds the impact time
-      step_size = new_step_size(step_size, state.x, sigma)
+      step_size = new_step_size(step_size, state.x, parameters.sigma)
 
       # Get state at new time
       new_time = state.t + step_size
       new_state = motion_at_time(new_time, previous_impact, coeffs)
 
       # Recurse
-      states ++ find_next_impact(new_state, previous_impact, coeffs, sigma, states, step_size, limit)
+      states ++ find_next_impact(new_state, previous_impact, coeffs, parameters, states, step_size, limit)
     end
   end
 
