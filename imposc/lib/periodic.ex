@@ -195,7 +195,7 @@ defmodule OneNParams do
     # Should be periodic
     cond do
       abs(point.v - next_point.v) > ImposcUtils.const_small() -> false
-      abs(point.phi - next_point.phi) >  ImposcUtils.const_small() * params.period -> false
+      abs(point.phi - next_point.phi) >  ImposcUtils.const_smallish() * params.period -> false
       true -> true
     end
   end
