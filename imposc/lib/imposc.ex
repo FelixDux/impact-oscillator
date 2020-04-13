@@ -323,20 +323,30 @@ defmodule Chatter do
       _ -> %StateOfMotion{t: state.t - 2 * state.v / g / (1 - parameters.r), x: parameters.sigma, v: 0}
     end
   end
-#
-#  @doc """
-#  The number of successive low velocity impacts after which the test for chatter will be applied.
-#
-#  TODO: make configurable
-#  """
-#
-#  defmacro const_low_v_count_threshold do
-#    quote do: 10
-#  end
 
-  def check_low_v_threshold(v) do
+  @doc """
+  The number of successive low velocity impacts after which the test for chatter will be applied.
+
+  TODO: make configurable
+  """
+
+  defmacro const_low_v_count_threshold do
+    quote do: 10
+  end
+
+  def check_low_v(counter \\0) do
+
     import ImposcUtils
-    v != 0 && v < ImposcUtils.const_small()
+    fn v -> if v != 0 && v < ImposcUtils.const_small() do
+              if counter < const_low_v_count_threshold() do
+                {false, check_low_v(counter+1)}
+              else
+                {true, check_low_v(0)}
+              end
+            else
+              {false, check_low_v(0)}
+            end
+    end
   end
 end
 
@@ -425,15 +435,16 @@ defmodule MotionBetweenImpacts do
   Returns a `t:point_with_states/0` with the next impact point and optionally the intermediate states of motion
   """
 
-  @spec next_impact(ImpactPoint, SystemParameters, Boolean, number, number) :: point_with_states
-  def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = parameters, record_states \\ false, step_size \\ 0.1, limit \\ 0.001) do
+#  @spec next_impact(ImpactPoint, SystemParameters, Boolean, number, number) :: point_with_states
+  def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = parameters, chatter_counter
+      \\ Chatter.check_low_v(), record_states \\ false, step_size \\ 0.1, limit \\ 0.001) do
     coeffs = EvolutionCoefficients.derive(parameters, previous_impact)
     start_state = %StateOfMotion{t: previous_impact.phi, x: parameters.sigma, v: -parameters.r * previous_impact.v}
 
     # Check for chatter
     check_chatter = fn state, parameters, sticking_region -> Chatter.accumulation_state(state, parameters) |> (&StickingRegion.state_if_sticking(&1, sticking_region)).() end
 
-    chatter_result = Chatter.check_low_v_threshold(previous_impact.v) && check_chatter.(start_state, parameters, coeffs.sticking_region)
+    chatter_result = elem(chatter_counter.(previous_impact.v), 0) && check_chatter.(start_state, parameters, coeffs.sticking_region)
 
     states = if chatter_result  do
       states_for_step(start_state, parameters.sigma, record_states) ++ [chatter_result]
@@ -545,7 +556,8 @@ defmodule MotionBetweenImpacts do
 
   @spec iterate_impacts(ImpactPoint, SystemParameters, integer) :: [ImpactPoint]
   def iterate_impacts(%ImpactPoint{} = start_impact, %SystemParameters{} = params, num_iterations \\ 1000) do
-    stream = Stream.unfold(start_impact, &{&1, elem(next_impact(&1, params),0)})
+    chatter_counter = Chatter.check_low_v()
+    stream = Stream.unfold(start_impact, &{&1, elem(next_impact(&1, params, chatter_counter),0)})
     Enum.take(stream, num_iterations)
   end
 
