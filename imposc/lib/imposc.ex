@@ -65,7 +65,7 @@ defmodule ImposcUtils do
     cond do
       phase_difference >= 0 -> t + phase_difference
 
-      true -> t + :math.pi + phase_difference
+      true -> t + period + phase_difference
     end
   end
 
@@ -127,13 +127,15 @@ defmodule ImpactPoint do
   `:phi`: the phase (time modulo the forcing period) at which the impact occurs
   `:v`: the velocity of the impact, which cannot be negative
 
+  In addition, we also record the actual time `:t`.
+
   Because `:phi` is periodic and `:v` non-negative, the surface on which impacts are
   defined is a half-cylinder. Whether a zero-velocity impact is physically meaningful
   depends on the value of `:phi` and on `sigma` the offset of the obstacle from the
   centre of motion.
   """
 
-  defstruct phi: 0, v: 0
+  defstruct phi: 0, v: 0, t: 0
 
   @doc """
   Converts the struct to a list [`:phi`, `:v`].
@@ -189,7 +191,7 @@ defmodule StateOfMotion do
 
   @spec point_from_state(StateOfMotion, float) :: ImpactPoint
   def point_from_state(%StateOfMotion{} = state, omega) do
-    %ImpactPoint{phi: ImposcUtils.phi(state.t, omega), v: state.v}
+    %ImpactPoint{phi: ImposcUtils.phi(state.t, omega), v: state.v, t: state.t}
   end
 end
 
@@ -417,7 +419,7 @@ defmodule MotionBetweenImpacts do
   @spec motion_at_time(number, ImpactPoint, EvolutionCoefficients) :: StateOfMotion
   def motion_at_time(t, %ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs) do
     # Time since the previous impact
-    lambda = t - previous_impact.phi
+    lambda = t - previous_impact.t
 
     result = %StateOfMotion{t: t}
 
@@ -446,11 +448,13 @@ defmodule MotionBetweenImpacts do
 #  @spec next_impact(ImpactPoint, SystemParameters, Boolean, number, number) :: point_with_states
   def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = parameters, chatter_counter
       \\ Chatter.check_low_v(), record_states \\ false, step_size \\ 0.1, limit \\ 0.000001) do
+
     coeffs = EvolutionCoefficients.derive(parameters, previous_impact)
-    start_state = %StateOfMotion{t: previous_impact.phi, x: parameters.sigma, v: -parameters.r * previous_impact.v}
+    start_state = %StateOfMotion{t: previous_impact.t, x: parameters.sigma, v: -parameters.r * previous_impact.v}
 
     # Check for chatter
-    check_chatter = fn state, parameters, sticking_region -> Chatter.accumulation_state(state, parameters) |> (&StickingRegion.state_if_sticking(&1, sticking_region)).() end
+    check_chatter = fn state, parameters, sticking_region -> Chatter.accumulation_state(state, parameters) |>
+                                                               (&StickingRegion.state_if_sticking(&1, sticking_region)).() end
 
     chatter_result = elem(chatter_counter.(previous_impact.v), 0) && check_chatter.(start_state, parameters, coeffs.sticking_region)
 
@@ -497,10 +501,11 @@ defmodule MotionBetweenImpacts do
     else
       # Update step size if necessary. When we are close to the impact, this implements the bisection algorithm which
       # finds the impact time
-      step_size = new_step_size(step_size, state.x, parameters.sigma)
+      step_size = new_step_size(step_size, state.t - previous_impact.t, state.x, parameters.sigma)
 
       # Get state at new time
       new_time = state.t + step_size
+
       new_state = motion_at_time(new_time, previous_impact, coeffs)
 
       # Recurse
@@ -513,18 +518,19 @@ defmodule MotionBetweenImpacts do
   algorithm which seeks the time of the next impact
   """
 
-  @spec new_step_size(float, float, float) :: float
-  def new_step_size(step_size, x, sigma) when x <= sigma and step_size < 0 do
+  @spec new_step_size(float, float, float, float) :: float
+  def new_step_size(step_size, _time_diff, x, sigma) when x <= sigma and step_size < 0 do
     # If we get here then previous displacement was above the offset, so continue to apply bisection algorithm
     -0.5 * step_size
   end
 
-  def new_step_size(step_size, x, sigma) when x > sigma and step_size > 0 do
+  def new_step_size(step_size, time_diff, x, sigma) when x > sigma and step_size > 0 do
     # Displacement is above offset so apply bisection algorithm to seek impact time
-    -0.5 * step_size
+    # BUT don't step farther back than the previous impact
+    -min(0.5 * step_size, time_diff)
   end
 
-  def new_step_size(step_size, _x, _sigma) do
+  def new_step_size(step_size, _time_diff, _x, _sigma) do
     # Default behaviour: do nothing
     step_size
   end
@@ -562,11 +568,13 @@ defmodule MotionBetweenImpacts do
 
   """
 
-  @spec iterate_impacts(ImpactPoint, SystemParameters, integer) :: [ImpactPoint]
-  def iterate_impacts(%ImpactPoint{} = start_impact, %SystemParameters{} = params, num_iterations \\ 1000) do
+  @spec iterate_impacts(ImpactPoint, SystemParameters, integer, Boolean) :: [ImpactPoint]
+  def iterate_impacts(%ImpactPoint{} = start_impact, %SystemParameters{} = params, num_iterations \\ 1000,
+        record_states \\ false) do
     chatter_counter = Chatter.check_low_v()
-    stream = Stream.unfold(start_impact, &{&1, elem(next_impact(&1, params, chatter_counter),0)})
-    Enum.take(stream, num_iterations)
+    stream = Stream.unfold({start_impact, []}, &{&1, next_impact(elem(&1, 0), params, chatter_counter, record_states)})
+    Enum.take(stream, num_iterations) |> (&{Enum.reduce(&1, [], fn x, acc -> acc ++ [elem(x, 0)] end),
+      Enum.reduce(&1, [], fn x, acc -> acc ++ elem(x, 1) end)}).()
   end
 
 end
