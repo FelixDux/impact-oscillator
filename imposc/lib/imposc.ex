@@ -88,7 +88,15 @@ defmodule ImposcUtils do
   """
 
   defmacro const_small do
-    quote do: 0.001
+    quote do: 0.0001
+  end
+
+  defmacro const_smallish do
+    quote do: 0.05
+  end
+
+  defmacro const_tiny do
+    quote do: 0.000001
   end
 
   @doc """
@@ -337,7 +345,7 @@ defmodule Chatter do
   def check_low_v(counter \\0) do
 
     import ImposcUtils
-    fn v -> if v != 0 && v < ImposcUtils.const_small() do
+    fn v -> if v != 0 && v < ImposcUtils.const_smallish() do
               if counter < const_low_v_count_threshold() do
                 {false, check_low_v(counter+1)}
               else
@@ -437,7 +445,7 @@ defmodule MotionBetweenImpacts do
 
 #  @spec next_impact(ImpactPoint, SystemParameters, Boolean, number, number) :: point_with_states
   def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = parameters, chatter_counter
-      \\ Chatter.check_low_v(), record_states \\ false, step_size \\ 0.1, limit \\ 0.001) do
+      \\ Chatter.check_low_v(), record_states \\ false, step_size \\ 0.1, limit \\ 0.000001) do
     coeffs = EvolutionCoefficients.derive(parameters, previous_impact)
     start_state = %StateOfMotion{t: previous_impact.phi, x: parameters.sigma, v: -parameters.r * previous_impact.v}
 
