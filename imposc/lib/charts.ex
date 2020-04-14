@@ -6,7 +6,7 @@ defmodule ImpactMap do
   """
 
    def chart_impacts(%ImpactPoint{}=initial_point, %SystemParameters{} = params, num_iterations \\ 1000) do
-    dataset = MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations) |> Stream.map(& ImpactPoint.point_to_list(&1))
+    dataset = elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0) |> Stream.map(& ImpactPoint.point_to_list(&1))
     {:ok, cmd} = Gnuplot.plot([
       [:set, :title, "Impact map for omega = #{params.omega}, sigma = #{params.sigma}, r = #{params.r}"],
       [:plot, "-", :with, :points, :pointtype, 7, :ps, 0.1]
@@ -33,7 +33,12 @@ end
 defmodule TimeSeries do
 
   def time_series(%ImpactPoint{} = start_impact, %SystemParameters{} = params) do
-    {_, states} = MotionBetweenImpacts.next_impact(start_impact, params, true)
+    {initial_points, _} = MotionBetweenImpacts.iterate_impacts(start_impact, params, 100)
+
+    new_impact = Enum.at(initial_points, -1)
+
+    {_, states} = MotionBetweenImpacts.iterate_impacts(new_impact, params, 100, true)
+
     dataset = Stream.map(states, &[&1.t, &1.x])
     {:ok, cmd} = Gnuplot.plot([
       [:set, :title, "Time series for omega = #{params.omega}, sigma = #{params.sigma}, r = #{params.r}"],
@@ -74,11 +79,11 @@ defmodule Mix.Tasks.Timeseries do
 
 #  @spec run(any) :: {:ok, binary}
   def run(_) do
-    params = %SystemParameters{omega: 2.0, r: 0.8, sigma: 0}
-    points = OneNLoci.orbits_for_params(params, 1)
+    params = %SystemParameters{omega: 2.7, r: 0.8, sigma: 0}
+#    points = OneNLoci.orbits_for_params(params, 1)
     # IO.inspect points
-    initial_point = Enum.at(points, 0)
-
+#    initial_point = Enum.at(points, 0)
+    initial_point = %ImpactPoint{phi: 0, v: 0.01}
     TimeSeries.time_series(initial_point, params)
     # IO.inspect points
   end
