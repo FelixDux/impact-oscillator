@@ -33,18 +33,20 @@ end
 defmodule TimeSeries do
 
   def time_series(%ImpactPoint{} = start_impact, %SystemParameters{} = params) do
-    {initial_points, _} = MotionBetweenImpacts.iterate_impacts(start_impact, params, 100)
+    {initial_points, _} = MotionBetweenImpacts.iterate_impacts(start_impact, params, 1)
 
     new_impact = Enum.at(initial_points, -1)
 
-    {_, states} = MotionBetweenImpacts.iterate_impacts(new_impact, params, 100, true)
+    {points, states} = MotionBetweenImpacts.iterate_impacts(new_impact, params, 800, true)
 
     dataset = Stream.map(states, &[&1.t, &1.x])
     {:ok, cmd} = Gnuplot.plot([
       [:set, :title, "Time series for omega = #{params.omega}, sigma = #{params.sigma}, r = #{params.r}"],
       [:plot, "-", :with, :lines]], [dataset])
-    IO.puts(cmd)
-    IO.inspect dataset
+#    IO.puts(cmd)
+#    IO.inspect dataset
+
+    Enum.map(points, &IO.puts("#{&1.t}, #{&1.phi}, #{&1.v}"))
   end
 end
 

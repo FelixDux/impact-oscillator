@@ -190,7 +190,7 @@ defmodule OneNParams do
 
     sys_params = %SystemParameters{omega: params.omega, r: params.r, sigma: sigma}
 
-    {next_point, _} = MotionBetweenImpacts.next_impact(point, sys_params)
+    {next_point, _, _} = MotionBetweenImpacts.next_impact(point, sys_params)
 
     # Should be periodic
     cond do

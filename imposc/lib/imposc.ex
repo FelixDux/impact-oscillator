@@ -319,7 +319,7 @@ defmodule Chatter do
   `:parameters`: system parameters for the oscillator
 
   **Precondition** `:state` is assumed to correspond to a low velocity impact (i.e. `:state.x` == `:parameters.sigma`
-  and `:state.v` small) but this is not checked. If this conditions are not met, the return value will be meaningless.
+  and `:state.v` small) but this is not checked. If these conditions are not met, the return value will be meaningless.
   """
 
   @spec accumulation_state(StateOfMotion, SystemParameters) :: StateOfMotion
@@ -404,7 +404,7 @@ defmodule MotionBetweenImpacts do
   from the previous impact.
   """
 
-  @type point_with_states :: {ImpactPoint, [StateOfMotion]}
+  @type point_with_states :: {ImpactPoint, [StateOfMotion], Chatter.check_low_v}
 
   @doc """
   Gives the state of motion (position, velocity, time) at a given time after an impact
@@ -456,15 +456,20 @@ defmodule MotionBetweenImpacts do
     check_chatter = fn state, parameters, sticking_region -> Chatter.accumulation_state(state, parameters) |>
                                                                (&StickingRegion.state_if_sticking(&1, sticking_region)).() end
 
-    chatter_result = elem(chatter_counter.(previous_impact.v), 0) && check_chatter.(start_state, parameters, coeffs.sticking_region)
+    {chatter_impact, new_counter} = chatter_counter.(previous_impact.v)
+
+    chatter_result = chatter_impact && check_chatter.(start_state, parameters, coeffs.sticking_region)
 
     states = if chatter_result  do
+      IO.puts("Got some chatter")
+      IO.inspect(start_state)
+      IO.inspect(chatter_result)
       states_for_step(start_state, parameters.sigma, record_states) ++ [chatter_result]
     else
       find_next_impact(start_state, previous_impact, coeffs, parameters, record_states, step_size, limit)
     end
 
-    {StateOfMotion.point_from_state(Enum.at(states, -1), parameters.omega), states}
+    {StateOfMotion.point_from_state(Enum.at(states, -1), parameters.omega), states, new_counter}
   end
 
   @spec states_for_step(StateOfMotion, float, Boolean) :: [StateOfMotion]
@@ -527,7 +532,13 @@ defmodule MotionBetweenImpacts do
   def new_step_size(step_size, time_diff, x, sigma) when x > sigma and step_size > 0 do
     # Displacement is above offset so apply bisection algorithm to seek impact time
     # BUT don't step farther back than the previous impact
-    -min(0.5 * step_size, time_diff)
+    -0.5 * min(step_size, time_diff)
+  end
+
+  def new_step_size(step_size, time_diff, _x, _sigma) when step_size <= -time_diff do
+    # Continue search in same direction
+    # BUT don't step farther back than the previous impact
+    -0.5 * time_diff
   end
 
   def new_step_size(step_size, _time_diff, _x, _sigma) do
@@ -572,7 +583,8 @@ defmodule MotionBetweenImpacts do
   def iterate_impacts(%ImpactPoint{} = start_impact, %SystemParameters{} = params, num_iterations \\ 1000,
         record_states \\ false) do
     chatter_counter = Chatter.check_low_v()
-    stream = Stream.unfold({start_impact, []}, &{&1, next_impact(elem(&1, 0), params, chatter_counter, record_states)})
+    stream = Stream.unfold({start_impact, [], chatter_counter}, &{&1, next_impact(elem(&1, 0), params, elem(&1, 2),
+      record_states)})
     Enum.take(stream, num_iterations) |> (&{Enum.reduce(&1, [], fn x, acc -> acc ++ [elem(x, 0)] end),
       Enum.reduce(&1, [], fn x, acc -> acc ++ elem(x, 1) end)}).()
   end
