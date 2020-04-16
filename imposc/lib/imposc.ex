@@ -62,10 +62,22 @@ defmodule ImposcUtils do
   def forward_to_phase(t, phi, period) do
     phase_difference = phi - modulo(t, period)
 
-    cond do
+    result = cond do
       phase_difference >= 0 -> t + phase_difference
 
       true -> t + period + phase_difference
+    end
+
+    # Check for rounding errors - new phase should equal old. We particularly don't want it to be slightly less, as this
+    # could trap us in the sticking region
+    new_phi = modulo(result, period)
+
+    delta_phi = phi - new_phi
+
+    cond do
+      delta_phi > 0 -> result + delta_phi
+
+      true -> result
     end
   end
 
@@ -207,7 +219,7 @@ defmodule StickingRegion do
   `:phi_out`: the maximum phase (modulo the forcing period) for which zero-velocity impacts have non-negative acceleration
   `:period`: the forcing period
 
-  The acceleration is actually zero for both `:phi_in` and `:phi_out` but its rate of change is positived for the former
+  The acceleration is actually zero for both `:phi_in` and `:phi_out` but its rate of change is positive for the former
   and negative for the latter.
   """
 
@@ -461,9 +473,6 @@ defmodule MotionBetweenImpacts do
     chatter_result = chatter_impact && check_chatter.(start_state, parameters, coeffs.sticking_region)
 
     states = if chatter_result  do
-      IO.puts("Got some chatter")
-      IO.inspect(start_state)
-      IO.inspect(chatter_result)
       states_for_step(start_state, parameters.sigma, record_states) ++ [chatter_result]
     else
       find_next_impact(start_state, previous_impact, coeffs, parameters, record_states, step_size, limit)
