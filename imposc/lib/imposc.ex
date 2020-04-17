@@ -365,6 +365,7 @@ defmodule Chatter do
     quote do: 10
   end
 
+  @spec check_low_v(integer) :: {Boolean, (float -> any)}
   def check_low_v(counter \\0) do
 
     import ImposcUtils
@@ -466,7 +467,7 @@ defmodule MotionBetweenImpacts do
   Returns a `t:point_with_states/0` with the next impact point and optionally the intermediate states of motion
   """
 
-#  @spec next_impact(ImpactPoint, SystemParameters, Boolean, number, number) :: point_with_states
+  @spec next_impact(ImpactPoint, SystemParameters, (integer -> (float -> any)), Boolean, number, number) :: point_with_states
   def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = parameters, chatter_counter
       \\ Chatter.check_low_v(), record_states \\ false, step_size \\ 0.1, limit \\ 0.000001) do
 
@@ -475,7 +476,7 @@ defmodule MotionBetweenImpacts do
 
     # Check for chatter
     check_chatter = fn state, parameters, sticking_region -> Chatter.accumulation_state(state, parameters) |>
-                                                               (&StickingRegion.state_if_sticking(&1, sticking_region)).() end
+                                                         (&StickingRegion.state_if_sticking(&1, sticking_region)).() end
 
     {chatter_impact, new_counter} = chatter_counter.(previous_impact.v)
 
