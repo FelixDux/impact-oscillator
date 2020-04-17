@@ -128,8 +128,8 @@ defmodule OneNParams do
 
   @spec velocities(number, OneNParams) :: {nil | float, nil | float}
   def velocities(sigma, %OneNParams{} = params) do
-#    IO.puts("#{sigma}, #{params.sigma_s}")
-    velocities_for_discr(sigma, discriminant(sigma, params), params) |> Enum.map(&nullify_unphysical(&1, sigma, params)) |> List.to_tuple
+    velocities_for_discr(sigma, discriminant(sigma, params), params) |> Enum.map(&nullify_unphysical(&1, sigma, params))
+    |> List.to_tuple
   end
 
   @doc """
