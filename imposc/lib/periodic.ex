@@ -189,17 +189,15 @@ defmodule OneNParams do
 
       sys_params = %SystemParameters{omega: params.omega, r: params.r, sigma: sigma}
 
-      {next_point, _, _} = MotionBetweenImpacts.next_impact(point, sys_params)
-
-  #    IO.puts("#{point.v}, #{next_point.v}")
-
       # Should be periodic
-      cond do
-        abs(point.v) < ImposcUtils.const_small() && next_point.v > ImposcUtils.const_small() -> false
-        point.v != next_point.v and abs(point.v - next_point.v)/point.v > ImposcUtils.const_small() -> false
-        abs(point.phi - next_point.phi) >  ImposcUtils.const_smallish() * params.period -> false
-        true -> true
-      end
+      MotionBetweenImpacts.next_impact(point, sys_params) |> (& elem(&1, 0)).() |> (fn(next_point) ->
+        cond do
+          abs(point.v) < ImposcUtils.const_small() && next_point.v > ImposcUtils.const_small() -> false
+          point.v != next_point.v and abs(point.v - next_point.v)/point.v > ImposcUtils.const_small() -> false
+          abs(point.phi - next_point.phi) >  ImposcUtils.const_smallish() * params.period -> false
+          true -> true
+        end
+      end).()
     end
   end
 end
@@ -209,15 +207,19 @@ defmodule OneNLoci do
   """
 
   def curves_for_fixed_omega(n, omega, r, num_points \\ 1000) do
+    # Initialise parameters
     params = OneNParams.derive(omega, r, n)
 
+    # Compute (1, n) velocities over range of offsets
     delta_s = 2 * params.sigma_s / num_points
 
-    pairs = 0..num_points |> Stream.map(&(&1 * delta_s - params.sigma_s)) |> Stream.map(&({&1, OneNParams.velocities(&1, params)}))
+    pairs = 0..num_points |> Stream.map(&(&1 * delta_s - params.sigma_s)) |>
+      Stream.map(&({&1, OneNParams.velocities(&1, params)}))
 
-    # TODO: normalise
-    [pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), 0)}) |> Enum.filter(&!is_nil(elem(&1,1))),
-      pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), 1)}) |> Enum.filter(&!is_nil(elem(&1,1)))]
+    # Filter out unphysical (nullified) velocities
+    filter_pairs = fn n -> (pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), n)}) |> Enum.filter(&!is_nil(elem(&1,1)))) end
+
+    0..1 |> Enum.map(&filter_pairs.(&1))
   end
 
   def vs(n, omega, r) do
