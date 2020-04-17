@@ -1,4 +1,5 @@
-import ImposcUtils
+import ForcingPhase
+import ImposcConstants
 import SystemParameters
 
 defmodule OneNParams do
@@ -38,10 +39,10 @@ defmodule OneNParams do
 
   @spec derive(float, float, integer) :: OneNParams
   def derive(omega, r, n) do
-    period = n * ImposcUtils.forcing_period(omega)
+    period = n * ForcingPhase.forcing_period(omega)
     cn = :math.cos(period)
     sn = :math.sin(period)
-    gamma = ImposcUtils.gamma(omega)
+    gamma = ForcingPhase.gamma(omega)
 
     result = %OneNParams{omega: omega, r: r, gamma2: gamma * gamma, r_minus: (1-r)/omega, cs: derive_cs(cn, sn, r)}
     result = %OneNParams{result | sigma_s: :math.sqrt(result.gamma2*(1 + :math.pow(result.cs/result.r_minus, 2)))}
@@ -97,7 +98,7 @@ defmodule OneNParams do
         true -> angle
       end
 
-    ImposcUtils.phi(angle / params.omega, params.omega)
+    ForcingPhase.phi(angle / params.omega, params.omega)
   end
 
   @doc """
@@ -192,9 +193,9 @@ defmodule OneNParams do
       # Should be periodic
       MotionBetweenImpacts.next_impact(point, sys_params) |> (& elem(&1, 0)).() |> (fn(next_point) ->
         cond do
-          abs(point.v) < ImposcUtils.const_small() && next_point.v > ImposcUtils.const_small() -> false
-          point.v != next_point.v and abs(point.v - next_point.v)/point.v > ImposcUtils.const_small() -> false
-          abs(point.phi - next_point.phi) >  ImposcUtils.const_smallish() * params.period -> false
+          abs(point.v) < ImposcConstants.const_small() && next_point.v > ImposcConstants.const_small() -> false
+          point.v != next_point.v and abs(point.v - next_point.v)/point.v > ImposcConstants.const_small() -> false
+          abs(point.phi - next_point.phi) >  ImposcConstants.const_smallish() * params.period -> false
           true -> true
         end
       end).()
