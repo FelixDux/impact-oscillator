@@ -232,24 +232,33 @@ defmodule StickingRegion do
   @spec derive(SystemParameters) :: StickingRegion
   def derive(%SystemParameters{} = parameters) do
 
-    # Zero velocity and zero acceleration condition
-    angle = :math.acos(parameters.sigma)
+    period = ImposcUtils.forcing_period(parameters.omega)
 
     cond do
       # No sticking region
-      parameters.sigma > 1 -> %StickingRegion{phi_in: nil, phi_out: nil,
-                                period: ImposcUtils.forcing_period(parameters.omega)}
+      parameters.sigma > 1 -> %StickingRegion{phi_in: nil, phi_out: nil, period: period}
 
       # Sticking region is a single point
-      parameters.sigma == 1 -> %StickingRegion{phi_in: 0, phi_out: 0,
-                                 period: ImposcUtils.forcing_period(parameters.omega)}
+      parameters.sigma == 1 -> %StickingRegion{phi_in: 0, phi_out: 0, period: period}
 
-      # Condition on rate of change of acceleration
-      :math.sin(angle) < 0 -> %StickingRegion{phi_in: angle/parameters.omega,
-                                phi_out: (2*:math.pi - angle)/parameters.omega,
-                                period: ImposcUtils.forcing_period(parameters.omega)}
-      true ->  %StickingRegion{phi_out: angle/parameters.omega, phi_in: (2*:math.pi - angle)/parameters.omega,
-                 period: ImposcUtils.forcing_period(parameters.omega)}
+
+      # Sticking region is whole phi-axis
+      parameters.sigma <= -1 -> %StickingRegion{phi_in: period, phi_out: 0, period: period}
+
+      # Zero velocity and zero acceleration condition
+      true -> :math.acos(parameters.sigma) |>
+            (fn(angle) ->
+              cond do
+
+                # Condition on rate of change of acceleration
+                :math.sin(angle) < 0 -> %StickingRegion{phi_in: angle/parameters.omega,
+                                          phi_out: (2*:math.pi - angle)/parameters.omega,
+                                          period: period}
+                true ->  %StickingRegion{phi_out: angle/parameters.omega, phi_in: (2*:math.pi - angle)/parameters.omega,
+                           period: period}
+
+              end
+            end).()
     end
   end
 

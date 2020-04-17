@@ -14,12 +14,11 @@ defmodule OneNParams do
   `:r_minus`: (1 - r)/omega - a coefficient used in the analysis
   `:n`: the number of forcing cycles between each impact
   `:cs`: a coefficient used in the analysis
-  `:phase_coeff`: ABOUT TO GO?
   `:sigma_s`: The positive intercept with the sigma-axis
   `:period`: The period between impacts
   """
 
-  defstruct omega: 2, r: 0.8, gamma: 1/3.0, gamma2: 1/9.0, r_minus: 0.1, n: 1, cs: 0, phase_coeff: 0, sigma_s: 0, period: :math.pi
+  defstruct omega: 2, r: 0.8, gamma: 1/3.0, gamma2: 1/9.0, r_minus: 0.1, n: 1, cs: 0, sigma_s: 0, period: :math.pi
 
   defp derive_cs(cn, _sn, _r) when cn == 1 do
     0
@@ -45,7 +44,6 @@ defmodule OneNParams do
     gamma = ImposcUtils.gamma(omega)
 
     result = %OneNParams{omega: omega, r: r, gamma2: gamma * gamma, r_minus: (1-r)/omega, cs: derive_cs(cn, sn, r)}
-    result = %OneNParams{result | phase_coeff: -result.r_minus / gamma / 2}
     result = %OneNParams{result | sigma_s: :math.sqrt(result.gamma2*(1 + :math.pow(result.cs/result.r_minus, 2)))}
     result = %OneNParams{result | period: period, gamma: gamma}
     result
@@ -86,7 +84,6 @@ defmodule OneNParams do
   end
 
   defp phase_for_velocity(velocity, sigma, %OneNParams{} = params) do
-    # TODO: modify to use cos formula
     arg = (sigma + params.cs * velocity / 2.0) / params.gamma
 
     angle = :math.acos(arg)
@@ -101,7 +98,6 @@ defmodule OneNParams do
       end
 
     ImposcUtils.phi(angle / params.omega, params.omega)
-#    ImposcUtils.phi(:math.asin(params.phase_coeff * velocity) / params.omega, params.omega)
   end
 
   @doc """
@@ -118,9 +114,7 @@ defmodule OneNParams do
   end
 
   def point_for_velocity(velocity, sigma, %OneNParams{} = params) do
-    phi = phase_for_velocity(velocity, sigma, params)
-
-    %ImpactPoint{phi: phi, v: velocity}
+    phase_for_velocity(velocity, sigma, params) |> (&%ImpactPoint{phi: &1, v: velocity, t: &1}).()
   end
 
   @doc """
@@ -133,6 +127,7 @@ defmodule OneNParams do
 
   @spec velocities(number, OneNParams) :: {nil | float, nil | float}
   def velocities(sigma, %OneNParams{} = params) do
+#    IO.puts("#{sigma}, #{params.sigma_s}")
     velocities_for_discr(sigma, discriminant(sigma, params), params) |> Enum.map(&nullify_unphysical(&1, sigma, params)) |> List.to_tuple
   end
 
@@ -185,18 +180,26 @@ defmodule OneNParams do
   end
 
   def is_physical?(velocity, sigma, %OneNParams{} = params) do
-    # Verify numerically by computing next impact
-    point = point_for_velocity(velocity, sigma, params)
+    if velocity == 0 and sigma > 0 do
+      # Special case: periodic graze orbit. Assume physical
+      true
+    else
+      # Verify numerically by computing next impact
+      point = point_for_velocity(velocity, sigma, params)
 
-    sys_params = %SystemParameters{omega: params.omega, r: params.r, sigma: sigma}
+      sys_params = %SystemParameters{omega: params.omega, r: params.r, sigma: sigma}
 
-    {next_point, _, _} = MotionBetweenImpacts.next_impact(point, sys_params)
+      {next_point, _, _} = MotionBetweenImpacts.next_impact(point, sys_params)
 
-    # Should be periodic
-    cond do
-      abs(point.v - next_point.v) > ImposcUtils.const_small() -> false
-      abs(point.phi - next_point.phi) >  ImposcUtils.const_smallish() * params.period -> false
-      true -> true
+  #    IO.puts("#{point.v}, #{next_point.v}")
+
+      # Should be periodic
+      cond do
+        abs(point.v) < ImposcUtils.const_small() && next_point.v > ImposcUtils.const_small() -> false
+        point.v != next_point.v and abs(point.v - next_point.v)/point.v > ImposcUtils.const_small() -> false
+        abs(point.phi - next_point.phi) >  ImposcUtils.const_smallish() * params.period -> false
+        true -> true
+      end
     end
   end
 end
@@ -212,7 +215,9 @@ defmodule OneNLoci do
 
     pairs = 0..num_points |> Stream.map(&(&1 * delta_s - params.sigma_s)) |> Stream.map(&({&1, OneNParams.velocities(&1, params)}))
 
-    [pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), 0)}) |> Enum.filter(&!is_nil(elem(&1,1))), pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), 1)}) |> Enum.filter(&!is_nil(elem(&1,1)))]
+    # TODO: normalise
+    [pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), 0)}) |> Enum.filter(&!is_nil(elem(&1,1))),
+      pairs |> Enum.map(&{elem(&1,0), elem(elem(&1,1), 1)}) |> Enum.filter(&!is_nil(elem(&1,1)))]
   end
 
   def vs(n, omega, r) do

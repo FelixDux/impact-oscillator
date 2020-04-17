@@ -48,7 +48,7 @@ class OneNParams:
 
         self._cs = 0
 
-        if self._cs != 1:
+        if self._cn != 1:
             self._cs = self._sn * (1 + self._r) / (1 - self._cn)
 
         self._gamma = parameters.gamma()
@@ -208,7 +208,7 @@ def curves_for_fixed_omega(n: int, parameters: SystemParameters, num_points=1000
 
 
 if __name__ == '__main__':
-    sys_params = SystemParameters(omega=2,r=0.8, sigma=0)
+    sys_params = SystemParameters(omega=2.7,r=0.8, sigma=0)
 
     one_n_params = OneNParams(parameters=sys_params, n=1)
 

@@ -36,6 +36,8 @@ if __name__ == "__main__":
     axes.add_sequence(*curves_for_fixed_omega(1, SystemParameters(omega=2, r=0.8, sigma=0)))
 
     axes.add_sequence(*curves_for_fixed_omega(1, SystemParameters(omega=2.2, r=0.8, sigma=0)))
+
+    axes.add_sequence(*curves_for_fixed_omega(1, SystemParameters(omega=2.7, r=0.8, sigma=0)))
     
     axes.axes.legend()
 

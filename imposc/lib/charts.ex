@@ -37,7 +37,7 @@ defmodule TimeSeries do
 
     new_impact = Enum.at(initial_points, -1)
 
-    {points, states} = MotionBetweenImpacts.iterate_impacts(new_impact, params, 800, true)
+    {points, states} = MotionBetweenImpacts.iterate_impacts(new_impact, params, 50, true)
 
     dataset = Stream.map(states, &[&1.t, &1.x])
     {:ok, cmd} = Gnuplot.plot([
@@ -71,7 +71,7 @@ defmodule Mix.Tasks.Ellipse do
 
 #  @spec run(any) :: {:ok, binary}
   def run(_) do
-    Curves.sigma_ellipse(1, 2.0, 0.8)
+    Curves.sigma_ellipse(1, 2.7, 0.8)
   end
 end
 
