@@ -51,8 +51,9 @@ defmodule MotionBetweenImpacts do
 
   @spec next_impact(ImpactPoint, SystemParameters, (integer -> (float -> any)), Boolean, number, number) :: point_with_states
   def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = parameters, chatter_counter
-  \\ Chatter.count_low_v(), record_states \\ false, step_size \\ 0.1, limit \\ 0.000001) do
+      \\ Chatter.count_low_v(), record_states \\ false, step_size \\ 0.1, limit \\ 0.000001) do
 
+    # Equations of motion to next impact
     coeffs = EvolutionCoefficients.derive(parameters, previous_impact)
     start_state = %StateOfMotion{t: previous_impact.t, x: parameters.sigma, v: -parameters.r * previous_impact.v}
 
@@ -65,11 +66,14 @@ defmodule MotionBetweenImpacts do
     chatter_result = chatter_impact && check_chatter.(start_state, parameters, coeffs.sticking_region)
 
     states = if chatter_result  do
+      # We have chatter, so skip to the chatter result
       states_for_step(start_state, parameters.sigma, record_states) ++ [chatter_result]
     else
+    # No chatter, so initiate the recursive search for the next impact
       find_next_impact(start_state, previous_impact, coeffs, parameters, record_states, step_size, limit)
     end
 
+    # Convert state at impact to an `:ImpactPoint`
     {StateOfMotion.point_from_state(Enum.at(states, -1), parameters.omega), states, new_counter}
   end
 
