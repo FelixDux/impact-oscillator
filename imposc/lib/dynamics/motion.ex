@@ -1,16 +1,14 @@
-
-
 defmodule MotionBetweenImpacts do
   @moduledoc """
   Computes the time evolution of the system from one impact to the next
   """
 
   @typedoc """
-  Tuple comprising an `:ImpactPoint` and a list which optionally contains `:StateOfMotion` instances for time steps
-  from the previous impact.
+  Tuple comprising an `:ImpactPoint`, a list which optionally contains `:StateOfMotion` instances for time steps
+  from the previous impact and a function to evaluate a chatter counter.
   """
 
-  @type point_with_states :: {ImpactPoint, [StateOfMotion], Chatter.check_low_v}
+  @type point_with_states :: {ImpactPoint, [StateOfMotion], Chatter.count_low_v}
 
   @doc """
   Gives the state of motion (position, velocity, time) at a given time after an impact
@@ -53,7 +51,7 @@ defmodule MotionBetweenImpacts do
 
   @spec next_impact(ImpactPoint, SystemParameters, (integer -> (float -> any)), Boolean, number, number) :: point_with_states
   def next_impact(%ImpactPoint{} = previous_impact, %SystemParameters{} = parameters, chatter_counter
-  \\ Chatter.check_low_v(), record_states \\ false, step_size \\ 0.1, limit \\ 0.000001) do
+  \\ Chatter.count_low_v(), record_states \\ false, step_size \\ 0.1, limit \\ 0.000001) do
 
     coeffs = EvolutionCoefficients.derive(parameters, previous_impact)
     start_state = %StateOfMotion{t: previous_impact.t, x: parameters.sigma, v: -parameters.r * previous_impact.v}
@@ -185,7 +183,7 @@ defmodule MotionBetweenImpacts do
   @spec iterate_impacts(ImpactPoint, SystemParameters, integer, Boolean) :: [ImpactPoint]
   def iterate_impacts(%ImpactPoint{} = start_impact, %SystemParameters{} = params, num_iterations \\ 1000,
         record_states \\ false) do
-    chatter_counter = Chatter.check_low_v()
+    chatter_counter = Chatter.count_low_v()
     stream = Stream.unfold({start_impact, [], chatter_counter}, &{&1, next_impact(elem(&1, 0), params, elem(&1, 2),
       record_states)})
     Enum.take(stream, num_iterations) |> (&{Enum.reduce(&1, [], fn x, acc -> acc ++ [elem(x, 0)] end),

@@ -31,7 +31,7 @@ defmodule Chatter do
     case g do
       0 -> StickingRegion.next_impact_state(state.t, parameters.sigma,StickingRegion.derive(parameters))
 
-      # TODO: handle case r=0
+      # TODO: handle case r=1
       _ -> %StateOfMotion{t: state.t - 2 * state.v / g / (1 - parameters.r), x: parameters.sigma, v: 0}
     end
   end
@@ -46,18 +46,24 @@ defmodule Chatter do
     quote do: 10
   end
 
-  @spec check_low_v(integer) :: {Boolean, (float -> any)}
-  def check_low_v(counter \\0) do
+  @doc """
+  Counts successive low velocity impacts and flags when a threshold number have been reached.
+
+  Used in detecting chatter.
+  """
+
+  @spec count_low_v(integer) :: {Boolean, (float -> any)}
+  def count_low_v(counter \\0) do
 
     require ImposcConstants
     fn v -> if v != 0 && v < ImposcConstants.const_smallish() do
               if counter < const_low_v_count_threshold() do
-                {false, check_low_v(counter+1)}
+                {false, count_low_v(counter+1)}
               else
-                {true, check_low_v(0)}
+                {true, count_low_v(0)}
               end
             else
-              {false, check_low_v(0)}
+              {false, count_low_v(0)}
             end
     end
   end
