@@ -27,6 +27,4 @@ defmodule ImpactPoint do
   def point_to_list(%ImpactPoint{} = point) do
     [point.phi, point.v]
   end
-
 end
-

@@ -30,7 +30,7 @@ defmodule ForcingPhase do
   end
 
   def modulo(x, y) do
-    x - trunc(x/y)*y
+    x - trunc(x / y) * y
   end
 
   @doc """
@@ -40,8 +40,9 @@ defmodule ForcingPhase do
   @spec forcing_period(float) :: float
   def forcing_period(omega) do
     case omega do
-      0 -> nil  # TODO use {:ok, result}/:error pattern AND handle negative case
-      _ -> 2.0*:math.pi/omega
+      # TODO use {:ok, result}/:error pattern AND handle negative case
+      0 -> nil
+      _ -> 2.0 * :math.pi() / omega
     end
   end
 
@@ -51,22 +52,22 @@ defmodule ForcingPhase do
 
   @spec phi(float, float) :: float
   def phi(t, omega) do
-    modulo(t,forcing_period(omega))
+    modulo(t, forcing_period(omega))
   end
 
   @doc """
   Returns the lowest time greater than or equal to time `:t` for which the phase relative to `:period` is `:phi`
   """
 
-  @spec forward_to_phase(float, float, float)::float
+  @spec forward_to_phase(float, float, float) :: float
   def forward_to_phase(t, phi, period) do
     phase_difference = phi - modulo(t, period)
 
-    result = cond do
-      phase_difference >= 0 -> t + phase_difference
-
-      true -> t + period + phase_difference
-    end
+    result =
+      cond do
+        phase_difference >= 0 -> t + phase_difference
+        true -> t + period + phase_difference
+      end
 
     # Check for rounding errors - new phase should equal old. We particularly don't want it to be slightly less, as this
     # could trap us in the sticking region
@@ -76,7 +77,6 @@ defmodule ForcingPhase do
 
     cond do
       delta_phi > 0 -> result + delta_phi
-
       true -> result
     end
   end
@@ -92,9 +92,6 @@ defmodule ForcingPhase do
   end
 
   def gamma(omega) do
-    1.0/(1.0-:math.pow(omega, 2))
+    1.0 / (1.0 - :math.pow(omega, 2))
   end
 end
-
-
-

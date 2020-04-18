@@ -1,4 +1,3 @@
-
 defmodule StateOfMotion do
   @moduledoc """
   State and phase variables for the motion between impacts

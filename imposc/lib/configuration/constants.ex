@@ -1,5 +1,4 @@
 defmodule ImposcConstants do
-
   @moduledoc """
   Tolerances for floating point comparisons
   """
@@ -16,4 +15,3 @@ defmodule ImposcConstants do
     quote do: 0.000001
   end
 end
-

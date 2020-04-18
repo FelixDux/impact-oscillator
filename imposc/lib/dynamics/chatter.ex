@@ -1,4 +1,3 @@
-
 defmodule Chatter do
   @moduledoc """
   Functions and data for numerically approximating 'chatter'.
@@ -8,7 +7,7 @@ defmodule Chatter do
   numerically it is necessary to detect when it is happening and then extrapolate forward to the accumulation point.
   """
 
-  @spec low_velocity_acceleration(float, float, float)::float
+  @spec low_velocity_acceleration(float, float, float) :: float
   defp low_velocity_acceleration(t, x, omega) do
     # Approximates the acceleration at low velocity
     :math.cos(omega * t) - x
@@ -29,10 +28,20 @@ defmodule Chatter do
     g = low_velocity_acceleration(state.t, parameters.sigma, parameters.omega)
 
     case g do
-      0 -> StickingRegion.next_impact_state(state.t, parameters.sigma,StickingRegion.derive(parameters))
+      0 ->
+        StickingRegion.next_impact_state(
+          state.t,
+          parameters.sigma,
+          StickingRegion.derive(parameters)
+        )
 
       # TODO: handle case r=1
-      _ -> %StateOfMotion{t: state.t - 2 * state.v / g / (1 - parameters.r), x: parameters.sigma, v: 0}
+      _ ->
+        %StateOfMotion{
+          t: state.t - 2 * state.v / g / (1 - parameters.r),
+          x: parameters.sigma,
+          v: 0
+        }
     end
   end
 
@@ -53,18 +62,19 @@ defmodule Chatter do
   """
 
   @spec count_low_v(integer) :: {Boolean, (float -> any)}
-  def count_low_v(counter \\0) do
-
+  def count_low_v(counter \\ 0) do
     require ImposcConstants
-    fn v -> if v != 0 && v < ImposcConstants.const_smallish() do
-              if counter < const_low_v_count_threshold() do
-                {false, count_low_v(counter+1)}
-              else
-                {true, count_low_v(0)}
-              end
-            else
-              {false, count_low_v(0)}
-            end
+
+    fn v ->
+      if v != 0 && v < ImposcConstants.const_smallish() do
+        if counter < const_low_v_count_threshold() do
+          {false, count_low_v(counter + 1)}
+        else
+          {true, count_low_v(0)}
+        end
+      else
+        {false, count_low_v(0)}
+      end
     end
   end
 end

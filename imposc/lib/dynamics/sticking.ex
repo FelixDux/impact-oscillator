@@ -1,4 +1,3 @@
-
 defmodule StickingRegion do
   @moduledoc """
   The interval of phases over which  zero-velocity impacts have non-negative acceleration.
@@ -23,34 +22,42 @@ defmodule StickingRegion do
 
   @spec derive(SystemParameters) :: StickingRegion
   def derive(%SystemParameters{} = parameters) do
-
     period = ForcingPhase.forcing_period(parameters.omega)
 
     cond do
       # No sticking region
-      parameters.sigma > 1 -> %StickingRegion{phi_in: nil, phi_out: nil, period: period}
+      parameters.sigma > 1 ->
+        %StickingRegion{phi_in: nil, phi_out: nil, period: period}
 
       # Sticking region is a single point
-      parameters.sigma == 1 -> %StickingRegion{phi_in: 0, phi_out: 0, period: period}
-
+      parameters.sigma == 1 ->
+        %StickingRegion{phi_in: 0, phi_out: 0, period: period}
 
       # Sticking region is whole phi-axis
-      parameters.sigma <= -1 -> %StickingRegion{phi_in: period, phi_out: 0, period: period}
+      parameters.sigma <= -1 ->
+        %StickingRegion{phi_in: period, phi_out: 0, period: period}
 
       # Zero velocity and zero acceleration condition
-      true -> :math.acos(parameters.sigma) |>
-                (fn(angle) ->
-                  cond do
+      true ->
+        :math.acos(parameters.sigma)
+        |> (fn angle ->
+              cond do
+                # Condition on rate of change of acceleration
+                :math.sin(angle) < 0 ->
+                  %StickingRegion{
+                    phi_in: angle / parameters.omega,
+                    phi_out: (2 * :math.pi() - angle) / parameters.omega,
+                    period: period
+                  }
 
-                    # Condition on rate of change of acceleration
-                    :math.sin(angle) < 0 -> %StickingRegion{phi_in: angle/parameters.omega,
-                                              phi_out: (2*:math.pi - angle)/parameters.omega,
-                                              period: period}
-                    true ->  %StickingRegion{phi_out: angle/parameters.omega, phi_in: (2*:math.pi - angle)/parameters.omega,
-                               period: period}
-
-                  end
-                 end).()
+                true ->
+                  %StickingRegion{
+                    phi_out: angle / parameters.omega,
+                    phi_in: (2 * :math.pi() - angle) / parameters.omega,
+                    period: period
+                  }
+              end
+            end).()
     end
   end
 
@@ -62,26 +69,31 @@ defmodule StickingRegion do
   def is_sticking?(phi, %StickingRegion{} = sticking_region) do
     cond do
       # No sticking region
-      sticking_region.phi_out == nil -> false
+      sticking_region.phi_out == nil ->
+        false
 
       # Recurse if phi not expressed as a phase
-      phi < 0 or phi >= sticking_region.period -> StickingRegion.is_sticking?(
-                                                    ForcingPhase.modulo(phi, sticking_region.period), sticking_region)
+      phi < 0 or phi >= sticking_region.period ->
+        StickingRegion.is_sticking?(
+          ForcingPhase.modulo(phi, sticking_region.period),
+          sticking_region
+        )
 
       # phi_out is always <= phi_in, treated as real numbers, but as phases they lie on a circle, so it still makes
       # sense to check for containment inside the closed interval [phi_in, phi_out) by reasoning that its complement
       # is [phi_out, phi_in)
-      phi >= sticking_region.phi_out and phi < sticking_region.phi_in -> false
+      phi >= sticking_region.phi_out and phi < sticking_region.phi_in ->
+        false
 
       # Not inside the complement, so inside the sticking region
-      true -> true
+      true ->
+        true
     end
   end
 
   def is_sticking_impact?(%ImpactPoint{} = point, %StickingRegion{} = sticking_region) do
     cond do
       point.v > 0 -> false
-
       true -> StickingRegion.is_sticking?(point.phi, sticking_region)
     end
   end
@@ -96,8 +108,11 @@ defmodule StickingRegion do
 
   @spec next_impact_state(float, float, StickingRegion) :: StateOfMotion
   def next_impact_state(t, sigma, %StickingRegion{} = sticking_region) do
-    %StateOfMotion{t: ForcingPhase.forward_to_phase(t, sticking_region.phi_out, sticking_region.period),
-      x: sigma, v: 0}
+    %StateOfMotion{
+      t: ForcingPhase.forward_to_phase(t, sticking_region.phi_out, sticking_region.period),
+      x: sigma,
+      v: 0
+    }
   end
 
   @spec state_if_sticking(StateOfMotion, StickingRegion) :: StateOfMotion
