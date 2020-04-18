@@ -1,4 +1,3 @@
-import ForcingPhase
 import ImposcConstants
 import SystemParameters
 
@@ -193,9 +192,9 @@ defmodule OneNParams do
       # Should be periodic
       MotionBetweenImpacts.next_impact(point, sys_params) |> (& elem(&1, 0)).() |> (fn(next_point) ->
         cond do
-          abs(point.v) < ImposcConstants.const_small() && next_point.v > ImposcConstants.const_small() -> false
-          point.v != next_point.v and abs(point.v - next_point.v)/point.v > ImposcConstants.const_small() -> false
-          abs(point.phi - next_point.phi) >  ImposcConstants.const_smallish() * params.period -> false
+          abs(point.v) < const_small() && next_point.v > const_small() -> false
+          point.v != next_point.v and abs(point.v - next_point.v)/point.v > const_small() -> false
+          abs(point.phi - next_point.phi) >  const_smallish() * params.period -> false
           true -> true
         end
       end).()
