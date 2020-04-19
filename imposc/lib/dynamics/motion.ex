@@ -76,7 +76,13 @@ defmodule MotionBetweenImpacts do
         limit \\ 0.000001
       ) do
     # Equations of motion to next impact
-    coeffs = EvolutionCoefficients.derive(parameters, previous_impact)
+    {status, coeffs} = EvolutionCoefficients.derive(parameters, previous_impact)
+
+    if status != :ok do
+      # TODO: this is a fudge!
+      IO.inspect(coeffs)
+      {nil, [], 0}
+    end
 
     start_state = %StateOfMotion{
       t: previous_impact.t,
@@ -87,7 +93,7 @@ defmodule MotionBetweenImpacts do
     # Check for chatter
     check_chatter = fn state, parameters, sticking_region ->
       Chatter.accumulation_state(state, parameters)
-      |> (&if(elem(&1,0)==:ok, do: elem(&1,1), else: nil)).()
+      |> (&if(elem(&1, 0) == :ok, do: elem(&1, 1), else: nil)).()
       |> (&StickingRegion.state_if_sticking(&1, sticking_region)).()
     end
 

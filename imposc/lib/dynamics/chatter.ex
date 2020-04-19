@@ -30,26 +30,36 @@ defmodule Chatter do
     g = low_velocity_acceleration(state.t, parameters.sigma, parameters.omega)
 
     cond do
-      parameters.r >= 1 -> {:error, "Chatter cannot occur for coefficient of restitution >= 1"}
+      parameters.r >= 1 ->
+        {:error, "Chatter cannot occur for coefficient of restitution >= 1"}
 
-      parameters.r < 0 -> {:error, "Chatter cannot occur for coefficient of restitution < 1"}
+      parameters.r < 0 ->
+        {:error, "Chatter cannot occur for coefficient of restitution < 1"}
 
-      g < 0 -> {:error, "Chatter will not occur outside the sticking region"}
+      g < 0 ->
+        {:error, "Chatter will not occur outside the sticking region"}
 
       g == 0 ->
-        {:ok, StickingRegion.next_impact_state(
-          state.t,
-          parameters.sigma,
-          StickingRegion.derive(parameters)
-        )}
+        case StickingRegion.derive(parameters) do
+          {:ok, region} ->
+            {:ok,
+             StickingRegion.next_impact_state(
+               state.t,
+               parameters.sigma,
+               region
+             )}
+
+          other ->
+            other
+        end
 
       true ->
-       {:ok, %StateOfMotion{
-          t: state.t - 2 * state.v / g / (1 - parameters.r),
-          x: parameters.sigma,
-          v: 0
-        }
-       }
+        {:ok,
+         %StateOfMotion{
+           t: state.t - 2 * state.v / g / (1 - parameters.r),
+           x: parameters.sigma,
+           v: 0
+         }}
     end
   end
 

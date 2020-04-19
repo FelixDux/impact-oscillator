@@ -37,12 +37,11 @@ defmodule ForcingPhase do
   For a given forcing frequency `:omega` returns the the forcing period
   """
 
-  @spec forcing_period(float) :: float
+  @spec forcing_period(float) :: {atom, float}
   def forcing_period(omega) do
-    case omega do
-      # TODO use {:ok, result}/:error pattern AND handle negative case
-      0 -> nil
-      _ -> 2.0 * :math.pi() / omega
+    cond do
+      omega <= 0 -> {:error, "Forcing frequency must be positive"}
+      true -> {:ok, 2.0 * :math.pi() / omega}
     end
   end
 
@@ -52,7 +51,7 @@ defmodule ForcingPhase do
 
   @spec phi(float, float) :: float
   def phi(t, omega) do
-    modulo(t, forcing_period(omega))
+    forcing_period(omega) |> (&if(elem(&1, 0) == :ok, do: modulo(t, elem(&1, 1)), else: nil)).()
   end
 
   @doc """

@@ -20,44 +20,52 @@ defmodule StickingRegion do
   Derive a `:StickingRegion` from `:SystemParameters`
   """
 
-  @spec derive(SystemParameters) :: StickingRegion
+  @spec derive(SystemParameters) :: {atom, StickingRegion}
   def derive(%SystemParameters{} = parameters) do
-    period = ForcingPhase.forcing_period(parameters.omega)
+    outcome = ForcingPhase.forcing_period(parameters.omega)
 
-    cond do
-      # No sticking region
-      parameters.sigma > 1 ->
-        %StickingRegion{phi_in: nil, phi_out: nil, period: period}
+    case outcome do
+      {:ok, period} ->
+        cond do
+          # No sticking region
+          parameters.sigma > 1 ->
+            {:ok, %StickingRegion{phi_in: nil, phi_out: nil, period: period}}
 
-      # Sticking region is a single point
-      parameters.sigma == 1 ->
-        %StickingRegion{phi_in: 0, phi_out: 0, period: period}
+          # Sticking region is a single point
+          parameters.sigma == 1 ->
+            {:ok, %StickingRegion{phi_in: 0, phi_out: 0, period: period}}
 
-      # Sticking region is whole phi-axis
-      parameters.sigma <= -1 ->
-        %StickingRegion{phi_in: period, phi_out: 0, period: period}
+          # Sticking region is whole phi-axis
+          parameters.sigma <= -1 ->
+            {:ok, %StickingRegion{phi_in: period, phi_out: 0, period: period}}
 
-      # Zero velocity and zero acceleration condition
-      true ->
-        :math.acos(parameters.sigma)
-        |> (fn angle ->
-              cond do
-                # Condition on rate of change of acceleration
-                :math.sin(angle) < 0 ->
-                  %StickingRegion{
-                    phi_in: angle / parameters.omega,
-                    phi_out: (2 * :math.pi() - angle) / parameters.omega,
-                    period: period
-                  }
+          # Zero velocity and zero acceleration condition
+          true ->
+            :math.acos(parameters.sigma)
+            |> (fn angle ->
+                  cond do
+                    # Condition on rate of change of acceleration
+                    :math.sin(angle) < 0 ->
+                      {:ok,
+                       %StickingRegion{
+                         phi_in: angle / parameters.omega,
+                         phi_out: (2 * :math.pi() - angle) / parameters.omega,
+                         period: period
+                       }}
 
-                true ->
-                  %StickingRegion{
-                    phi_out: angle / parameters.omega,
-                    phi_in: (2 * :math.pi() - angle) / parameters.omega,
-                    period: period
-                  }
-              end
-            end).()
+                    true ->
+                      {:ok,
+                       %StickingRegion{
+                         phi_out: angle / parameters.omega,
+                         phi_in: (2 * :math.pi() - angle) / parameters.omega,
+                         period: period
+                       }}
+                  end
+                end).()
+        end
+
+      _ ->
+        outcome
     end
   end
 
@@ -116,7 +124,8 @@ defmodule StickingRegion do
   end
 
   @spec state_if_sticking(StateOfMotion, StickingRegion) :: StateOfMotion
-  def state_if_sticking(%StateOfMotion{} = state, %StickingRegion{} = _sticking_region) when is_nil(state) do
+  def state_if_sticking(%StateOfMotion{} = state, %StickingRegion{} = _sticking_region)
+      when is_nil(state) do
     nil
   end
 
