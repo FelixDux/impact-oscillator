@@ -25,30 +25,31 @@ defmodule Chatter do
   **Precondition** chatter cannot occur for `:parameters.r` >= 1. This will result in an error condition.
   """
 
-  @spec accumulation_state(StateOfMotion, SystemParameters) :: StateOfMotion
+  @spec accumulation_state(StateOfMotion, SystemParameters) :: {atom, StateOfMotion}
   def accumulation_state(%StateOfMotion{} = state, %SystemParameters{} = parameters) do
     g = low_velocity_acceleration(state.t, parameters.sigma, parameters.omega)
 
     cond do
-      parameters.r >= 1 -> nil
+      parameters.r >= 1 -> {:error, "Chatter cannot occur for coefficient of restitution >= 1"}
 
-      parameters.r < 0 -> nil
+      parameters.r < 0 -> {:error, "Chatter cannot occur for coefficient of restitution < 1"}
 
-      g < 0 -> nil
+      g < 0 -> {:error, "Chatter will not occur outside the sticking region"}
 
       g == 0 ->
-        StickingRegion.next_impact_state(
+        {:ok, StickingRegion.next_impact_state(
           state.t,
           parameters.sigma,
           StickingRegion.derive(parameters)
-        )
+        )}
 
       true ->
-        %StateOfMotion{
+       {:ok, %StateOfMotion{
           t: state.t - 2 * state.v / g / (1 - parameters.r),
           x: parameters.sigma,
           v: 0
         }
+       }
     end
   end
 

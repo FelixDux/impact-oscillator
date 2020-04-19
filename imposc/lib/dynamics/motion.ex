@@ -87,6 +87,7 @@ defmodule MotionBetweenImpacts do
     # Check for chatter
     check_chatter = fn state, parameters, sticking_region ->
       Chatter.accumulation_state(state, parameters)
+      |> (&if(elem(&1,0)==:ok, do: elem(&1,1), else: nil)).()
       |> (&StickingRegion.state_if_sticking(&1, sticking_region)).()
     end
 
