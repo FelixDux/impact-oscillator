@@ -116,6 +116,10 @@ defmodule StickingRegion do
   end
 
   @spec state_if_sticking(StateOfMotion, StickingRegion) :: StateOfMotion
+  def state_if_sticking(%StateOfMotion{} = state, %StickingRegion{} = _sticking_region) when is_nil(state) do
+    nil
+  end
+
   def state_if_sticking(%StateOfMotion{} = state, %StickingRegion{} = sticking_region) do
     if is_sticking?(state.t, sticking_region) do
       state

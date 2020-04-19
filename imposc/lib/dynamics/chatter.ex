@@ -21,22 +21,29 @@ defmodule Chatter do
 
   **Precondition** `:state` is assumed to correspond to a low velocity impact (i.e. `:state.x` == `:parameters.sigma`
   and `:state.v` small) but this is not checked. If these conditions are not met, the return value will be meaningless.
+
+  **Precondition** chatter cannot occur for `:parameters.r` >= 1. This will result in an error condition.
   """
 
   @spec accumulation_state(StateOfMotion, SystemParameters) :: StateOfMotion
   def accumulation_state(%StateOfMotion{} = state, %SystemParameters{} = parameters) do
     g = low_velocity_acceleration(state.t, parameters.sigma, parameters.omega)
 
-    case g do
-      0 ->
+    cond do
+      parameters.r >= 1 -> nil
+
+      parameters.r < 0 -> nil
+
+      g < 0 -> nil
+
+      g == 0 ->
         StickingRegion.next_impact_state(
           state.t,
           parameters.sigma,
           StickingRegion.derive(parameters)
         )
 
-      # TODO: handle case r=1
-      _ ->
+      true ->
         %StateOfMotion{
           t: state.t - 2 * state.v / g / (1 - parameters.r),
           x: parameters.sigma,
