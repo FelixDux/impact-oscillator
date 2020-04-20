@@ -48,7 +48,7 @@ defmodule EvolutionCoefficients do
     case StickingRegion.derive(parameters) do
       {:ok, region} -> {:ok, %{result | sticking_region: region}}
       {_, reason} -> {:error, reason}
-      other -> IO.puts(other)
+      other -> IO.inspect(other)
     end
   end
 end
