@@ -1,4 +1,4 @@
-defmodule ImposcTest do
+defmodule ForcingPhaseTest do
   use ExUnit.Case
   doctest ForcingPhase
 
@@ -34,13 +34,23 @@ defmodule ImposcTest do
   test "gamma(1) is 1" do
     assert ForcingPhase.gamma(1) == 1
   end
-end
 
-defmodule ImpactPointTest do
-  use ExUnit.Case
-  doctest ImpactPoint
-
-  test "impact point maps to list" do
-    assert ImpactPoint.point_to_list(%ImpactPoint{phi: 1.6, v: 0.7}) == [1.6, 0.7]
+  test "forcing_period error cases" do
+    for omega <- [-3.7, 0], do: assert(elem(ForcingPhase.forcing_period(omega),0) == :error)
   end
+
+  test "forcing_period valid cases" do
+    for omega <- [:math.pi(), 2], do: assert(elem(ForcingPhase.forcing_period(omega),0) == :ok)
+      && assert(abs(elem(ForcingPhase.forcing_period(omega),1) - 2*:math.pi()/omega) < 0.0001)
+  end
+
+  test "forward_to_phase" do
+    omega = 2.7
+
+    {_, period} = ForcingPhase.forcing_period(omega)
+
+    for {n, phi, diff} <- [{21, :math.pi()/omega/2, 0.001}, {-2, period/4, 0.15}],
+        do: assert(abs(ForcingPhase.forward_to_phase(n*period + phi - diff, phi, period)-(n*period + phi))< 0.000001)
+  end
+
 end
