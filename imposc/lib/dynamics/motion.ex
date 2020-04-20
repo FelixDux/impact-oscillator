@@ -188,7 +188,15 @@ defmodule MotionBetweenImpacts do
 
       # Recurse
       states ++
-        find_next_impact(new_state, previous_impact, coeffs, parameters, states, step_size, limit)
+        find_next_impact(
+          new_state,
+          previous_impact,
+          coeffs,
+          parameters,
+          record_states,
+          step_size,
+          limit
+        )
     end
   end
 

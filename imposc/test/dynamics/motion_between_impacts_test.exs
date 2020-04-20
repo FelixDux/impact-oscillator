@@ -5,7 +5,7 @@ defmodule MotionBetweenImpactsTest do
 
   @moduletag :capture_log
 
-  doctest MotionBetweenImpacts
+  doctest MotionBetweenImpacts  # Accounts for iterate_impacts
 
   test "module exists" do
     assert is_list(MotionBetweenImpacts.module_info())
@@ -44,7 +44,46 @@ defmodule MotionBetweenImpactsTest do
           )
   end
 
-  # next_impact
+  test "next_impact not recording states" do
+    system_parameters = %SystemParameters{omega: 2.4, r: 0.6, sigma: -0.07}
+    {:ok, period} = ForcingPhase.forcing_period(system_parameters.omega)
+
+    point = %ImpactPoint{phi: period / 2, t: period / 2, v: 1}
+
+    {next_point, states, _} = MotionBetweenImpacts.next_impact(point, system_parameters)
+
+    assert next_point.v >= 0
+    assert next_point.t > point.t
+    assert next_point.phi == ForcingPhase.phi(next_point.t, system_parameters.omega)
+
+    assert length(states) == 1
+
+    last_state = List.last(states)
+
+    assert next_point.t == last_state.t
+    assert next_point.v == last_state.v
+    assert abs(last_state.x - system_parameters.sigma) < 0.00001
+  end
+
+  test "next_impact recording states" do
+    system_parameters = %SystemParameters{omega: 2.4, r: 0.6, sigma: -0.07}
+    {:ok, period} = ForcingPhase.forcing_period(system_parameters.omega)
+
+    point = %ImpactPoint{phi: period / 2, t: period / 2, v: 1}
+
+    {next_point, states, _} =
+      MotionBetweenImpacts.next_impact(point, system_parameters, Chatter.count_low_v(), true)
+
+    assert next_point.v >= 0
+    assert next_point.t > point.t
+    assert next_point.phi == ForcingPhase.phi(next_point.t, system_parameters.omega)
+
+    last_state = List.last(states)
+
+    assert next_point.t == last_state.t
+    assert next_point.v == last_state.v
+    assert abs(last_state.x - system_parameters.sigma) < 0.00001
+  end
 
   test "new_step_size" do
     step_size = 0.01
@@ -58,5 +97,4 @@ defmodule MotionBetweenImpactsTest do
              -0.5 * step_size
   end
 
-  # iterate_impacts
 end
