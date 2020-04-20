@@ -36,12 +36,16 @@ defmodule ForcingPhaseTest do
   end
 
   test "forcing_period error cases" do
-    for omega <- [-3.7, 0], do: assert(elem(ForcingPhase.forcing_period(omega),0) == :error)
+    for omega <- [-3.7, 0], do: assert(elem(ForcingPhase.forcing_period(omega), 0) == :error)
   end
 
   test "forcing_period valid cases" do
-    for omega <- [:math.pi(), 2], do: assert(elem(ForcingPhase.forcing_period(omega),0) == :ok)
-      && assert(abs(elem(ForcingPhase.forcing_period(omega),1) - 2*:math.pi()/omega) < 0.0001)
+    for omega <- [:math.pi(), 2],
+        do:
+          assert(elem(ForcingPhase.forcing_period(omega), 0) == :ok) &&
+            assert(
+              abs(elem(ForcingPhase.forcing_period(omega), 1) - 2 * :math.pi() / omega) < 0.0001
+            )
   end
 
   test "forward_to_phase" do
@@ -49,8 +53,13 @@ defmodule ForcingPhaseTest do
 
     {_, period} = ForcingPhase.forcing_period(omega)
 
-    for {n, phi, diff} <- [{21, :math.pi()/omega/2, 0.001}, {-2, period/4, 0.15}],
-        do: assert(abs(ForcingPhase.forward_to_phase(n*period + phi - diff, phi, period)-(n*period + phi))< 0.000001)
+    for {n, phi, diff} <- [{21, :math.pi() / omega / 2, 0.001}, {-2, period / 4, 0.15}],
+        do:
+          assert(
+            abs(
+              ForcingPhase.forward_to_phase(n * period + phi - diff, phi, period) -
+                (n * period + phi)
+            ) < 0.000001
+          )
   end
-
 end
