@@ -231,24 +231,60 @@ defmodule MotionBetweenImpacts do
 
   ## Example
 
-  iex> initial_point = %ImpactPoint{phi: 0.5, v: 0.5}
-  %ImpactPoint{phi: 0.5, v: 0.5}
+  iex> initial_point = %ImpactPoint{phi: 0.5, t: 0.5, v: 0.5}
+  %ImpactPoint{phi: 0.5, t: 0.5, v: 0.5}
   iex> params = %SystemParameters{omega: 2.8, r: 0.8, sigma: 0}
   %SystemParameters{omega: 2.8, r: 0.8, sigma: 0}
   iex> num_iterations = 10
   10
-  iex> MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations)
+  iex> elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
   [
-    %ImpactPoint{phi: 0.5, v: 0.5},
-    %ImpactPoint{phi: 1.258348997435864, v: 0.6396580088658008},
-    %ImpactPoint{phi: 2.1791979948717275, v: 0.28209493346812553},
-    %ImpactPoint{phi: 0.4187969923075898, v: 0.17606866202605073},
-    %ImpactPoint{phi: 1.1412084897434536, v: 0.47836908299234254},
-    %ImpactPoint{phi: 1.343307487179318, v: 0.1327150301794905},
-    %ImpactPoint{phi: 0.3375939846151814, v: 0.4872891560716187},
-    %ImpactPoint{phi: 1.1506304820510453, v: 0.6790838645307236},
-    %ImpactPoint{phi: 1.9699169794869098, v: 0.23611127091193596},
-    %ImpactPoint{phi: 0.1423284769227724, v: 0.20346731205860913}
+      %ImpactPoint{phi: 0.5, t: 0.5, v: 0.5},
+      %ImpactPoint{
+        phi: 1.2590486129143796,
+        t: 3.5030433654785176,
+        v: 0.6390091769528171
+      },
+      %ImpactPoint{
+        phi: 2.179896847410779,
+        t: 6.667886352539055,
+        v: 0.28162295347995536
+      },
+      %ImpactPoint{
+        phi: 0.4186115980204672,
+        t: 7.150595855712881,
+        v: 0.17564908445364041
+      },
+      %ImpactPoint{
+        phi: 1.1413122495090526,
+        t: 10.117291259765604,
+        v: 0.47786866340459266
+      },
+      %ImpactPoint{
+        phi: 1.3412650982632641,
+        t: 12.561238861083954,
+        v: 0.13396902992973322
+      },
+      %ImpactPoint{
+        phi: 0.34309630395107327,
+        t: 13.807064819335901,
+        v: 0.4898211314201742
+      },
+      %ImpactPoint{
+        phi: 1.155204304072491,
+        t: 16.863167572021457,
+        v: 0.6795397961462705
+      },
+      %ImpactPoint{
+        phi: 1.9784908930611316,
+        t: 19.930448913574235,
+        v: 0.23798306733513042
+      },
+      %ImpactPoint{
+        phi: 0.15019972326067332,
+        t: 20.346152496337915,
+        v: 0.2029513898497854
+      }
   ]
 
   """
