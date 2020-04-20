@@ -36,25 +36,25 @@ defmodule Curves do
     case OneNLoci.curves_for_fixed_omega(n, omega, r, num_points) do
       {:ok, dataset} ->
         (fn ->
-          {:ok, _cmd} =
-            Gnuplot.plot(
-              [
-                [
-                  :set,
-                  :title,
-                  "Sigma response curve for (1, #{n}) orbits for omega = #{omega}, r = #{r}"
-                ],
-                Gnuplot.plots([
-                  ["-", :title, "Stable", :with, :lines],
-                  ["-", :title, "Unstable", :with, :lines]
-                ])
-              ],
-              dataset
-            )
+           {:ok, _cmd} =
+             Gnuplot.plot(
+               [
+                 [
+                   :set,
+                   :title,
+                   "Sigma response curve for (1, #{n}) orbits for omega = #{omega}, r = #{r}"
+                 ],
+                 Gnuplot.plots([
+                   ["-", :title, "Stable", :with, :lines],
+                   ["-", :title, "Unstable", :with, :lines]
+                 ])
+               ],
+               dataset
+             )
 
-          #    IO.puts(cmd)
-          #    IO.inspect dataset
-        end).()
+           #    IO.puts(cmd)
+           #    IO.inspect dataset
+         end).()
 
       # TODO: implement error logger
       {:error, reason} ->
