@@ -124,7 +124,7 @@ defmodule StickingRegion do
   end
 
   @spec state_if_sticking(StateOfMotion, StickingRegion) :: StateOfMotion
-  def state_if_sticking(%StateOfMotion{} = state, %StickingRegion{} = _sticking_region)
+  def state_if_sticking(state, %StickingRegion{} = _sticking_region)
       when is_nil(state) do
     nil
   end

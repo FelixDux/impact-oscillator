@@ -5,7 +5,8 @@ defmodule MotionBetweenImpactsTest do
 
   @moduletag :capture_log
 
-  doctest MotionBetweenImpacts  # Accounts for iterate_impacts
+  # Accounts for iterate_impacts
+  doctest MotionBetweenImpacts
 
   test "module exists" do
     assert is_list(MotionBetweenImpacts.module_info())
@@ -96,5 +97,4 @@ defmodule MotionBetweenImpactsTest do
     assert MotionBetweenImpacts.new_step_size(step_size, 1.75 * step_size, sigma + 0.1, sigma) ==
              -0.5 * step_size
   end
-
 end
