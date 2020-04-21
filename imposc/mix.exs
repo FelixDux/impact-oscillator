@@ -22,8 +22,9 @@ defmodule Imposc.MixProject do
   defp deps do
     [
       {:gnuplot, "~> 1.19"},
-      {:json, "~> 1.3"}#,
-#      {:yamerl, "~> 0.8"}
+      # ,
+      {:json, "~> 1.3"}
+      #      {:yamerl, "~> 0.8"}
     ]
   end
 end

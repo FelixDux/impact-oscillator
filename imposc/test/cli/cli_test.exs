@@ -16,12 +16,16 @@ defmodule CLITest do
 
     assert {[window: true], [], []} = CLI.parse_args(["--window"])
 
-    assert {[json: true, file: true], [], []} = CLI.parse_args(["--json", "--file"])
+    assert {[json: true, png: true], [], []} = CLI.parse_args(["--json", "--png"])
 
     assert {[help: true], [], []} = CLI.parse_args(["-h"])
 
     assert {[window: true], [], []} = CLI.parse_args(["-w"])
 
-    assert {[json: true, file: true], [], []} = CLI.parse_args(["-j", "-f"])
+    assert {[json: true, png: true], [], []} = CLI.parse_args(["-j", "-p"])
+  end
+
+  test "help" do
+    CLI.process(:help)
   end
 end
