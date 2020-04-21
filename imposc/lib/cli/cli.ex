@@ -25,7 +25,7 @@ defmodule CLI do
 
   @spec parse_args([String]) :: {[], [], []}
   def parse_args(args) do
-    %{switches: switches, aliases: aliases} = const_options
+    %{switches: switches, aliases: aliases} = const_options()
 
     OptionParser.parse(args, strict: switches, aliases: aliases)
   end
