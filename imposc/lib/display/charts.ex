@@ -116,7 +116,7 @@ defmodule Mix.Tasks.Ellipse do
 
   #  @spec run(any) :: {:ok, binary}
   def run(_) do
-    Curves.sigma_ellipse(1, 2.7, 0.8)
+    Curves.sigma_ellipse(2, 4, 0.4)
   end
 end
 

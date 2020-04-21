@@ -45,6 +45,23 @@ defmodule OneNParams do
   """
 
   @spec derive(float, float, integer) :: {atom, OneNParams}
+  def derive(_omega, _r, n) when not is_integer(n) do
+    {:error, "The multiple of the forcing period must be an integer"}
+  end
+
+  def derive(_omega, _r, n) when n <= 0 do
+    {:error, "The multiple of the forcing period must be a positive integer"}
+  end
+
+  def derive(_omega, r, _n) when r < 0 or r > 1 do
+    {:error, "The coefficient of restitution must be in the range [0, 1]"}
+  end
+
+  def derive(_omega, r, _n) when r == 1 do
+    # TODO: implement this (Vn = -(sigma -/+ gamma)(1 - cn)/sn, so not an ellipse any more, sigma_s = abs(gamma))
+    {:error, "The case for coefficient of restitution == 1 has not yet been implemented"}
+  end
+
   def derive(omega, r, n) do
     outcome = ForcingPhase.forcing_period(omega)
 
@@ -99,6 +116,7 @@ defmodule OneNParams do
 
   defp velocities_for_discr(sigma, discriminant, %OneNParams{} = params) do
     # Real roots
+    # TODO: case cs == 0
     intercept = -2 * params.cs * sigma
     divisor = params.cs * params.cs + params.r_minus * params.r_minus
 
@@ -134,20 +152,17 @@ defmodule OneNParams do
     ForcingPhase.phi(angle / params.omega, params.omega)
   end
 
-  @doc """
-  Returns an `:ImpactPoint` corresponding to a solution of the quadratic equation for the velocity of a (1, n)
-  orbit.
-
-  `:velocity`: impact velocity for a candidate (1, n) orbit
-  `:sigma`: the obstacle offset
-  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
-  """
-
-  def point_for_velocity(nil, _sigma, %OneNParams{} = _params) do
+  #  Returns an `:ImpactPoint` corresponding to a solution of the quadratic equation for the velocity of a (1, n)
+  #  orbit.
+  #
+  #  `:velocity`: impact velocity for a candidate (1, n) orbit
+  #  `:sigma`: the obstacle offset
+  #  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
+  defp point_for_velocity(nil, _sigma, %OneNParams{} = _params) do
     nil
   end
 
-  def point_for_velocity(velocity, sigma, %OneNParams{} = params) do
+  defp point_for_velocity(velocity, sigma, %OneNParams{} = params) do
     phase_for_velocity(velocity, sigma, params) |> (&%ImpactPoint{phi: &1, v: velocity, t: &1}).()
   end
 
@@ -181,42 +196,36 @@ defmodule OneNParams do
     |> Enum.map(&point_for_velocity(&1, sigma, params))
   end
 
-  @doc """
-  Filters out velocities for unphysical (1, n) orbits.
-
-  `:velocity`: impact velocity for a candidate (1, n) orbit
-  `:sigma`: the obstacle offset
-  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
-
-  Returns `:velocity` if physical, `:nil` if unphysical.
-  """
-
+  #  Filters out velocities for unphysical (1, n) orbits.
+  #
+  #  `:velocity`: impact velocity for a candidate (1, n) orbit
+  #  `:sigma`: the obstacle offset
+  #  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
+  #
+  #  Returns `:velocity` if physical, `:nil` if unphysical.
   @spec nullify_unphysical(any, any, OneNParams) :: any
-  def nullify_unphysical(velocity, sigma, %OneNParams{} = params) do
-    if is_physical?(velocity, sigma, params) do
-      velocity
-    else
-      nil
+  defp nullify_unphysical(velocity, sigma, %OneNParams{} = params) do
+    cond do
+      is_nil(velocity) -> nil
+      is_physical?(velocity, sigma, params) -> velocity
+      true -> nil
     end
   end
 
-  @doc """
-  Checks whether a candidate (1, n) orbit is physical.
-
-  `:velocity`: impact velocity for a candidate (1, n) orbit
-  `:sigma`: the obstacle offset
-  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
-
-  Returns `:true` if physical, `:false` if unphysical.
-  """
-
+  #  Checks whether a candidate (1, n) orbit is physical.
+  #
+  #  `:velocity`: impact velocity for a candidate (1, n) orbit
+  #  `:sigma`: the obstacle offset
+  #  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
+  #
+  #  Returns `:true` if physical, `:false` if unphysical.
   @spec is_physical?(float, float, OneNParams) :: boolean
-  def is_physical?(velocity, _sigma, %OneNParams{} = _params) when velocity < 0 do
+  defp is_physical?(velocity, _sigma, %OneNParams{} = _params) when velocity < 0 do
     # Negative velocity so can't be physical
     false
   end
 
-  def is_physical?(velocity, sigma, %OneNParams{} = params) do
+  defp is_physical?(velocity, sigma, %OneNParams{} = params) do
     if velocity == 0 and sigma > 0 do
       # Special case: periodic graze orbit. Assume physical
       true
