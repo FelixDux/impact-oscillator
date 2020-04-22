@@ -14,15 +14,15 @@ defmodule CLITest do
   test "Parse switches" do
     assert {[help: true], [], []} = CLI.parse_args(["--help"])
 
-    assert {[window: true], [], []} = CLI.parse_args(["--window"])
+    assert {[rest: true], [], []} = CLI.parse_args(["--rest"])
 
-    assert {[json: true, png: true], [], []} = CLI.parse_args(["--json", "--png"])
+    assert {[one_shot: true, console: true], [], []} = CLI.parse_args(["--one-shot", "--console"])
 
     assert {[help: true], [], []} = CLI.parse_args(["-h"])
 
-    assert {[window: true], [], []} = CLI.parse_args(["-w"])
+    assert {[rest: true], [], []} = CLI.parse_args(["-r"])
 
-    assert {[json: true, png: true], [], []} = CLI.parse_args(["-j", "-p"])
+    assert {[one_shot: true, console: true], [], []} = CLI.parse_args(["-o", "-c"])
   end
 
   test "help" do
