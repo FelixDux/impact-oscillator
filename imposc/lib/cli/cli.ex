@@ -47,7 +47,7 @@ defmodule CLI do
   end
 
   def process({[console: true], _, _}) do
-    CoreWrapper.json_from_input |> CoreWrapper.json_to_output
+    CoreWrapper.process_input()
   end
 
   def process({options, args}) do
