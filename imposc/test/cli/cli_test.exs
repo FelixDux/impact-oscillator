@@ -26,6 +26,6 @@ defmodule CLITest do
   end
 
   test "help" do
-    CLI.process(:help)
+    CLI.process({[help: true], nil, nil})
   end
 end

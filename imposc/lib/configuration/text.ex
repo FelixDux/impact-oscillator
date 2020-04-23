@@ -7,15 +7,15 @@ defmodule GreekLetters do
   Unicode Greek letter sigma
   """
 
-  defmacro const_sigma do
-    quote do: List.to_string([<<207_131::utf8>>])
-  end
+  @const_sigma List.to_string([<<207_131::utf8>>])
+
+  def const_sigma, do: @const_sigma
 
   @doc """
   Unicode Greek letter omega
   """
 
-  defmacro const_omega do
-    quote do: List.to_string([<<207_137::utf8>>])
-  end
+  @const_omega List.to_string([<<207_137::utf8>>])
+
+  def const_omega, do: @const_omega
 end

@@ -69,9 +69,9 @@ defmodule Chatter do
   TODO: make configurable
   """
 
-  defmacro const_low_v_count_threshold do
-    quote do: 10
-  end
+  @const_low_v_count_threshold 10
+
+  def const_low_v_count_threshold, do: @const_low_v_count_threshold
 
   @doc """
   Counts successive low velocity impacts and flags when a threshold number have been reached.

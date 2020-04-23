@@ -3,15 +3,15 @@ defmodule ImposcConstants do
   Tolerances for floating point comparisons
   """
 
-  defmacro const_small do
-    quote do: 0.0001
-  end
+  @const_small 0.0001
 
-  defmacro const_smallish do
-    quote do: 0.05
-  end
+  def const_small, do: @const_small
 
-  defmacro const_tiny do
-    quote do: 0.000001
-  end
+  @const_smallish 0.05
+
+  def const_smallish, do: @const_smallish
+
+  @const_tiny 0.000001
+
+  def const_tiny, do: @const_tiny
 end

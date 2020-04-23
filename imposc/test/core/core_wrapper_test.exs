@@ -1,4 +1,3 @@
-
 defmodule CoreWrapperTest do
   use ExUnit.Case
 
@@ -13,12 +12,14 @@ defmodule CoreWrapperTest do
   end
 
   test "JSON from input" do
-    "[{\"a\": \"b\"}]" |> CoreWrapper.json_from_input |> 
-    (&assert(&1 == {:ok, [%{"a" => "b"}]})).()
+    "[{\"a\": \"b\"}]"
+    |> CoreWrapper.json_from_input()
+    |> (&assert(&1 == {:ok, [%{"a" => "b"}]})).()
   end
 
   test "output to JSON" do
-    [%{"a" => "b"}] |> CoreWrapper.json_to_output |> 
-    (&assert(&1 == "[{\"a\":\"b\"}]")).()
+    [%{"a" => "b"}]
+    |> CoreWrapper.json_to_output()
+    |> (&assert(&1 == "[{\"a\":\"b\"}]")).()
   end
 end
