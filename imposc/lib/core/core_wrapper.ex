@@ -4,25 +4,29 @@ defmodule CoreWrapper do
   
   """
 
-  def json_from_input() do
-    IO.read(:all) |> JSON.decode
+  def json_from_input(input) do
+    input |> JSON.decode
   end
 
   def json_to_output(data) do
-    data |> JSON.encode! |> IO.puts
+    data |> JSON.encode! 
   end
 
   def process(input) do
     case input do
       {:ok, _} -> input |> elem(1) |> process
 
-      [_|_] -> input |> Stream.map(&process(&1))
+      [_|_] -> input |> Enum.map(&process(&1))
 
       _ -> input
     end
   end
 
+  def process_input_string(input) do
+    input |> json_from_input |> process |> json_to_output
+  end
+
   def process_input() do
-    json_from_input() |> process |> json_to_output
+    IO.read(:all) |> process_input_string |> IO.puts
   end
 end
