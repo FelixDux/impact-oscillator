@@ -24,10 +24,11 @@ imposc-*.tar
 
 *.beam
 /config/*.secret.exs
-imposc/.elixir_ls
+**/.elixir_ls
 *.elixir
 *.app
 *.pyc
 imposcpy/venv
 .vscode
 .idea
+*.swp

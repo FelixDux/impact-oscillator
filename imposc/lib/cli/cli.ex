@@ -17,8 +17,7 @@ defmodule CLI do
             aliases: [h: :help, o: :one_shot, c: :console, r: :rest],
             help: [
               help: "Returns this help message",
-              one_shot: "Accepts JSON from the standard input, interprets it into commands, generates any graphics and
-     returns any text output (e.g. JSON) to the standard output and exits",
+              one_shot: "Accepts JSON from the standard input, interprets it into commands, generates any graphics and returns any text output (e.g. JSON) to the standard output and exits",
               console: "Launches as a console application",
               rest: "Launches as a REST server"
             ]
@@ -40,14 +39,23 @@ defmodule CLI do
                                                                  end end).()} [options]"
   end
 
-  def process(:help) do
+  def process({[help: true], _, _}) do
     IO.puts("Usage: #{usage()}\n")
     %{help: help, aliases: aliases} = const_options
     for {k, v} <- aliases, do: IO.puts("\n-#{k}, --#{v}:\t#{help[v]}")
     #    System.halt(0)
   end
 
+  def process({[console: true], _, _}) do
+    CoreWrapper.json_from_input |> CoreWrapper.json_to_output
+  end
+
   def process({options, args}) do
-    IO.puts("Hello")
+    IO.puts("Not yet implemented")
+  end
+
+
+  def main(args) do
+    args |> parse_args |> process
   end
 end
