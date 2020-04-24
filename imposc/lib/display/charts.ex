@@ -10,6 +10,8 @@ defmodule ImpactMap do
         %SystemParameters{} = params,
         num_iterations \\ 1000
       ) do
+        IO.inspect(params)
+        IO.inspect(initial_point)
     dataset =
       elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
       |> Stream.map(&ImpactPoint.point_to_list(&1))

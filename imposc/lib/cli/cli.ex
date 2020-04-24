@@ -50,12 +50,14 @@ defmodule CLI do
     #    System.halt(0)
   end
 
-  def process({[console: true], _, _}) do
+  def process({[one_shot: true], _, _}) do
     CoreWrapper.process_input()
   end
 
-  def process({options, args}) do
-    IO.puts("Not yet implemented")
+  def process(args) do
+    IO.puts("Not yet implemented:")
+
+    IO.inspect(args)
   end
 
   def main(args) do

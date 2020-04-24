@@ -4,29 +4,28 @@ defmodule CoreWrapper do
 
   """
 
-  @function_map %{
-    scatter: CoreWrapper.scatter/1
-  }
-
   def scatter(args) do
+    #IO.inspect(args)
     ImpactMap.chart_impacts(
-      struct(ImpactPoint, Map.fetch!(args, :initial_point)), 
-      struct(SystemParameters, Map.fetch!(args, :params))) 
+      struct(ImpactPoint, Map.fetch!(args, "initial_point")), 
+      struct(SystemParameters, Map.fetch!(args, "params"))) 
   end
 
-  defp get_function(action) do
-    Map.fetch!(@function_map, action)
-  end
+  defp execute_action(input) do
 
+    case input do
+      {:error, _} -> input
 
-  defp execute_function(input) do
-    f = input |> Map.fetch!(:action) |> get_function
+      %{"action" =>  "scatter", "args" => args} -> args |> scatter
 
-    input |> Map.fetch!(:args) |> f
+      #_ -> IO.inspect(input) 
+
+      _ -> {:error, "Could not retrieve action from JSON input"}
+    end
   end
 
   def json_from_input(input) do
-    input |> JSON.decode()
+    input |> JSON.decode() #|> IO.inspect
   end
 
   def json_to_output(data) do
@@ -37,7 +36,7 @@ defmodule CoreWrapper do
     case input do
       {:ok, _} -> input |> elem(1) |> process
       [_ | _] -> input |> Enum.map(&process(&1))
-      _ -> input |> execute_function
+      _ -> input |> execute_action
     end
   end
 
