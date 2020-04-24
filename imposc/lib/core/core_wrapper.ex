@@ -22,23 +22,32 @@ defmodule CoreWrapper do
         end).()
   end
 
-  def to_impact_point(args, key \\ "initial_point") do
-    case Map.fetch(args, key) do
-      {:ok, attrs} ->
-        attrs
+  defp from_attrs(kind, attrs) do
+    case kind.module_info() |> Keyword.fetch!(:module) do
+      ImpactPoint -> attrs
         |> (&to_struct(ImpactPoint, &1)).()
         |> (&%ImpactPoint{phi: &1.phi, v: &1.v, t: &1.phi}).()
+
+      SystemParameters -> attrs |> (&to_struct(SystemParameters, &1)).()
+
+      _ -> nil
+    end
+  end
+
+  def from_args(kind, args, key) do
+    case Map.fetch(args, key) do
+      {:ok, attrs} -> attrs |> (&from_attrs(kind, &1)).()
 
       :error ->
         {:error, "Missing arguments for \"#{key}\""}
     end
   end
-
   def scatter(args) do
-    ImpactMap.chart_impacts(
-      to_impact_point(args),
-      to_struct(SystemParameters, Map.fetch!(args, "params"))
-    )
+    args |> 
+    (&ImpactMap.chart_impacts(
+      from_args(ImpactPoint, &1, "initial_point"),
+      from_args(SystemParameters, &1, "params")
+    )).()
   end
 
   defp execute_action(input) do
