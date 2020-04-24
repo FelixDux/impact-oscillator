@@ -27,4 +27,12 @@ defmodule ImpactPoint do
   def point_to_list(%ImpactPoint{} = point) do
     [point.phi, point.v]
   end
+
+  @doc """
+  Initialises from a phase and a velocity. The time is set to the phase. 
+  """
+
+  def derive(phi, v) do
+    %ImpactPoint{phi: phi, v: v, t: phi}
+  end
 end
