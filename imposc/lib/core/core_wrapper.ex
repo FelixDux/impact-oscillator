@@ -26,6 +26,10 @@ defmodule CoreWrapper do
     attrs
   end
 
+  defp from_attrs(kind, attrs) when Float == kind and is_float(attrs) do
+    attrs
+  end
+
   defp from_attrs(kind, attrs) do
     case kind.module_info() |> Keyword.fetch!(:module) do
       ImpactPoint ->
@@ -60,11 +64,22 @@ defmodule CoreWrapper do
         )).()
   end
 
+  def ellipse(args) do
+    args
+    |> (&Curves.sigma_ellipse(
+          from_args(Integer, &1, "n"),
+          from_args(Float, &1, "omega"),
+          from_args(Float, &1, "r"),
+          from_args(Integer, &1, "num_points")
+        )).()
+  end
+
   defp execute_action(input) do
     Task.async( fn -> 
     case input do
       {:error, _} -> input
       %{"action" => "scatter", "args" => args} -> args |> scatter
+      %{"action" => "ellipse", "args" => args} -> args |> ellipse
       # _ -> IO.inspect(input) 
 
       _ -> {:error, "Could not retrieve action from JSON input"}
