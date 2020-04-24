@@ -74,12 +74,21 @@ defmodule CoreWrapper do
         )).()
   end
 
+  def timeseries(args) do
+    args
+    |> (&TimeSeries.time_series(
+          from_args(ImpactPoint, &1, "start_impact"),
+          from_args(SystemParameters, &1, "params")
+        )).()
+  end
+
   defp execute_action(input) do
     Task.async( fn -> 
     case input do
       {:error, _} -> input
       %{"action" => "scatter", "args" => args} -> args |> scatter
       %{"action" => "ellipse", "args" => args} -> args |> ellipse
+      %{"action" => "timeseries", "args" => args} -> args |> timeseries
       # _ -> IO.inspect(input) 
 
       _ -> {:error, "Could not retrieve action from JSON input"}
