@@ -61,29 +61,29 @@ defmodule CoreWrapper do
   end
 
   defp execute_action(input) do
+    Task.async( fn -> 
     case input do
       {:error, _} -> input
       %{"action" => "scatter", "args" => args} -> args |> scatter
       # _ -> IO.inspect(input) 
 
       _ -> {:error, "Could not retrieve action from JSON input"}
-    end
+    end end) 
   end
 
   def json_from_input(input) do
-    # |> IO.inspect
-    input |> JSON.decode()
+    input |> JSON.decode
   end
 
   def json_to_output(data) do
-    data |> JSON.encode!()
+    data |> JSON.encode!
   end
 
   def process(input) do
     case input do
       {:ok, _} -> input |> elem(1) |> process
       [_ | _] -> input |> Enum.map(&process(&1))
-      _ -> input |> execute_action
+      _ -> input |> execute_action |> Task.await
     end
   end
 
@@ -92,6 +92,6 @@ defmodule CoreWrapper do
   end
 
   def process_input() do
-    IO.read(:all) |> process_input_string |> IO.puts()
+    IO.read(:all) |> process_input_string |> IO.puts
   end
 end
