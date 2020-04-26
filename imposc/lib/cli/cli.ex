@@ -45,7 +45,7 @@ defmodule CLI do
 
   def process({[help: true], _, _}) do
     IO.puts("Usage: #{usage()}\n")
-    %{help: help, aliases: aliases} = const_options
+    %{help: help, aliases: aliases} = const_options()
     for {k, v} <- aliases, do: IO.puts("\n-#{k}, --#{v}:\t#{help[v]}")
     #    System.halt(0)
   end
