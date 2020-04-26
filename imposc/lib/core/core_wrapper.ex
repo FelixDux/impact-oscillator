@@ -71,55 +71,16 @@ defmodule CoreWrapper do
         {:error, "Missing arguments for \"#{key}\""}
     end
   end
-
-  @doc """
-  Generates a scatter plot using arguments initialised from `:args`.
-  """
-  @spec scatter(map()) :: nil | number() | {atom(), iodata()} | struct()
-  def scatter(args) do
-    args
-    |> (&ImpactMap.chart_impacts(
-          from_args(ImpactPoint, &1, "initial_point"),
-          from_args(SystemParameters, &1, "params"),
-          from_args(Integer, &1, "num_iterations")
-        )).()
-  end
-
-  @doc """
-  Generates a (1, n) orbit sigma response plot using arguments initialised from `:args`.
-  """
-  @spec ellipse(map()) :: nil | number() | {atom(), iodata()} | struct()
-  def ellipse(args) do
-    args
-    |> (&Curves.sigma_ellipse(
-          from_args(Integer, &1, "n"),
-          from_args(Float, &1, "omega"),
-          from_args(Float, &1, "r"),
-          from_args(Integer, &1, "num_points")
-        )).()
-  end
-
-  @doc """
-  Generates a time-series plot using arguments initialised from `:args`.
-  """
-  @spec timeseries(map()) :: nil | number() | {atom(), iodata()} | struct()
-  def timeseries(args) do
-    args
-    |> (&TimeSeries.time_series(
-          from_args(ImpactPoint, &1, "start_impact"),
-          from_args(SystemParameters, &1, "params")
-        )).()
-  end
-
+  
   # Determines which kind of action is required by a JSON-derived `:Map`
   # of `:input` and returns an async-ed `:Task` to execute it.
   defp execute_action(input) do
     Task.async(fn ->
       case input do
         {:error, _} -> input
-        %{"action" => "scatter", "args" => args} -> args |> scatter
-        %{"action" => "ellipse", "args" => args} -> args |> ellipse
-        %{"action" => "timeseries", "args" => args} -> args |> timeseries
+        %{"action" => "scatter", "args" => args} -> args |> ScatterAction.execute
+        %{"action" => "ellipse", "args" => args} -> args |> EllipseAction.execute
+        %{"action" => "timeseries", "args" => args} -> args |> TimeSeriesAction.execute
         # _ -> IO.inspect(input) 
 
         _ -> {:error, "Could not retrieve action from JSON input"}
