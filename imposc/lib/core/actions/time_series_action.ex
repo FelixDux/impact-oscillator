@@ -23,5 +23,4 @@ defmodule TimeSeriesAction do
       "params" => %{"omega" => nil, "sigma" => nil, "r" => nil}
     }
   end
-
 end

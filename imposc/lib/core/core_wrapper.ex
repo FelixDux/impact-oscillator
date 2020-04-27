@@ -71,14 +71,13 @@ defmodule CoreWrapper do
         {:error, "Missing arguments for \"#{key}\""}
     end
   end
-  
+
   # Determines which kind of action is required by a JSON-derived `:Map`
   # of `:input` and returns an async-ed `:Task` to execute it.
   defp execute_action(input) do
     Task.async(fn ->
       case input do
         {:error, _} -> input
-
         %{"action" => action, "args" => args} -> ActionMap.execute(action, args)
         # _ -> IO.inspect(input) 
 
