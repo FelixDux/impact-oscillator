@@ -78,9 +78,8 @@ defmodule CoreWrapper do
     Task.async(fn ->
       case input do
         {:error, _} -> input
-        %{"action" => "scatter", "args" => args} -> args |> ScatterAction.execute
-        %{"action" => "ellipse", "args" => args} -> args |> EllipseAction.execute
-        %{"action" => "timeseries", "args" => args} -> args |> TimeSeriesAction.execute
+
+        %{"action" => action, "args" => args} -> ActionMap.execute(action, args)
         # _ -> IO.inspect(input) 
 
         _ -> {:error, "Could not retrieve action from JSON input"}
