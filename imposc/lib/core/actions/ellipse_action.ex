@@ -14,4 +14,17 @@ defmodule EllipseAction do
           CoreWrapper.from_args(Integer, &1, "num_points")
         )).()
   end
+
+  @doc """
+  Specifies the arguments required for a (1, n) sigma response plot 
+  """
+  @impl Action
+  def requirements() do
+    %{
+      "n" => nil,
+      "omega" => nil,
+      "r" => nil,
+      "num_points" => nil
+    }
+  end
 end

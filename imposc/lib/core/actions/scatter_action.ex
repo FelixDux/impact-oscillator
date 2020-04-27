@@ -13,4 +13,16 @@ defmodule ScatterAction do
           CoreWrapper.from_args(Integer, &1, "num_iterations")
         )).()
   end
+
+  @doc """
+  Specifies the arguments required for a scatter plot 
+  """
+  @impl Action
+  def requirements() do
+    %{
+      "initial_point" => %{"phi" => nil, "v" => nil},
+      "params" => %{"omega" => nil, "sigma" => nil, "r" => nil},
+      "num_iterations" => nil
+    }
+  end
 end

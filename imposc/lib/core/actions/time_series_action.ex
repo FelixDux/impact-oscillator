@@ -13,4 +13,15 @@ defmodule TimeSeriesAction do
         )).()
   end
 
+  @doc """
+  Specifies the arguments required for a time series plot 
+  """
+  @impl Action
+  def requirements() do
+    %{
+      "start_impact" => %{"phi" => nil, "v" => nil},
+      "params" => %{"omega" => nil, "sigma" => nil, "r" => nil}
+    }
+  end
+
 end
