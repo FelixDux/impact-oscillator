@@ -1,5 +1,5 @@
 defmodule Action do
-  @callback execute(map()) :: nil | number() | {atom(), iodata()} | struct()
+  @callback execute(map()) :: atom() | {atom(), iodata()}
 
   @callback requirements() :: map()
 

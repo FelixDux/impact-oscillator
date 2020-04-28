@@ -44,7 +44,6 @@ defmodule MotionBetweenImpacts do
             coeffs.omega *
               coeffs.gamma * :math.sin(coeffs.omega * t)
     }
-
   end
 
   @doc """

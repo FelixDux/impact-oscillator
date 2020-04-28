@@ -8,7 +8,8 @@ defmodule Imposc.MixProject do
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      escript: escript()
+      escript: escript(),
+      dialyzer: [flags: ["-Werror_handling", "-Wrace_conditions", "-Wunderspecs", "-Wno_match"]]
     ]
   end
 

@@ -4,19 +4,19 @@ defmodule ForcingPhase do
   """
 
   @doc """
-  Returns the fractional part of a floating point number
+  Returns the fractional part of a number()ing point number
   """
 
-  @spec frac_part(float) :: float
+  @spec frac_part(number()) :: number()
   def frac_part(x) do
     x - trunc(x)
   end
 
   @doc """
-  Returns the remainder of `:x` divided by `:y` - like `Kernel.rem` but for floats
+  Returns the remainder of `:x` divided by `:y` - like `Kernel.rem` but for number()s
   """
 
-  @spec modulo(float, float) :: float
+  @spec modulo(number(), number()) :: number()
   def modulo(x, y) when y == 0 do
     x
   end
@@ -49,7 +49,7 @@ defmodule ForcingPhase do
   For a given time `:t` and forcing frequency `:omega` returns the phase relative to the forcing period
   """
 
-  @spec phi(float, float) :: float
+  @spec phi(number(), number()) :: number()
   def phi(t, omega) do
     forcing_period(omega) |> (&if(elem(&1, 0) == :ok, do: modulo(t, elem(&1, 1)), else: nil)).()
   end
@@ -58,7 +58,7 @@ defmodule ForcingPhase do
   Returns the lowest time greater than or equal to time `:t` for which the phase relative to `:period` is `:phi`
   """
 
-  @spec forward_to_phase(float, float, float) :: float
+  @spec forward_to_phase(number(), number(), number()) :: number()
   def forward_to_phase(t, phi, period) do
     phase_difference = phi - modulo(t, period)
 
@@ -85,7 +85,7 @@ defmodule ForcingPhase do
   the displacement between impacts
   """
 
-  @spec gamma(number) :: float
+  @spec gamma(number()) :: number()
   def gamma(omega) when omega in [1, -1] do
     1
   end

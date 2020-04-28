@@ -5,6 +5,8 @@ defmodule ImpactMap do
   Generates scatter plots of impact speed and phase on the impact-surface
   """
 
+  @spec chart_impacts(%ImpactPoint{}, %SystemParameters{}, integer()) ::
+          {atom(), iodata()} | atom()
   def chart_impacts(
         %ImpactPoint{} = initial_point,
         %SystemParameters{} = params,
@@ -33,6 +35,11 @@ defmodule ImpactMap do
 end
 
 defmodule Curves do
+  @moduledoc """
+  Generates sigma-response curves for (1, n) orbits
+  """
+
+  @spec sigma_ellipse(integer(), number(), number(), integer()) :: {atom(), iodata()} | atom()
   def sigma_ellipse(n, omega, r, num_points \\ 1000) do
     case OneNLoci.curves_for_fixed_omega(n, omega, r, num_points) do
       {:ok, dataset} ->
@@ -64,6 +71,7 @@ defmodule Curves do
 end
 
 defmodule TimeSeries do
+  @spec time_series(%ImpactPoint{}, %SystemParameters{}) :: {atom(), iodata()} | atom()
   def time_series(%ImpactPoint{} = start_impact, %SystemParameters{} = params) do
     {initial_points, _} = MotionBetweenImpacts.iterate_impacts(start_impact, params, 1)
 

@@ -28,6 +28,18 @@ defmodule OneNParams do
             sigma_s: 0,
             period: :math.pi()
 
+  @type t :: %OneNParams{
+          omega: number(),
+          r: number(),
+          gamma: number(),
+          gamma2: number(),
+          r_minus: number(),
+          n: integer(),
+          cs: number(),
+          sigma_s: number(),
+          period: number()
+        }
+
   defp derive_cs(cn, _sn, _r) when cn == 1 do
     0
   end
@@ -104,7 +116,7 @@ defmodule OneNParams do
          (sigma * sigma - params.gamma2) * params.r_minus * params.r_minus)
   end
 
-  @spec velocities_for_discr(number(), number(), %OneNParams{}) :: [nil | number(), ...]
+  @spec velocities_for_discr(number(), number(), OneNParams.t()) :: [nil | number(), ...]
   #  Solves the quadratic equation to return the velocities for candidate (1, n) orbits for a given obstacle offset and
   #  discriminant. Depending on the value of the discriminant, there will be either zero, one (in the case of a double
   #  root) or two such velocities. Unphysical or negative-velocity orbits are not filtered out.
@@ -127,7 +139,7 @@ defmodule OneNParams do
     [vs + d, vs - d]
   end
 
-  @spec phase_for_velocity(number() | nil, number(), %OneNParams{}) :: number() | nil
+  @spec phase_for_velocity(nil | number(), number(), OneNParams.t()) :: nil | number()
   # Returns the phase corresponding to a solution of the quadratic equation for the velocity of a (1, n) orbit.
   defp phase_for_velocity(nil, _sigma, %OneNParams{} = _params) do
     # Return `nil` for a `nil` velocity
