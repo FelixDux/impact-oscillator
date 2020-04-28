@@ -31,4 +31,27 @@ defmodule ActionTest do
     assert {:error, "Missing arguments: num_iterations\ninitial_point: Missing arguments: phi"} =
              Action.validate_args(ScatterAction, args)
   end
+
+  test "Action requirements correctly retrieved" do
+    assert %{} = "ellipse" |> ActionMap.requirements()
+  end
+
+  test "Action description correctly retrieved" do
+
+    assert Regex.match?(~r/.*sigma.*$/i, 
+    "ellipse" |> ActionMap.description()
+    )
+  end
+
+  test "Bad requirements request correctly handled" do
+    action = "sdfh"
+
+    assert {:error, "Unrecognised action" <> _a} = action |> ActionMap.requirements
+  end
+
+  test "Bad description request correctly handled" do
+    action = "sdfh"
+
+    assert {:error, "Unrecognised action" <> _a} = action |> ActionMap.description
+  end
 end

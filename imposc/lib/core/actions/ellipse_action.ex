@@ -1,6 +1,10 @@
 defmodule EllipseAction do
   @behaviour Action
 
+  @moduledoc """
+  Generates a (1, n) orbit sigma response plot 
+  """
+
   @doc """
   Generates a (1, n) orbit sigma response plot using arguments initialised from `:args`.
   """
@@ -26,5 +30,13 @@ defmodule EllipseAction do
       "r" => nil,
       "num_points" => nil
     }
+  end
+
+  @doc """
+  Returns a description of the action
+  """
+  @impl Action
+  def description() do
+    @moduledoc
   end
 end

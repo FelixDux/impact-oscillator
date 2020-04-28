@@ -18,4 +18,24 @@ defmodule ActionMap do
         module_name |> (&apply(String.to_existing_atom("Elixir.#{&1}"), :execute, [args])).()
     end
   end
+
+  def requirements(action) do
+    case Map.fetch(@actions, action) do
+      :error ->
+        {:error, "Unrecognised action \"#{action}\""}
+
+      {:ok, module_name} ->
+        module_name |> (&apply(String.to_existing_atom("Elixir.#{&1}"), :requirements, [])).()
+    end
+  end
+
+  def description(action) do
+    case Map.fetch(@actions, action) do
+      :error ->
+        {:error, "Unrecognised action \"#{action}\""}
+
+      {:ok, module_name} ->
+        module_name |> (&apply(String.to_existing_atom("Elixir.#{&1}"), :description, [])).()
+    end
+  end
 end

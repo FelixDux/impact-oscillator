@@ -3,6 +3,8 @@ defmodule Action do
 
   @callback requirements() :: map()
 
+  @callback description() :: iodata()
+
   @doc """
   Validates `:args` against `:requirements`
   """

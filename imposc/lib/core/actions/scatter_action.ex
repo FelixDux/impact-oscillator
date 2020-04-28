@@ -1,6 +1,10 @@
 defmodule ScatterAction do
   @behaviour Action
 
+  @moduledoc """
+  Generates a scatter plot
+  """
+
   @doc """
   Generates a scatter plot using arguments initialised from `:args`.
   """
@@ -24,5 +28,13 @@ defmodule ScatterAction do
       "params" => %{"omega" => nil, "sigma" => nil, "r" => nil},
       "num_iterations" => nil
     }
+  end
+
+  @doc """
+  Returns a description of the action
+  """
+  @impl Action
+  def description() do
+    @moduledoc
   end
 end
