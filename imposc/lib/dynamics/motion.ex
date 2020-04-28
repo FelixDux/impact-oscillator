@@ -8,7 +8,7 @@ defmodule MotionBetweenImpacts do
   from the previous impact and a function to evaluate a chatter counter.
   """
 
-  @type point_with_states :: {%ImpactPoint{}, [%StateOfMotion{}], any()} #(fun(number()) -> any())}
+  @type point_with_states :: {%ImpactPoint{}, [%StateOfMotion{}], (number() -> any())}
 
   @doc """
   Gives the state of motion (position, velocity, time) at a given time after an impact
@@ -61,7 +61,7 @@ defmodule MotionBetweenImpacts do
   @spec next_impact(
           %ImpactPoint{},
           %SystemParameters{},
-          any(), #(fun(integer()) -> {boolean(), (fun(number()) -> any())}),
+          (integer() -> {boolean(), (number() -> any())}),
           boolean(),
           number(),
           number()

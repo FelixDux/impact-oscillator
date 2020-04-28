@@ -79,7 +79,7 @@ defmodule Chatter do
   Used in detecting chatter.
   """
 
-  @spec count_low_v(integer()) :: any() #fun((number()) -> {boolean(), fun((integer()) -> any())})
+  @spec count_low_v(integer()) :: (number() -> {boolean(), (integer() -> any())})
   def count_low_v(counter \\ 0) do
     require ImposcConstants
 
