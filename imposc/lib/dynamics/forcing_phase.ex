@@ -37,7 +37,7 @@ defmodule ForcingPhase do
   For a given forcing frequency `:omega` returns the the forcing period
   """
 
-  @spec forcing_period(float) :: {atom, float}
+  @spec forcing_period(number()) :: {atom(), number()}
   def forcing_period(omega) do
     cond do
       omega <= 0 -> {:error, "Forcing frequency must be positive"}

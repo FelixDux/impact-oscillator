@@ -25,7 +25,7 @@ defmodule Chatter do
   **Precondition** chatter cannot occur for `:parameters.r` >= 1. This will result in an error condition.
   """
 
-  @spec accumulation_state(StateOfMotion, SystemParameters) :: {atom, StateOfMotion}
+  @spec accumulation_state(%StateOfMotion{}, %SystemParameters{}) :: {atom(), %StateOfMotion{}}
   def accumulation_state(%StateOfMotion{} = state, %SystemParameters{} = parameters) do
     g = low_velocity_acceleration(state.t, parameters.sigma, parameters.omega)
 
@@ -79,7 +79,7 @@ defmodule Chatter do
   Used in detecting chatter.
   """
 
-  @spec count_low_v(integer) :: {Boolean, (float -> any)}
+  @spec count_low_v(integer()) :: any() #fun((number()) -> {boolean(), fun((integer()) -> any())})
   def count_low_v(counter \\ 0) do
     require ImposcConstants
 

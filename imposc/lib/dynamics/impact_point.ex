@@ -23,7 +23,7 @@ defmodule ImpactPoint do
   Converts the struct to a list [`:phi`, `:v`].
   """
 
-  @spec point_to_list(ImpactPoint) :: [float]
+  @spec point_to_list(%ImpactPoint{}) :: [number()]
   def point_to_list(%ImpactPoint{} = point) do
     [point.phi, point.v]
   end

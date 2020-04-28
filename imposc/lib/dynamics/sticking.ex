@@ -20,7 +20,7 @@ defmodule StickingRegion do
   Derive a `:StickingRegion` from `:SystemParameters`
   """
 
-  @spec derive(SystemParameters) :: {atom, StickingRegion}
+  @spec derive(%SystemParameters{}) :: {atom(), %StickingRegion{}}
   def derive(%SystemParameters{} = parameters) do
     outcome = ForcingPhase.forcing_period(parameters.omega)
 
@@ -73,7 +73,7 @@ defmodule StickingRegion do
   Check if the phase `:phi` is in the `:sticking_region`
   """
 
-  @spec is_sticking?(float, StickingRegion) :: Boolean
+  @spec is_sticking?(number(), %StickingRegion{}) :: boolean()
   def is_sticking?(phi, %StickingRegion{} = sticking_region) do
     cond do
       # No sticking region
@@ -114,7 +114,7 @@ defmodule StickingRegion do
   `:sticking_region`) and the associated velocity is zero
   """
 
-  @spec next_impact_state(float, float, StickingRegion) :: StateOfMotion
+  @spec next_impact_state(number(), number(), %StickingRegion{}) :: %StateOfMotion{}
   def next_impact_state(t, sigma, %StickingRegion{} = sticking_region) do
     %StateOfMotion{
       t: ForcingPhase.forward_to_phase(t, sticking_region.phi_out, sticking_region.period),
@@ -123,7 +123,7 @@ defmodule StickingRegion do
     }
   end
 
-  @spec state_if_sticking(StateOfMotion, StickingRegion) :: StateOfMotion
+  @spec state_if_sticking(%StateOfMotion{}, %StickingRegion{}) :: %StateOfMotion{}
   def state_if_sticking(state, %StickingRegion{} = _sticking_region)
       when is_nil(state) do
     nil

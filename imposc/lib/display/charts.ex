@@ -14,27 +14,21 @@ defmodule ImpactMap do
       elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
       |> Stream.map(&ImpactPoint.point_to_list(&1))
 
-      case Gnuplot.plot(
-        [
-          [
-            :set,
-            :title,
-            "Impact map for omega = #{params.omega}, sigma = #{params.sigma}, r = #{params.r}"
-          ],
-          [:plot, "-", :with, :points, :pointtype, 7, :ps, 0.1]
-        ],
-        [dataset]
-          ) 
-        do
-
-        {:ok, _cmd} -> :ok
-
-        {:error, message} -> {:error, message}
-
-        _ -> {:error, "Unknown error generating chart"}
-
-        end
-
+    case Gnuplot.plot(
+           [
+             [
+               :set,
+               :title,
+               "Impact map for omega = #{params.omega}, sigma = #{params.sigma}, r = #{params.r}"
+             ],
+             [:plot, "-", :with, :points, :pointtype, 7, :ps, 0.1]
+           ],
+           [dataset]
+         ) do
+      {:ok, _cmd} -> :ok
+      {:error, message} -> {:error, message}
+      _ -> {:error, "Unknown error generating chart"}
+    end
   end
 end
 
@@ -43,34 +37,28 @@ defmodule Curves do
     case OneNLoci.curves_for_fixed_omega(n, omega, r, num_points) do
       {:ok, dataset} ->
         (fn ->
-             case Gnuplot.plot(
-               [
-                 [
-                   :set,
-                   :title,
-                   "Sigma response curve for (1, #{n}) orbits for omega = #{omega}, r = #{r}"
-                 ],
-                 Gnuplot.plots([
-                   ["-", :title, "Stable", :with, :lines],
-                   ["-", :title, "Unstable", :with, :lines]
-                 ])
-               ],
-               dataset
-             )
-        do
-
-        {:ok, _cmd} -> :ok
-
-        {:error, message} -> {:error, message}
-
-        _ -> {:error, "Unknown error generating chart"}
-
-        end
-
+           case Gnuplot.plot(
+                  [
+                    [
+                      :set,
+                      :title,
+                      "Sigma response curve for (1, #{n}) orbits for omega = #{omega}, r = #{r}"
+                    ],
+                    Gnuplot.plots([
+                      ["-", :title, "Stable", :with, :lines],
+                      ["-", :title, "Unstable", :with, :lines]
+                    ])
+                  ],
+                  dataset
+                ) do
+             {:ok, _cmd} -> :ok
+             {:error, message} -> {:error, message}
+             _ -> {:error, "Unknown error generating chart"}
+           end
          end).()
 
-      {:error, reason} -> {:error, "Error #{reason} encountered generating chart"}
-
+      {:error, reason} ->
+        {:error, "Error #{reason} encountered generating chart"}
     end
   end
 end
@@ -85,30 +73,23 @@ defmodule TimeSeries do
 
     dataset = Stream.map(states, &[&1.t, &1.x])
 
-     case Gnuplot.plot(
-        [
-          [
-            :set,
-            :title,
-            "Time series for omega = #{params.omega}, sigma = #{params.sigma}, r = #{params.r}"
-          ],
-          [:plot, "-", :with, :lines]
-        ],
-        [dataset]
-      )
-        do
-
-        {:ok, _cmd} -> :ok
-
-        {:error, message} -> {:error, message}
-
-        _ -> {:error, "Unknown error generating chart"}
-
-        end
-
+    case Gnuplot.plot(
+           [
+             [
+               :set,
+               :title,
+               "Time series for omega = #{params.omega}, sigma = #{params.sigma}, r = #{params.r}"
+             ],
+             [:plot, "-", :with, :lines]
+           ],
+           [dataset]
+         ) do
+      {:ok, _cmd} -> :ok
+      {:error, message} -> {:error, message}
+      _ -> {:error, "Unknown error generating chart"}
+    end
   end
 end
-
 
 defmodule Mix.Tasks.Scatter do
   use Mix.Task

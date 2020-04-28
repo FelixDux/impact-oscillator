@@ -26,7 +26,7 @@ defmodule EvolutionCoefficients do
   Returns `:EvolutionCoefficients` for the motion after the impact
   """
 
-  @spec derive(SystemParameters, ImpactPoint) :: {atom, EvolutionCoefficients}
+  @spec derive(%SystemParameters{}, %ImpactPoint{}) :: {atom(), %EvolutionCoefficients{}}
   def derive(%SystemParameters{} = parameters, %ImpactPoint{} = point) do
     result = %EvolutionCoefficients{
       gamma: ForcingPhase.gamma(parameters.omega),

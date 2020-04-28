@@ -44,7 +44,7 @@ defmodule OneNParams do
   `:n`: the number of forcing cycles between impacts in a single-impact periodic orbit
   """
 
-  @spec derive(float, float, integer) :: {atom, OneNParams}
+  @spec derive(number(), number(), integer()) :: {atom(), %OneNParams{}}
   def derive(_omega, _r, n) when not is_integer(n) do
     {:error, "The multiple of the forcing period must be an integer"}
   end
@@ -91,12 +91,12 @@ defmodule OneNParams do
            {:ok, result}
          end).()
 
-      _ ->
+      {:error, _} ->
         outcome
     end
   end
 
-  @spec discriminant(number, OneNParams) :: number
+  @spec discriminant(number(), %OneNParams{}) :: number()
   defp discriminant(sigma, %OneNParams{} = params) do
     # The discriminant of the quadratic equation for the impact velocity for a given value of the obstacle offset.
     4 *
@@ -104,7 +104,7 @@ defmodule OneNParams do
          (sigma * sigma - params.gamma2) * params.r_minus * params.r_minus)
   end
 
-  @spec velocities_for_discr(number, number, OneNParams) :: [nil | float, ...]
+  @spec velocities_for_discr(number(), number(), %OneNParams{}) :: [nil | number(), ...]
   #  Solves the quadratic equation to return the velocities for candidate (1, n) orbits for a given obstacle offset and
   #  discriminant. Depending on the value of the discriminant, there will be either zero, one (in the case of a double
   #  root) or two such velocities. Unphysical or negative-velocity orbits are not filtered out.
@@ -127,7 +127,7 @@ defmodule OneNParams do
     [vs + d, vs - d]
   end
 
-  @spec phase_for_velocity(float | nil, float, OneNParams) :: float
+  @spec phase_for_velocity(number() | nil, number(), %OneNParams{}) :: number() | nil
   # Returns the phase corresponding to a solution of the quadratic equation for the velocity of a (1, n) orbit.
   defp phase_for_velocity(nil, _sigma, %OneNParams{} = _params) do
     # Return `nil` for a `nil` velocity
@@ -174,7 +174,7 @@ defmodule OneNParams do
   `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
   """
 
-  @spec velocities(number, OneNParams) :: {nil | float, nil | float}
+  @spec velocities(number(), %OneNParams{}) :: {nil | number(), nil | number()}
   def velocities(sigma, %OneNParams{} = params) do
     velocities_for_discr(sigma, discriminant(sigma, params), params)
     |> Enum.map(&nullify_unphysical(&1, sigma, params))
@@ -189,7 +189,7 @@ defmodule OneNParams do
   `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
   """
 
-  @spec orbits(number, OneNParams) :: [any]
+  @spec orbits(number(), %OneNParams{}) :: [nil | %ImpactPoint{}]
   def orbits(sigma, %OneNParams{} = params) do
     velocities(sigma, params)
     |> Tuple.to_list()
@@ -203,7 +203,7 @@ defmodule OneNParams do
   #  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
   #
   #  Returns `:velocity` if physical, `:nil` if unphysical.
-  @spec nullify_unphysical(any, any, OneNParams) :: any
+  @spec nullify_unphysical(number() | nil, number(), %OneNParams{}) :: number() | nil
   defp nullify_unphysical(velocity, sigma, %OneNParams{} = params) do
     cond do
       is_nil(velocity) -> nil
@@ -219,7 +219,7 @@ defmodule OneNParams do
   #  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
   #
   #  Returns `:true` if physical, `:false` if unphysical.
-  @spec is_physical?(float, float, OneNParams) :: boolean
+  @spec is_physical?(number(), number(), %OneNParams{}) :: boolean()
   defp is_physical?(velocity, _sigma, %OneNParams{} = _params) when velocity < 0 do
     # Negative velocity so can't be physical
     false
@@ -286,9 +286,6 @@ defmodule OneNLoci do
 
       {:error, reason} ->
         {:error, reason}
-
-      other ->
-        other
     end
   end
 

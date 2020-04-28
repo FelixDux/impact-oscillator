@@ -22,7 +22,7 @@ defmodule StateOfMotion do
   Returns a point on the impact surface `:state.x`=`:SystemParameters.sigma`
   """
 
-  @spec point_from_state(StateOfMotion, float) :: ImpactPoint
+  @spec point_from_state(%StateOfMotion{}, number()) :: %ImpactPoint{}
   def point_from_state(%StateOfMotion{} = state, omega) do
     %ImpactPoint{phi: ForcingPhase.phi(state.t, omega), v: state.v, t: state.t}
   end

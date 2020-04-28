@@ -8,7 +8,7 @@ defmodule MotionBetweenImpacts do
   from the previous impact and a function to evaluate a chatter counter.
   """
 
-  @type point_with_states :: {ImpactPoint, [StateOfMotion], Chatter.count_low_v()}
+  @type point_with_states :: {%ImpactPoint{}, [%StateOfMotion{}], any()} #(fun(number()) -> any())}
 
   @doc """
   Gives the state of motion (position, velocity, time) at a given time after an impact
@@ -20,7 +20,7 @@ defmodule MotionBetweenImpacts do
   Returns the `:StateOfMotion` at time `:t`
   """
 
-  @spec motion_at_time(number, ImpactPoint, EvolutionCoefficients) :: StateOfMotion
+  @spec motion_at_time(number(), %ImpactPoint{}, %EvolutionCoefficients{}) :: %StateOfMotion{}
   def motion_at_time(t, %ImpactPoint{} = previous_impact, %EvolutionCoefficients{} = coeffs) do
     # Time since the previous impact
     lambda = t - previous_impact.t
@@ -37,7 +37,7 @@ defmodule MotionBetweenImpacts do
     }
 
     # Velocity
-    result = %{
+    %{
       result
       | v:
           coeffs.sin_coeff * :math.cos(lambda) - coeffs.cos_coeff * :math.sin(lambda) -
@@ -45,7 +45,6 @@ defmodule MotionBetweenImpacts do
               coeffs.gamma * :math.sin(coeffs.omega * t)
     }
 
-    result
   end
 
   @doc """
@@ -60,12 +59,12 @@ defmodule MotionBetweenImpacts do
   """
 
   @spec next_impact(
-          ImpactPoint,
-          SystemParameters,
-          (integer -> (float -> any)),
-          Boolean,
-          number,
-          number
+          %ImpactPoint{},
+          %SystemParameters{},
+          any(), #(fun(integer()) -> {boolean(), (fun(number()) -> any())}),
+          boolean(),
+          number(),
+          number()
         ) :: point_with_states
   def next_impact(
         %ImpactPoint{} = previous_impact,
@@ -123,7 +122,7 @@ defmodule MotionBetweenImpacts do
     {StateOfMotion.point_from_state(Enum.at(states, -1), parameters.omega), states, new_counter}
   end
 
-  @spec states_for_step(StateOfMotion, float, Boolean) :: [StateOfMotion]
+  @spec states_for_step(%StateOfMotion{}, number(), boolean()) :: [%StateOfMotion{}]
   #  If intermediate states are being recorded AND the current displacement is less than or equal to the obstacle offset,
   #  returns a list containing the current state of motion. Otherwise, returns an empty list.
   defp states_for_step(%StateOfMotion{} = state, sigma, record_states) do
@@ -135,14 +134,14 @@ defmodule MotionBetweenImpacts do
   end
 
   @spec find_next_impact(
-          StateOfMotion,
-          ImpactPoint,
-          EvolutionCoefficients,
-          SystemParameters,
-          Boolean,
-          float,
-          float
-        ) :: [StateOfMotion]
+          %StateOfMotion{},
+          %ImpactPoint{},
+          %EvolutionCoefficients{},
+          %SystemParameters{},
+          boolean(),
+          number(),
+          number()
+        ) :: [%StateOfMotion{}]
   #  For a given impact point and current state of motion, returns a list containing the state of motion corresponding to
   #  the next impact. Optionally, the returned list will also contain the states corresponding to the intermediate time
   #  steps.  The current state of motion is needed because the function is recursive.
@@ -297,7 +296,8 @@ defmodule MotionBetweenImpacts do
 
   """
 
-  @spec iterate_impacts(ImpactPoint, SystemParameters, integer, Boolean) :: [ImpactPoint]
+  @spec iterate_impacts(%ImpactPoint{}, %SystemParameters{}, integer(), boolean()) ::
+          {[%ImpactPoint{}], [%StateOfMotion{}]}
   def iterate_impacts(
         %ImpactPoint{} = start_impact,
         %SystemParameters{} = params,

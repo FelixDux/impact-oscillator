@@ -37,21 +37,21 @@ defmodule ActionTest do
   end
 
   test "Action description correctly retrieved" do
-
-    assert Regex.match?(~r/.*sigma.*$/i, 
-    "ellipse" |> ActionMap.description()
-    )
+    assert Regex.match?(
+             ~r/.*sigma.*$/i,
+             "ellipse" |> ActionMap.description()
+           )
   end
 
   test "Bad requirements request correctly handled" do
     action = "sdfh"
 
-    assert {:error, "Unrecognised action" <> _a} = action |> ActionMap.requirements
+    assert {:error, "Unrecognised action" <> _a} = action |> ActionMap.requirements()
   end
 
   test "Bad description request correctly handled" do
     action = "sdfh"
 
-    assert {:error, "Unrecognised action" <> _a} = action |> ActionMap.description
+    assert {:error, "Unrecognised action" <> _a} = action |> ActionMap.description()
   end
 end
