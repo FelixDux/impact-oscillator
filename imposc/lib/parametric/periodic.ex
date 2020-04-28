@@ -40,6 +40,7 @@ defmodule OneNParams do
           period: number()
         }
 
+  @spec derive_cs(number(), number(), number()) :: number()
   defp derive_cs(cn, _sn, _r) when cn == 1 do
     0
   end
@@ -170,6 +171,7 @@ defmodule OneNParams do
   #  `:velocity`: impact velocity for a candidate (1, n) orbit
   #  `:sigma`: the obstacle offset
   #  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
+  @spec point_for_velocity(nil | number(), number(), OneNParams.t()) :: %ImpactPoint{}
   defp point_for_velocity(nil, _sigma, %OneNParams{} = _params) do
     nil
   end
@@ -273,6 +275,8 @@ defmodule OneNLoci do
   @moduledoc """
   """
 
+  @spec curves_for_fixed_omega(integer(), number(), number(), integer()) ::
+          {atom(), iodata() | [{number() | nil, number() | nil}]}
   def curves_for_fixed_omega(n, omega, r, num_points \\ 1000) do
     # Initialise parameters
     case OneNParams.derive(omega, r, n) do
@@ -301,6 +305,7 @@ defmodule OneNLoci do
     end
   end
 
+  @spec vs(integer(), number(), number()) :: {atom(), iodata()} | {number() | nil, number() | nil}
   def vs(n, omega, r) do
     case OneNParams.derive(omega, r, n) do
       {:ok, params} -> OneNParams.velocities(-params.sigma_s, params)
@@ -308,6 +313,8 @@ defmodule OneNLoci do
     end
   end
 
+  @spec orbits_for_params(%SystemParameters{}, integer()) ::
+          {atom(), iodata()} | [{number() | nil, number() | nil}]
   def orbits_for_params(%SystemParameters{} = params, n) do
     case OneNParams.derive(params.omega, params.r, n) do
       {:ok, parameters} -> OneNParams.orbits(params.sigma, parameters)

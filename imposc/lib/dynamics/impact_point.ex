@@ -32,6 +32,7 @@ defmodule ImpactPoint do
   Initialises from a phase and a velocity. The time is set to the phase. 
   """
 
+  @spec derive(number(), number()) :: %ImpactPoint{}
   def derive(phi, v) do
     %ImpactPoint{phi: phi, v: v, t: phi}
   end

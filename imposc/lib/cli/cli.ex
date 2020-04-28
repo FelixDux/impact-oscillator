@@ -23,7 +23,9 @@ defmodule CLI do
     ]
   }
 
+  @spec const_options() :: map()
   def const_options(), do: @const_options
+
   @spec parse_args([String]) :: {[], [], []}
   def parse_args(args) do
     %{switches: switches, aliases: aliases} = const_options()
@@ -31,6 +33,7 @@ defmodule CLI do
     OptionParser.parse(args, strict: switches, aliases: aliases)
   end
 
+  @spec usage() :: iodata()
   defp usage() do
     "#{
       :application.get_application(__MODULE__)
@@ -43,11 +46,11 @@ defmodule CLI do
     } [options]"
   end
 
+  @spec process({[{atom(), boolean()}], any(), any()}) :: iodata()
   def process({[help: true], _, _}) do
     IO.puts("Usage: #{usage()}\n")
     %{help: help, aliases: aliases} = const_options()
     for {k, v} <- aliases, do: IO.puts("\n-#{k}, --#{v}:\t#{help[v]}")
-    #    System.halt(0)
   end
 
   def process({[one_shot: true], _, _}) do

@@ -102,7 +102,7 @@ end
 defmodule Mix.Tasks.Scatter do
   use Mix.Task
 
-  #  @spec run(any) :: {:ok, binary}
+  @spec run(any) :: {atom(), iodata()} | atom()
   def run(_) do
     initial_point = %ImpactPoint{phi: 0.0, v: 0.01}
     params = %SystemParameters{omega: 2.7, r: 0.8, sigma: 0}
@@ -117,7 +117,7 @@ end
 defmodule Mix.Tasks.Ellipse do
   use Mix.Task
 
-  #  @spec run(any) :: {:ok, binary}
+  @spec run(any) :: {atom(), iodata()} | atom()
   def run(_) do
     Curves.sigma_ellipse(2, 4, 0.4)
   end
@@ -126,7 +126,7 @@ end
 defmodule Mix.Tasks.Timeseries do
   use Mix.Task
 
-  #  @spec run(any) :: {:ok, binary}
+  @spec run(any) :: {atom(), iodata()} | atom()
   def run(_) do
     params = %SystemParameters{omega: 2.7, r: 0.8, sigma: 0}
     #    points = OneNLoci.orbits_for_params(params, 1)

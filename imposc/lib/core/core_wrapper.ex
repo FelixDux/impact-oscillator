@@ -26,6 +26,7 @@ defmodule CoreWrapper do
   # Extracts an input parameter of type `:kind` from `:attrs`. If `:attrs`
   # is a number we just return it, if it is a `:Map` we convert it to a 
   # struct type sepcified by `:kind`.
+  @spec from_attrs(module(), map()) :: struct()
   defp from_attrs(kind, attrs) when Integer == kind and is_integer(attrs) do
     attrs
   end
@@ -74,6 +75,7 @@ defmodule CoreWrapper do
 
   # Determines which kind of action is required by a JSON-derived `:Map`
   # of `:input` and returns an async-ed `:Task` to execute it.
+  @spec execute_action(map() | {atom(), iodata()}) :: {atom(), iodata()} | Task.t()
   defp execute_action(input) do
     Task.async(fn ->
       case input do
@@ -90,6 +92,7 @@ defmodule CoreWrapper do
     end)
   end
 
+  @spec process(map() | {atom(), iodata()}) :: {atom(), iodata()} | atom()
   def process(input) do
     case input do
       {:ok, _} -> input |> elem(1) |> process
@@ -98,10 +101,12 @@ defmodule CoreWrapper do
     end
   end
 
+  @spec process_input_string(iodata()) :: iodata()
   def process_input_string(input) do
     input |> JSON.decode() |> process |> JSON.encode!()
   end
 
+  @spec process_input() :: iodata()
   def process_input() do
     IO.read(:all) |> process_input_string |> IO.puts()
   end

@@ -9,6 +9,7 @@ defmodule ActionMap do
     "timeseries" => "TimeSeriesAction"
   }
 
+  @spec execute(iodata(), map()) :: atom() | {atom(), iodata()}
   def execute(action, args) do
     case Map.fetch(@actions, action) do
       :error ->
@@ -19,6 +20,7 @@ defmodule ActionMap do
     end
   end
 
+  @spec requirements(iodata()) :: map() | {atom(), iodata()}
   def requirements(action) do
     case Map.fetch(@actions, action) do
       :error ->
@@ -29,6 +31,7 @@ defmodule ActionMap do
     end
   end
 
+  @spec description(iodata()) :: iodata() | {atom(), iodata()}
   def description(action) do
     case Map.fetch(@actions, action) do
       :error ->
