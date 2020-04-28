@@ -14,8 +14,7 @@ defmodule ImpactMap do
       elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
       |> Stream.map(&ImpactPoint.point_to_list(&1))
 
-    {:ok, _cmd} =
-      Gnuplot.plot(
+      case Gnuplot.plot(
         [
           [
             :set,
@@ -25,9 +24,17 @@ defmodule ImpactMap do
           [:plot, "-", :with, :points, :pointtype, 7, :ps, 0.1]
         ],
         [dataset]
-      )
+          ) 
+        do
 
-    #    IO.puts(cmd)
+        {:ok, _cmd} -> :ok
+
+        {:error, message} -> {:error, message}
+
+        _ -> {:error, "Unknown error generating chart"}
+
+        end
+
   end
 end
 
@@ -36,8 +43,7 @@ defmodule Curves do
     case OneNLoci.curves_for_fixed_omega(n, omega, r, num_points) do
       {:ok, dataset} ->
         (fn ->
-           {:ok, _cmd} =
-             Gnuplot.plot(
+             case Gnuplot.plot(
                [
                  [
                    :set,
@@ -51,17 +57,20 @@ defmodule Curves do
                ],
                dataset
              )
+        do
 
-           #    IO.puts(cmd)
-           #    IO.inspect dataset
+        {:ok, _cmd} -> :ok
+
+        {:error, message} -> {:error, message}
+
+        _ -> {:error, "Unknown error generating chart"}
+
+        end
+
          end).()
 
-      # TODO: implement error logger
-      {:error, reason} ->
-        IO.puts(reason)
+      {:error, reason} -> {:error, "Error #{reason} encountered generating chart"}
 
-      other ->
-        IO.inspect(other)
     end
   end
 end
@@ -76,8 +85,7 @@ defmodule TimeSeries do
 
     dataset = Stream.map(states, &[&1.t, &1.x])
 
-    {:ok, _cmd} =
-      Gnuplot.plot(
+     case Gnuplot.plot(
         [
           [
             :set,
@@ -88,13 +96,19 @@ defmodule TimeSeries do
         ],
         [dataset]
       )
+        do
 
-    #    IO.puts(cmd)
-    #    IO.inspect dataset
+        {:ok, _cmd} -> :ok
 
-    #    Enum.map(points, &IO.puts("#{&1.t}, #{&1.phi}, #{&1.v}"))
+        {:error, message} -> {:error, message}
+
+        _ -> {:error, "Unknown error generating chart"}
+
+        end
+
   end
 end
+
 
 defmodule Mix.Tasks.Scatter do
   use Mix.Task

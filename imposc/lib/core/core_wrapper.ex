@@ -79,8 +79,7 @@ defmodule CoreWrapper do
       case input do
         {:error, _} -> input
         %{"action" => action, "args" => args} -> ActionMap.execute(action, args)
-        # _ -> IO.inspect(input) 
-
+        |> (&%{"action" => action, "args" => args, "result" => &1}).()
         _ -> {:error, "Could not retrieve action from JSON input"}
       end
     end)
