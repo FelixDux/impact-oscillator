@@ -57,6 +57,14 @@ defmodule CLI do
     CoreWrapper.process_input()
   end
 
+  def process({[console: true], _, _}) do
+    Console.run()
+  end
+
+  def process({[{a, true}], _, _}) do
+    IO.puts("Not yet implemented: #{a}")
+  end
+
   def process(args) do
     IO.puts("Not yet implemented:")
 
