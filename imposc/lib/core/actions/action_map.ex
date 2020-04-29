@@ -9,6 +9,14 @@ defmodule ActionMap do
     "timeseries" => "TimeSeriesAction"
   }
 
+  @doc """
+  Lists the available actions with their descriptions.
+  """
+  @spec list_actions() :: [{iodata(), iodata()}, ...]
+  def list_actions() do
+    Enum.map(Map.keys(@actions), fn action -> {action, description(action)} end)
+  end
+
   @spec execute(iodata(), map()) :: atom() | {atom(), iodata()}
   def execute(action, args) do
     case Map.fetch(@actions, action) do

@@ -12,9 +12,14 @@ defmodule Console do
     get_command() |> (& case &1 do
       "help" -> help()
 
-      _ -> (fn -> help("Unrecognised command: #{&1}")
-          run() end).()
+      "exit" -> finish()
+
+      _ -> (fn -> help("Unrecognised command: #{&1}") end).()
     end).()
+  end
+
+  defp finish() do
+    IO.puts("Goodbye")
   end
 
   defp get_command() do
@@ -24,7 +29,15 @@ defmodule Console do
   defp help(prefix \\ "") do
     IO.puts(prefix)
 
-    IO.puts("help:\tthis help")
+    IO.puts("help:\tthis help\n")
+
+    ActionMap.list_actions() |> Enum.map(fn {action, description} ->
+      IO.puts("#{action}: #{description}")
+    end)
+
+    IO.puts("exit:\tclose the console\n")
+
+    run()
   end
 
 end
