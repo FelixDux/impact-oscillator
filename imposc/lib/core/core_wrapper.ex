@@ -101,12 +101,17 @@ defmodule CoreWrapper do
     end
   end
 
-  @spec process_input_string(iodata()) :: iodata()
-  def process_input_string(input) do
-    input |> JSON.decode() |> process |> JSON.encode!()
+  @spec process_decoded(map() | {atom(), iodata()}) :: iodata()
+  def process_decoded(input) do
+    input |> process |> JSON.encode!()
   end
 
-  @spec process_input() :: iodata()
+  @spec process_input_string(iodata()) :: iodata()
+  def process_input_string(input) do
+    input |> JSON.decode() |> process_decoded
+  end
+
+  @spec process_input() :: :ok
   def process_input() do
     IO.read(:all) |> process_input_string |> IO.puts()
   end
