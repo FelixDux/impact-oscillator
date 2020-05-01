@@ -35,14 +35,14 @@ defmodule EvolutionCoefficients do
 
     result = %{
       result
-      | cos_coeff: parameters.sigma - result.gamma * :math.cos(parameters.omega * point.phi)
+      | cos_coeff: parameters.sigma - result.gamma * :math.cos(parameters.omega * point.t)
     }
 
     result = %{
       result
       | sin_coeff:
           -parameters.r * point.v +
-            parameters.omega * result.gamma * :math.sin(parameters.omega * point.phi)
+            parameters.omega * result.gamma * :math.sin(parameters.omega * point.t)
     }
 
     case StickingRegion.derive(parameters) do

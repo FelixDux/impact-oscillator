@@ -6,7 +6,7 @@ defmodule ImpactPoint do
   @doc """
   Each impact is uniquely specified by two parameters:
 
-  `:phi`: the phase (time modulo the forcing period) at which the impact occurs
+  `:phi`: the phase (time modulo and scaled by the forcing period) at which the impact occurs
   `:v`: the velocity of the impact, which cannot be negative
 
   In addition, we also record the actual time `:t`.

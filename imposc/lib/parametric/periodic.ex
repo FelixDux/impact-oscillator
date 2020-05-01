@@ -162,7 +162,7 @@ defmodule OneNParams do
         true -> angle
       end
 
-    ForcingPhase.phi(angle / params.omega, params.omega)
+    ForcingPhase.phi(angle / params.omega, params.omega, false)
   end
 
   #  Returns an `:ImpactPoint` corresponding to a solution of the quadratic equation for the velocity of a (1, n)
@@ -177,7 +177,8 @@ defmodule OneNParams do
   end
 
   defp point_for_velocity(velocity, sigma, %OneNParams{} = params) do
-    phase_for_velocity(velocity, sigma, params) |> (&%ImpactPoint{phi: &1, v: velocity, t: &1}).()
+    phase_for_velocity(velocity, sigma, params) |> 
+    (&%ImpactPoint{phi: ForcingPhase.phi(&1, params.omega), v: velocity, t: &1}).()
   end
 
   @doc """
@@ -260,7 +261,7 @@ defmodule OneNParams do
               point.v != next_point.v and abs(point.v - next_point.v) / point.v > const_small() ->
                 false
 
-              abs(point.phi - next_point.phi) > const_smallish() * params.period ->
+              abs(point.phi - next_point.phi) > const_smallish() 
                 false
 
               true ->

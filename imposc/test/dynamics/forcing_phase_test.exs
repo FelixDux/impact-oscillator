@@ -3,7 +3,7 @@ defmodule ForcingPhaseTest do
   doctest ForcingPhase
 
   test "phi is modulo" do
-    assert ForcingPhase.phi(3, :math.pi()) == 1
+    assert ForcingPhase.phi(3, :math.pi(), false) == 1
 
     for t <- 0..100, do: assert(ForcingPhase.phi(t, 2.8) >= 0)
   end
@@ -53,12 +53,12 @@ defmodule ForcingPhaseTest do
 
     {_, period} = ForcingPhase.forcing_period(omega)
 
-    for {n, phi, diff} <- [{21, :math.pi() / omega / 2, 0.001}, {-2, period / 4, 0.15}],
+    for {n, phi, diff} <- [{21, 0.25, 0.001}, {-2,  1 / 4.0, 0.15}],
         do:
           assert(
             abs(
-              ForcingPhase.forward_to_phase(n * period + phi - diff, phi, period) -
-                (n * period + phi)
+              ForcingPhase.forward_to_phase((n + phi) * period - diff, phi, period) -
+                (n + phi) * period
             ) < 0.000001
           )
   end

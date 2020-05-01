@@ -46,12 +46,14 @@ defmodule ForcingPhase do
   end
 
   @doc """
-  For a given time `:t` and forcing frequency `:omega` returns the phase relative to the forcing period
+  For a given time `:t` and forcing frequency `:omega` returns the phase 
+  relative to the forcing period and optionally scaled by the forcing 
+  period so that it ranges from 0 to 1
   """
 
-  @spec phi(number(), number()) :: number()
-  def phi(t, omega) do
-    forcing_period(omega) |> (&if(elem(&1, 0) == :ok, do: modulo(t, elem(&1, 1)), else: nil)).()
+  @spec phi(number(), number(), boolean()) :: number()
+  def phi(t, omega, scaled \\ true) do
+    forcing_period(omega) |> (&if(elem(&1, 0) == :ok, do: elem(&1, 1) |> (fn period -> modulo(t, period)/ if(scaled, do: period, else: 1) end).(), else: nil)).()
   end
 
   @doc """
@@ -60,7 +62,7 @@ defmodule ForcingPhase do
 
   @spec forward_to_phase(number(), number(), number()) :: number()
   def forward_to_phase(t, phi, period) do
-    phase_difference = phi - modulo(t, period)
+    phase_difference = period * phi - modulo(t, period)
 
     result =
       cond do
@@ -70,12 +72,12 @@ defmodule ForcingPhase do
 
     # Check for rounding errors - new phase should equal old. We particularly don't want it to be slightly less, as this
     # could trap us in the sticking region
-    new_phi = modulo(result, period)
+    new_phi = modulo(result / period, 1)
 
     delta_phi = phi - new_phi
 
     cond do
-      delta_phi > 0 -> result + delta_phi
+      delta_phi > 0 -> result + delta_phi * period
       true -> result
     end
   end
