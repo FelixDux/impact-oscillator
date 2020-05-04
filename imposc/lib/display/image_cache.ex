@@ -6,6 +6,15 @@ defmodule ImageCache do
   defstruct directory: "images", size_limit: 1024*1024*512
 
   @doc """
+  Ensures the cache specified in `:image_cache` is below the size limit and
+  returns a new unique file name.
+  """
+  def offer_new_file(%ImageCache{} = image_cache, extension \\ "png") do
+    reduce_cache(image_cache) # TODO: put in its own process
+    new_file_name(image_cache, extension)
+  end
+
+  @doc """
   Returns a path for a new file in the cache specified in `:image_cache` with 
   an extension specified in `:extension`.
   """
@@ -47,7 +56,6 @@ defmodule ImageCache do
       end
     end).()
   end
-
 
   @doc """
   Returns the absolute path to the cache directory.

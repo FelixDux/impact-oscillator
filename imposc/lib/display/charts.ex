@@ -1,9 +1,26 @@
 import SystemParameters
 
+
+defmodule PlotCommands do
+
+  def chart_title(title) do
+    [:set, :title, title]
+  end
+
+  @callback plot_command(iodata()) :: [any()]
+
+end
+
 defmodule ImpactMap do
+  @behaviour PlotCommands
+
   @moduledoc """
   Generates scatter plots of impact speed and phase on the impact-surface
   """
+
+  def plot_command(label) do
+     [:plot, "-", :title, label, :with, :points, :pointtype, 7, :ps, 0.1] 
+  end
 
   @spec chart_impacts(%ImpactPoint{}, %SystemParameters{}, integer()) ::
           {atom(), iodata()} | atom()
@@ -18,12 +35,8 @@ defmodule ImpactMap do
 
     case Gnuplot.plot(
            [
-             [
-               :set,
-               :title,
-               "Impact map for omega = #{params.omega}, sigma = #{params.sigma}, r = #{params.r}"
-             ],
-             [:plot, "-", :with, :points, :pointtype, 7, :ps, 0.1]
+               PlotCommands.chart_title("Impact map for {/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}"),
+             plot_command("({/Symbol f}_0, v_0) = #{initial_point}")
            ],
            [dataset]
          ) do
@@ -46,11 +59,9 @@ defmodule Curves do
         (fn ->
            case Gnuplot.plot(
                   [
-                    [
-                      :set,
-                      :title,
-                      "Sigma response curve for (1, #{n}) orbits for omega = #{omega}, r = #{r}"
-                    ],
+                    PlotCommands.chart_title(
+                      "{/Symbol s}-response curve for (1, #{n}) orbits for {/Symbol w} = #{omega}, r = #{r}"
+                    ),
                     Gnuplot.plots([
                       ["-", :title, "Stable", :with, :lines],
                       ["-", :title, "Unstable", :with, :lines]
@@ -83,11 +94,9 @@ defmodule TimeSeries do
 
     case Gnuplot.plot(
            [
-             [
-               :set,
-               :title,
-               "Time series for omega = #{params.omega}, sigma = #{params.sigma}, r = #{params.r}"
-             ],
+                    PlotCommands.chart_title(
+               "Time series for {/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}"
+                    ),
              [:plot, "-", :with, :lines]
            ],
            [dataset]

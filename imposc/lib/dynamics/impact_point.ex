@@ -37,3 +37,9 @@ defmodule ImpactPoint do
     %ImpactPoint{phi: phi, v: v, t: phi}
   end
 end
+
+defimpl String.Chars, for: ImpactPoint do
+  def to_string(point) do
+    "(#{point.phi}, #{point.v})"
+  end
+end
