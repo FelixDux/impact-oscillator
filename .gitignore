@@ -32,3 +32,4 @@ imposcpy/venv
 .vscode
 .idea
 *.swp
+/images/
