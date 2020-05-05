@@ -7,8 +7,40 @@ defmodule PlotCommands do
     [:set, :title, title]
   end
 
-  @callback plot_command(iodata()) :: [any()]
+  @callback command_for_plot(iodata()) :: [any()]
 
+  @callback from_args(map()) :: [any()]
+
+  @callback data_for_plot(map()) :: {iodata(), [any()]}
+
+  def collate_data(implementation, arg_list) do
+    data = arg_list |> Enum.map(
+    fn args ->
+    Task.async(fn ->
+      args |> implementation.data_for_plot
+    end)
+    |> (&Task.await(&1)).()
+    end) 
+    #|> Enum.map(&Task.await(&1))
+    #|> IO.inspect
+
+    0..1 |> Enum.map(fn i -> data |> Enum.map(&elem(&1, i)) end)|> List.to_tuple
+  end
+
+  @spec draw(module(), [map()], iodata()) :: {atom(), iodata()} | atom()
+  def draw(implementation, arg_list, title) do
+    {labels, datasets} = collate_data(implementation, arg_list)
+
+    commands = labels |> Enum.map(&implementation.command_for_plot(&1)) |>
+   (& [chart_title(title), Gnuplot.plots(&1)]).()
+   |> IO.inspect
+
+    case Gnuplot.plot( commands, datasets) do
+      {:ok, _cmd} -> :ok
+      {:error, message} -> {:error, message}
+      _ -> {:error, "Unknown error generating chart"}
+    end
+  end
 end
 
 defmodule ImpactMap do
@@ -18,32 +50,30 @@ defmodule ImpactMap do
   Generates scatter plots of impact speed and phase on the impact-surface
   """
 
-  def plot_command(label) do
+  @impl PlotCommands
+  def command_for_plot(label) do
      [:plot, "-", :title, label, :with, :points, :pointtype, 7, :ps, 0.1] 
   end
 
-  @spec chart_impacts(%ImpactPoint{}, %SystemParameters{}, integer()) ::
-          {atom(), iodata()} | atom()
-  def chart_impacts(
-        %ImpactPoint{} = initial_point,
-        %SystemParameters{} = params,
-        num_iterations \\ 1000
-      ) do
+  @impl PlotCommands
+  def from_args(args) do
+    args
+    |> (&[
+          CoreWrapper.from_args(ImpactPoint, &1, "initial_point"),
+          CoreWrapper.from_args(SystemParameters, &1, "params"),
+          CoreWrapper.from_args(Integer, &1, "num_iterations")
+    ]).()
+  end
+
+  @impl PlotCommands
+  def data_for_plot(args) do
+    [initial_point, params, num_iterations] = from_args(args)
+
     dataset =
       elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
       |> Stream.map(&ImpactPoint.point_to_list(&1))
 
-    case Gnuplot.plot(
-           [
-               PlotCommands.chart_title("Impact map for {/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}"),
-             plot_command("({/Symbol f}_0, v_0) = #{initial_point}")
-           ],
-           [dataset]
-         ) do
-      {:ok, _cmd} -> :ok
-      {:error, message} -> {:error, message}
-      _ -> {:error, "Unknown error generating chart"}
-    end
+   {"{/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}, ({/Symbol f}_0, v_0) = #{initial_point}", dataset}
   end
 end
 
@@ -113,13 +143,12 @@ defmodule Mix.Tasks.Scatter do
 
   @spec run(any) :: {atom(), iodata()} | atom()
   def run(_) do
-    initial_point = %ImpactPoint{phi: 0.0, v: 0.01}
-    params = %SystemParameters{omega: 2.7, r: 0.8, sigma: 0}
-    # points = OneNLoci.orbits_for_params(params, 1)
-    # initial_point = Enum.at(points, 0)
-    num_iterations = 10000
+    args = [
+      %{"initial_point"=> %{"phi"=> 0.5, "v"=> 0.15}, "params"=> %{"omega"=> 2.8, "sigma"=> 0, "r"=> 0.8}, "num_iterations"=> 10000} ,
+%{"initial_point"=> %{"phi"=> 0.5, "v"=> 0.15}, "params"=> %{"omega"=> 2.8, "sigma"=> 0.2, "r"=> 0.8}, "num_iterations"=> 10000}
+      ]
 
-    ImpactMap.chart_impacts(initial_point, params, num_iterations)
+    PlotCommands.draw(ImpactMap, args, "Impact Map")
   end
 end
 

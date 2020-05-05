@@ -12,3 +12,9 @@ defmodule SystemParameters do
 
   defstruct omega: 2, r: 0.8, sigma: 0
 end
+
+defimpl String.Chars, for: SystemParameters do
+  def to_string(parameters) do
+    "omega = #{parameters.omega}, sigma = #{parameters.sigma}, r = #{parameters.r}"
+  end
+end
