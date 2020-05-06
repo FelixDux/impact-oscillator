@@ -3,34 +3,41 @@ defmodule SigmaCurves do
   @moduledoc """
   Generates sigma-response curves for (1, n) orbits
   """
+  @behaviour PlotCommands
 
-  @spec sigma_ellipse(integer(), number(), number(), integer()) :: {atom(), iodata()} | atom()
-  def sigma_ellipse(n, omega, r, num_points \\ 1000) do
+  @impl PlotCommands
+  def command_for_plot(label) do
+    ["-", :title, label, :with, :lines]
+  end
+
+  @impl PlotCommands
+  def from_args(args) do
+    args
+    |> (&[
+          CoreWrapper.from_args(Integer, &1, "n"),
+          CoreWrapper.from_args(Float, &1, "omega"),
+          CoreWrapper.from_args(Float, &1, "r"),
+          CoreWrapper.from_args(Integer, &1, "num_points")
+        ]).()
+  end
+
+  @impl PlotCommands
+  def data_for_plot(args) do
+    [n, omega, r, num_points] = from_args(args)
+
     case OneNLoci.curves_for_fixed_omega(n, omega, r, num_points) do
       {:ok, dataset} ->
-        (fn ->
-           case Gnuplot.plot(
-                  [
-                    PlotCommands.chart_title(
-                      "{/Symbol s}-response curve for (1, #{n}) orbits for {/Symbol w} = #{omega}, r = #{
-                        r
-                      }"
-                    ),
-                    Gnuplot.plots([
-                      ["-", :title, "Stable", :with, :lines],
-                      ["-", :title, "Unstable", :with, :lines]
-                    ])
-                  ],
-                  dataset
-                ) do
-             {:ok, _cmd} -> :ok
-             {:error, message} -> {:error, message}
-             _ -> {:error, "Unknown error generating chart"}
-           end
-         end).()
+        {
+          #[
+ "{/Symbol w} = #{omega}, r = #{r}, n = #{n}, stable",
+#"{/Symbol w} = #{omega}, r = #{r}, n = #{n}, unstable", ],
+          List.first(
+            dataset
+          )
+        }
+        #|> IO.inspect
 
-      {:error, reason} ->
-        {:error, "Error #{reason} encountered generating chart"}
+      {:error, reason} -> {:error, "Error #{reason} encountered generating chart"}
     end
   end
 end
