@@ -10,11 +10,7 @@ defmodule TimeSeriesAction do
   """
   @impl Action
   def execute(args) do
-    args
-    |> (&TimeSeries.time_series(
-          CoreWrapper.from_args(ImpactPoint, &1, "start_impact"),
-          CoreWrapper.from_args(SystemParameters, &1, "params")
-        )).()
+    PlotCommands.draw(TimeSeries, [args], "Time Series")
   end
 
   @doc """

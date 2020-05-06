@@ -35,12 +35,8 @@ defmodule Mix.Tasks.Timeseries do
 
   @spec run(any) :: {atom(), iodata()} | atom()
   def run(_) do
-    params = %SystemParameters{omega: 2.7, r: 0.8, sigma: 0}
-    #    points = OneNLoci.orbits_for_params(params, 1)
-    # IO.inspect points
-    #    initial_point = Enum.at(points, 0)
-    initial_point = %ImpactPoint{phi: 0, v: 0.01}
-    TimeSeries.time_series(initial_point, params)
-    # IO.inspect points
+    args=[%{"start_impact" => %{"phi" => 0.5, "v" => 0.15}, "params" => %{"omega" => 2.8, "sigma" => 0, "r" => 0.8}},
+    %{"start_impact" => %{"phi" => 0.5, "v" => 0.15}, "params" => %{"omega" => 2.8, "sigma" => 0.2, "r" => 0.8}}]
+    PlotCommands.draw(TimeSeries, args, "Impact Map")
   end
 end
