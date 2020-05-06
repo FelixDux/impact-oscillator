@@ -33,7 +33,7 @@ defmodule PlotCommands do
 
     commands = labels |> Enum.map(&implementation.command_for_plot(&1)) |>
    (& [chart_title(title), Gnuplot.plots(&1)]).()
-   |> IO.inspect
+   #|> IO.inspect
 
     case Gnuplot.plot( commands, datasets) do
       {:ok, _cmd} -> :ok
@@ -52,7 +52,7 @@ defmodule ImpactMap do
 
   @impl PlotCommands
   def command_for_plot(label) do
-     [:plot, "-", :title, label, :with, :points, :pointtype, 7, :ps, 0.1] 
+     ["-", :title, label, :with, :points, :pointtype, 7, :ps, 0.1] 
   end
 
   @impl PlotCommands
