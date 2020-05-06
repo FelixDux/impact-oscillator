@@ -1,8 +1,6 @@
 import SystemParameters
 
-
 defmodule PlotCommands do
-
   def chart_title(title) do
     [:set, :title, title]
   end
@@ -14,28 +12,33 @@ defmodule PlotCommands do
   @callback data_for_plot(map()) :: {iodata(), [any()]}
 
   def collate_data(implementation, arg_list) do
-    data = arg_list |> Enum.map(
-    fn args ->
-    Task.async(fn ->
-      args |> implementation.data_for_plot
-    end)
-    |> (&Task.await(&1)).()
-    end) 
-    #|> Enum.map(&Task.await(&1))
-    #|> IO.inspect
+    data =
+      arg_list
+      |> Enum.map(fn args ->
+        Task.async(fn ->
+          args |> implementation.data_for_plot
+        end)
+        |> (&Task.await(&1)).()
+      end)
 
-    0..1 |> Enum.map(fn i -> data |> Enum.map(&elem(&1, i)) end)|> List.to_tuple
+    # |> Enum.map(&Task.await(&1))
+    # |> IO.inspect
+
+    0..1 |> Enum.map(fn i -> data |> Enum.map(&elem(&1, i)) end) |> List.to_tuple()
   end
 
   @spec draw(module(), [map()], iodata()) :: {atom(), iodata()} | atom()
   def draw(implementation, arg_list, title) do
     {labels, datasets} = collate_data(implementation, arg_list)
 
-    commands = labels |> Enum.map(&implementation.command_for_plot(&1)) |>
-   (& [chart_title(title), Gnuplot.plots(&1)]).()
-   #|> IO.inspect
+    commands =
+      labels
+      |> Enum.map(&implementation.command_for_plot(&1))
+      |> (&[chart_title(title), Gnuplot.plots(&1)]).()
 
-    case Gnuplot.plot( commands, datasets) do
+    # |> IO.inspect
+
+    case Gnuplot.plot(commands, datasets) do
       {:ok, _cmd} -> :ok
       {:error, message} -> {:error, message}
       _ -> {:error, "Unknown error generating chart"}
@@ -52,7 +55,7 @@ defmodule ImpactMap do
 
   @impl PlotCommands
   def command_for_plot(label) do
-     ["-", :title, label, :with, :points, :pointtype, 7, :ps, 0.1] 
+    ["-", :title, label, :with, :points, :pointtype, 7, :ps, 0.1]
   end
 
   @impl PlotCommands
@@ -62,7 +65,7 @@ defmodule ImpactMap do
           CoreWrapper.from_args(ImpactPoint, &1, "initial_point"),
           CoreWrapper.from_args(SystemParameters, &1, "params"),
           CoreWrapper.from_args(Integer, &1, "num_iterations")
-    ]).()
+        ]).()
   end
 
   @impl PlotCommands
@@ -73,7 +76,9 @@ defmodule ImpactMap do
       elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
       |> Stream.map(&ImpactPoint.point_to_list(&1))
 
-   {"{/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}, ({/Symbol f}_0, v_0) = #{initial_point}", dataset}
+    {"{/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}, ({/Symbol f}_0, v_0) = #{
+       initial_point
+     }", dataset}
   end
 end
 
@@ -90,7 +95,9 @@ defmodule Curves do
            case Gnuplot.plot(
                   [
                     PlotCommands.chart_title(
-                      "{/Symbol s}-response curve for (1, #{n}) orbits for {/Symbol w} = #{omega}, r = #{r}"
+                      "{/Symbol s}-response curve for (1, #{n}) orbits for {/Symbol w} = #{omega}, r = #{
+                        r
+                      }"
                     ),
                     Gnuplot.plots([
                       ["-", :title, "Stable", :with, :lines],
@@ -124,9 +131,11 @@ defmodule TimeSeries do
 
     case Gnuplot.plot(
            [
-                    PlotCommands.chart_title(
-               "Time series for {/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}"
-                    ),
+             PlotCommands.chart_title(
+               "Time series for {/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{
+                 params.r
+               }"
+             ),
              [:plot, "-", :with, :lines]
            ],
            [dataset]
@@ -144,9 +153,17 @@ defmodule Mix.Tasks.Scatter do
   @spec run(any) :: {atom(), iodata()} | atom()
   def run(_) do
     args = [
-      %{"initial_point"=> %{"phi"=> 0.5, "v"=> 0.15}, "params"=> %{"omega"=> 2.8, "sigma"=> 0, "r"=> 0.8}, "num_iterations"=> 10000} ,
-%{"initial_point"=> %{"phi"=> 0.5, "v"=> 0.15}, "params"=> %{"omega"=> 2.8, "sigma"=> 0.2, "r"=> 0.8}, "num_iterations"=> 10000}
-      ]
+      %{
+        "initial_point" => %{"phi" => 0.5, "v" => 0.15},
+        "params" => %{"omega" => 2.8, "sigma" => 0, "r" => 0.8},
+        "num_iterations" => 10000
+      },
+      %{
+        "initial_point" => %{"phi" => 0.5, "v" => 0.15},
+        "params" => %{"omega" => 2.8, "sigma" => 0.2, "r" => 0.8},
+        "num_iterations" => 10000
+      }
+    ]
 
     PlotCommands.draw(ImpactMap, args, "Impact Map")
   end

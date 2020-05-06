@@ -53,7 +53,13 @@ defmodule ForcingPhase do
 
   @spec phi(number(), number(), boolean()) :: number()
   def phi(t, omega, scaled \\ true) do
-    forcing_period(omega) |> (&if(elem(&1, 0) == :ok, do: elem(&1, 1) |> (fn period -> modulo(t, period)/ if(scaled, do: period, else: 1) end).(), else: nil)).()
+    forcing_period(omega)
+    |> (&if(elem(&1, 0) == :ok,
+          do:
+            elem(&1, 1)
+            |> (fn period -> modulo(t, period) / if(scaled, do: period, else: 1) end).(),
+          else: nil
+        )).()
   end
 
   @doc """

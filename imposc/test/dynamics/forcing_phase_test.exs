@@ -53,7 +53,7 @@ defmodule ForcingPhaseTest do
 
     {_, period} = ForcingPhase.forcing_period(omega)
 
-    for {n, phi, diff} <- [{21, 0.25, 0.001}, {-2,  1 / 4.0, 0.15}],
+    for {n, phi, diff} <- [{21, 0.25, 0.001}, {-2, 1 / 4.0, 0.15}],
         do:
           assert(
             abs(

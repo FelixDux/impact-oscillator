@@ -177,8 +177,8 @@ defmodule OneNParams do
   end
 
   defp point_for_velocity(velocity, sigma, %OneNParams{} = params) do
-    phase_for_velocity(velocity, sigma, params) |> 
-    (&%ImpactPoint{phi: ForcingPhase.phi(&1, params.omega), v: velocity, t: &1}).()
+    phase_for_velocity(velocity, sigma, params)
+    |> (&%ImpactPoint{phi: ForcingPhase.phi(&1, params.omega), v: velocity, t: &1}).()
   end
 
   @doc """
@@ -261,7 +261,7 @@ defmodule OneNParams do
               point.v != next_point.v and abs(point.v - next_point.v) / point.v > const_small() ->
                 false
 
-              abs(point.phi - next_point.phi) > const_smallish() 
+                abs(point.phi - next_point.phi) > const_smallish()
                 false
 
               true ->
