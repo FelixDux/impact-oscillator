@@ -27,10 +27,8 @@ defmodule TimeSeries do
 
     dataset = Stream.map(states, &[&1.t, &1.x])
 
-
     {"{/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}, ({/Symbol f}_0, v_0) = #{
        start_impact
      }", dataset}
   end
 end
-

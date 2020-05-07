@@ -1,4 +1,3 @@
-
 defmodule SigmaCurves do
   @moduledoc """
   Generates sigma-response curves for (1, n) orbits
@@ -28,16 +27,17 @@ defmodule SigmaCurves do
     case OneNLoci.curves_for_fixed_omega(n, omega, r, num_points) do
       {:ok, dataset} ->
         {
-          #[
- "{/Symbol w} = #{omega}, r = #{r}, n = #{n}, stable",
-#"{/Symbol w} = #{omega}, r = #{r}, n = #{n}, unstable", ],
-          List.first(
-            dataset
-          )
+          [
+            "{/Symbol w} = #{omega}, r = #{r}, n = #{n}, stable",
+            "{/Symbol w} = #{omega}, r = #{r}, n = #{n}, unstable"
+          ],
+          dataset
         }
-        #|> IO.inspect
 
-      {:error, reason} -> {:error, "Error #{reason} encountered generating chart"}
+      # |> IO.inspect
+
+      {:error, reason} ->
+        {:error, "Error #{reason} encountered generating chart"}
     end
   end
 end

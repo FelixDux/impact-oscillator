@@ -1,4 +1,3 @@
-
 defmodule ImpactMap do
   @behaviour PlotCommands
 
