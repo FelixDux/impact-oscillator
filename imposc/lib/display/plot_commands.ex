@@ -12,6 +12,8 @@ defmodule PlotCommands do
   @spec axis_label_command(boolean(), iodata()) :: [any()]
   def axis_label_command(x_axis, text) do
     [:set, (if x_axis, do: :xlabel, else: :ylabel), text]
+
+    ++ (if x_axis, do: [:offset, '0,0.25'], else: [:rotate, :by, 0])
   end
 
   @spec range_command(boolean(), number(), number()) :: [any()]
@@ -27,6 +29,13 @@ defmodule PlotCommands do
 
   def range_command(x_axis, min_value, max_value) do
     [:set, (if x_axis, do: :xrange, else: :yrange), min_value..max_value]
+  end
+
+  def legend_commands() do
+    [
+      [:set, :key, :box],
+      [:set, :key, :below]
+    ]
   end
 
   @callback commands_for_axes() :: [[any()]]
@@ -91,6 +100,7 @@ defmodule PlotCommands do
       labels
       |> Enum.map(&implementation.command_for_plot(&1))
       |> (&[chart_title(title)] ++ implementation.commands_for_axes() ++
+        legend_commands() ++
         [Gnuplot.plots(&1)]).()
 
     case Gnuplot.plot(commands, datasets) do

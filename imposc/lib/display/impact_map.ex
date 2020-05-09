@@ -16,6 +16,7 @@ defmodule ImpactMap do
       PlotCommands.axis_label_command(true, "{/Symbol f}"),
       PlotCommands.axis_label_command(false, "v"),
       PlotCommands.range_command(true, 0, 1),
+      [:set, :xtics, "(\"0\" 0, \"{/Symbol p}/{/Symbol w}\" 0.5, \"2{/Symbol p}/{/Symbol w}\" 1)" |> to_charlist],
       PlotCommands.range_command(false, 0, nil)
     ]
   end
@@ -38,7 +39,7 @@ defmodule ImpactMap do
       elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
       |> Stream.map(&ImpactPoint.point_to_list(&1))
 
-    {"{/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}, ({/Symbol f}_0, v_0) = #{
+    {"{/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}, ({/Symbol f}_0 / (2{/Symbol p}/{/Symbol w}), v_0) = #{
        initial_point
      }", dataset}
   end
