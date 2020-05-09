@@ -7,6 +7,14 @@ defmodule TimeSeries do
   end
 
   @impl PlotCommands
+  def commands_for_axes() do
+    [
+      PlotCommands.axis_label_command(true, "t"),
+      PlotCommands.axis_label_command(false, "x"),
+    ]
+  end
+
+  @impl PlotCommands
   def from_args(args) do
     args
     |> (&[

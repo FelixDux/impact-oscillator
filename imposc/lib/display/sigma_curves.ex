@@ -10,6 +10,15 @@ defmodule SigmaCurves do
   end
 
   @impl PlotCommands
+  def commands_for_axes() do
+    [
+      PlotCommands.axis_label_command(true, "{/Symbol s}"),
+      PlotCommands.axis_label_command(false, "V_n")#,
+      #PlotCommands.range_command(false, 0, nil)
+    ]
+  end
+
+  @impl PlotCommands
   def from_args(args) do
     args
     |> (&[

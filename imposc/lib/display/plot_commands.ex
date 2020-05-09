@@ -9,6 +9,28 @@ defmodule PlotCommands do
 
   @callback data_for_plot(map()) :: {iodata(), [any()]} | {[iodata()], [[any()]]}
 
+  @spec axis_label_command(boolean(), iodata()) :: [any()]
+  def axis_label_command(x_axis, text) do
+    [:set, (if x_axis, do: :xlabel, else: :ylabel), text]
+  end
+
+  @spec range_command(boolean(), number(), number()) :: [any()]
+  def range_command(x_axis, min_value, max_value) when is_nil(min_value) do
+    [:set, (if x_axis, do: :xrange, else: :yrange), "[:" <>
+      Gnuplot.Commands.Command.formatg(max_value) <> "]"]
+  end
+
+  def range_command(x_axis, min_value, max_value) when is_nil(max_value) do
+    [:set, (if x_axis, do: :xrange, else: :yrange), "[" <>
+      Gnuplot.Commands.Command.formatg(min_value) <> ":5]"]
+  end
+
+  def range_command(x_axis, min_value, max_value) do
+    [:set, (if x_axis, do: :xrange, else: :yrange), min_value..max_value]
+  end
+
+  @callback commands_for_axes() :: [[any()]]
+
   defp flatten_plot_data(data) do
     # In some cases `:data_for_plot` may generate multiple datasets
     {label, data_points} = data
@@ -68,9 +90,8 @@ defmodule PlotCommands do
     commands =
       labels
       |> Enum.map(&implementation.command_for_plot(&1))
-      |> (&[chart_title(title), Gnuplot.plots(&1)]).()
-
-    # |> IO.inspect
+      |> (&[chart_title(title)] ++ implementation.commands_for_axes() ++
+        [Gnuplot.plots(&1)]).()
 
     case Gnuplot.plot(commands, datasets) do
       {:ok, _cmd} -> :ok

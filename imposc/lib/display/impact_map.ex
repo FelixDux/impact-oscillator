@@ -11,6 +11,16 @@ defmodule ImpactMap do
   end
 
   @impl PlotCommands
+  def commands_for_axes() do
+    [
+      PlotCommands.axis_label_command(true, "{/Symbol f}"),
+      PlotCommands.axis_label_command(false, "v"),
+      PlotCommands.range_command(true, 0, 1)#,
+      #PlotCommands.range_command(false, 0, nil)
+    ]
+  end
+
+  @impl PlotCommands
   def from_args(args) do
     args
     |> (&[
