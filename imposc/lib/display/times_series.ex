@@ -10,7 +10,7 @@ defmodule TimeSeries do
   def commands_for_axes() do
     [
       PlotCommands.axis_label_command(true, "t"),
-      PlotCommands.axis_label_command(false, "x"),
+      PlotCommands.axis_label_command(false, "x")
     ]
   end
 

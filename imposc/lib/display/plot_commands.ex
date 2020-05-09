@@ -17,12 +17,12 @@ defmodule PlotCommands do
   @spec range_command(boolean(), number(), number()) :: [any()]
   def range_command(x_axis, min_value, max_value) when is_nil(min_value) do
     [:set, (if x_axis, do: :xrange, else: :yrange), "[:" <>
-      Gnuplot.Commands.Command.formatg(max_value) <> "]"]
+      Gnuplot.Commands.Command.formatg(max_value) <> "]" |> to_charlist]
   end
 
   def range_command(x_axis, min_value, max_value) when is_nil(max_value) do
     [:set, (if x_axis, do: :xrange, else: :yrange), "[" <>
-      Gnuplot.Commands.Command.formatg(min_value) <> ":5]"]
+      Gnuplot.Commands.Command.formatg(min_value) <> ":]" |> to_charlist]
   end
 
   def range_command(x_axis, min_value, max_value) do

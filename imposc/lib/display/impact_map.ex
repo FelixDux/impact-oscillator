@@ -15,8 +15,8 @@ defmodule ImpactMap do
     [
       PlotCommands.axis_label_command(true, "{/Symbol f}"),
       PlotCommands.axis_label_command(false, "v"),
-      PlotCommands.range_command(true, 0, 1)#,
-      #PlotCommands.range_command(false, 0, nil)
+      PlotCommands.range_command(true, 0, 1),
+      PlotCommands.range_command(false, 0, nil)
     ]
   end
 

@@ -13,8 +13,8 @@ defmodule SigmaCurves do
   def commands_for_axes() do
     [
       PlotCommands.axis_label_command(true, "{/Symbol s}"),
-      PlotCommands.axis_label_command(false, "V_n")#,
-      #PlotCommands.range_command(false, 0, nil)
+      PlotCommands.axis_label_command(false, "V_n"),
+      PlotCommands.range_command(false, 0, nil)
     ]
   end
 
