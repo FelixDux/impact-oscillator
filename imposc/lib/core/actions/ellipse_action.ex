@@ -9,8 +9,13 @@ defmodule EllipseAction do
   Generates a (1, n) orbit sigma response plot using arguments initialised from `:args`.
   """
   @impl Action
-  def execute(args) do
-    PlotCommands.draw(SigmaCurves, [args], "{/Symbol s}-response curve for (1, n) orbits")
+  def execute(args, outfile) do
+    PlotCommands.draw(
+      SigmaCurves,
+      [args],
+      "{/Symbol s}-response curve for (1, n) orbits",
+      outfile
+    )
   end
 
   @doc """

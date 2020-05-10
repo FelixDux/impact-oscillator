@@ -25,7 +25,7 @@ defmodule CoreWrapper do
 
   # Extracts an input parameter of type `:kind` from `:attrs`. If `:attrs`
   # is a number we just return it, if it is a `:Map` we convert it to a 
-  # struct type sepcified by `:kind`.
+  # struct type specified by `:kind`.
   @spec from_attrs(module(), map()) :: struct()
   defp from_attrs(kind, attrs) when Integer == kind and is_integer(attrs) do
     attrs
@@ -86,8 +86,12 @@ defmodule CoreWrapper do
         {:error, _} ->
           input
 
+        %{"action" => action, "args" => args, "outfile" => outfile} ->
+          ActionMap.execute(action, args, outfile)
+          |> (&%{"action" => action, "args" => args, "result" => &1}).()
+
         %{"action" => action, "args" => args} ->
-          ActionMap.execute(action, args)
+          ActionMap.execute(action, args, "")
           |> (&%{"action" => action, "args" => args, "result" => &1}).()
 
         _ ->

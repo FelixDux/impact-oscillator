@@ -16,7 +16,12 @@ defmodule ImpactMap do
       PlotCommands.axis_label_command(true, "{/Symbol f}"),
       PlotCommands.axis_label_command(false, "v"),
       PlotCommands.range_command(true, 0, 1),
-      [:set, :xtics, "(\"0\" 0, \"{/Symbol p}/{/Symbol w}\" 0.5, \"2{/Symbol p}/{/Symbol w}\" 1)" |> to_charlist],
+      [
+        :set,
+        :xtics,
+        "(\"0\" 0, \"{/Symbol p}/{/Symbol w}\" 0.5, \"2{/Symbol p}/{/Symbol w}\" 1)"
+        |> to_charlist
+      ],
       PlotCommands.range_command(false, 0, nil)
     ]
   end

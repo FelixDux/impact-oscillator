@@ -9,8 +9,8 @@ defmodule ScatterAction do
   Generates a scatter plot using arguments initialised from `:args`.
   """
   @impl Action
-  def execute(args) do
-    PlotCommands.draw(ImpactMap, [args], "Impact Map")
+  def execute(args, outfile) do
+    PlotCommands.draw(ImpactMap, [args], "Impact Map", outfile)
   end
 
   @doc """
