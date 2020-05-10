@@ -82,7 +82,7 @@ defmodule ImageCache do
   end
 
   def reduce_cache(%ImageCache{} = image_cache) do
-    directory_path = cache_path(image_cache)
+    {:ok, directory_path} = cache_path(image_cache)
 
     files = cache_files(directory_path)
 
