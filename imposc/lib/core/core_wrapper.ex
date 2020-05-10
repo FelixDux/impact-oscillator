@@ -35,6 +35,10 @@ defmodule CoreWrapper do
     attrs
   end
 
+  defp from_attrs(kind, attrs) when String == kind and is_binary(attrs) do
+    attrs
+  end
+
   defp from_attrs(kind, attrs) do
     # Work out which struct type is needed and initialise it appropriately.
     case kind.module_info() |> Keyword.fetch(:module) do
