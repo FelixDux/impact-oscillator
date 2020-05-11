@@ -76,11 +76,7 @@ defmodule OneNParams do
   end
 
   def derive(omega, r, n) do
-    outcome = ForcingPhase.forcing_period(omega)
-
-    case outcome do
-      {:ok, forcing_period} ->
-        (fn ->
+    with {:ok, forcing_period} <- ForcingPhase.forcing_period(omega), do: (fn ->
            period = n * forcing_period
            cn = :math.cos(period)
            sn = :math.sin(period)
@@ -103,10 +99,6 @@ defmodule OneNParams do
 
            {:ok, result}
          end).()
-
-      {:error, _} ->
-        outcome
-    end
   end
 
   @spec discriminant(number(), %OneNParams{}) :: number()
@@ -129,7 +121,6 @@ defmodule OneNParams do
 
   defp velocities_for_discr(sigma, discriminant, %OneNParams{} = params) do
     # Real roots
-    # TODO: case cs == 0
     intercept = -2 * params.cs * sigma
     divisor = params.cs * params.cs + params.r_minus * params.r_minus
 
@@ -261,7 +252,7 @@ defmodule OneNParams do
               point.v != next_point.v and abs(point.v - next_point.v) / point.v > const_small() ->
                 false
 
-                abs(point.phi - next_point.phi) > const_smallish()
+              abs(point.phi - next_point.phi) > const_smallish() ->
                 false
 
               true ->
@@ -280,9 +271,7 @@ defmodule OneNLoci do
           {atom(), iodata() | [{number() | nil, number() | nil}]}
   def curves_for_fixed_omega(n, omega, r, num_points \\ 1000) do
     # Initialise parameters
-    case OneNParams.derive(omega, r, n) do
-      {:ok, params} ->
-        (fn ->
+      with {:ok, params} <- OneNParams.derive(omega, r, n), do: (fn ->
            # Compute (1, n) velocities over range of offsets
            delta_s = 2 * params.sigma_s / num_points
 
@@ -300,26 +289,18 @@ defmodule OneNLoci do
 
            0..1 |> Enum.map(&filter_pairs.(&1)) |> (&{:ok, &1}).()
          end).()
-
-      {:error, reason} ->
-        {:error, reason}
-    end
   end
 
   @spec vs(integer(), number(), number()) :: {atom(), iodata()} | {number() | nil, number() | nil}
   def vs(n, omega, r) do
-    case OneNParams.derive(omega, r, n) do
-      {:ok, params} -> OneNParams.velocities(-params.sigma_s, params)
-      {:error, reason} -> {:error, reason}
-    end
+      with {:ok, params} <- OneNParams.derive(omega, r, n), do:
+        OneNParams.velocities(-params.sigma_s, params)
   end
 
   @spec orbits_for_params(%SystemParameters{}, integer()) ::
           {atom(), iodata()} | [{number() | nil, number() | nil}]
   def orbits_for_params(%SystemParameters{} = params, n) do
-    case OneNParams.derive(params.omega, params.r, n) do
-      {:ok, parameters} -> OneNParams.orbits(params.sigma, parameters)
-      {:error, reason} -> {:error, reason}
-    end
+      with {:ok, parameters} <- OneNParams.derive(params.omega, params.r, n), do:
+        OneNParams.orbits(params.sigma, parameters)
   end
 end

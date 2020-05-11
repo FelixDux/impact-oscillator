@@ -16,10 +16,7 @@ defmodule PlotCommands do
   end
 
   def outfile_arg(args) do
-    case CoreWrapper.from_args(String, args, "outfile") do
-      {:error, _} -> nil
-      outfile -> outfile
-    end
+    with {:error, _} <- CoreWrapper.from_args(String, args, "outfile"), do: nil
   end
 
   def outfile_commands(options) do

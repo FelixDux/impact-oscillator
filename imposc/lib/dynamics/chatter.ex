@@ -40,18 +40,13 @@ defmodule Chatter do
         {:error, "Chatter will not occur outside the sticking region"}
 
       g == 0 ->
-        case StickingRegion.derive(parameters) do
-          {:ok, region} ->
+          with {:ok, region} <- StickingRegion.derive(parameters), do:
             {:ok,
              StickingRegion.next_impact_state(
                state.t,
                parameters.sigma,
                region
              )}
-
-          other ->
-            other
-        end
 
       true ->
         {:ok,

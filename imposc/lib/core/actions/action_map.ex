@@ -24,11 +24,8 @@ defmodule ActionMap do
         {:error, "Unrecognised action \"#{action}\""}
 
       {:ok, module_name} ->
-        case module_name
-             |> (&Action.validate(String.to_existing_atom("Elixir.#{&1}"), args, options)).() do
-          {:ok, _} -> module_name |> (&run_for_module(&1, :execute, [args, options])).()
-          {:error, result} -> {:error, result}
-        end
+        with {:ok, _} <- module_name |> (&Action.validate(String.to_existing_atom("Elixir.#{&1}"), args, options)).(), do:
+          module_name |> (&run_for_module(&1, :execute, [args, options])).()
     end
   end
 
