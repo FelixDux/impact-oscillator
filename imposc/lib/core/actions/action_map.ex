@@ -24,9 +24,16 @@ defmodule ActionMap do
         {:error, "Unrecognised action \"#{action}\""}
 
       {:ok, module_name} ->
-        module_name
-        |> (&apply(String.to_existing_atom("Elixir.#{&1}"), :execute, [args, options])).()
+        case module_name
+             |> (&Action.validate(String.to_existing_atom("Elixir.#{&1}"), args, options)).() do
+          {:ok, _} -> module_name |> (&run_for_module(&1, :execute, [args, options])).()
+          {:error, result} -> {:error, result}
+        end
     end
+  end
+
+  defp run_for_module(module_name, function_name, arg_list) do
+    apply(String.to_existing_atom("Elixir.#{module_name}"), function_name, arg_list)
   end
 
   @spec requirements(iodata()) :: map() | {atom(), iodata()}
@@ -36,7 +43,7 @@ defmodule ActionMap do
         {:error, "Unrecognised action \"#{action}\""}
 
       {:ok, module_name} ->
-        module_name |> (&apply(String.to_existing_atom("Elixir.#{&1}"), :requirements, [])).()
+        module_name |> (&run_for_module(&1, :requirements, [])).()
     end
   end
 
@@ -47,7 +54,7 @@ defmodule ActionMap do
         {:error, "Unrecognised action \"#{action}\""}
 
       {:ok, module_name} ->
-        module_name |> (&apply(String.to_existing_atom("Elixir.#{&1}"), :expected_options, [])).()
+        module_name |> (&run_for_module(&1, :expected_options, [])).()
     end
   end
 
@@ -58,7 +65,7 @@ defmodule ActionMap do
         {:error, "Unrecognised action \"#{action}\""}
 
       {:ok, module_name} ->
-        module_name |> (&apply(String.to_existing_atom("Elixir.#{&1}"), :description, [])).()
+        module_name |> (&run_for_module(&1, :description, [])).()
     end
   end
 end
