@@ -40,6 +40,17 @@ defmodule ActionMap do
     end
   end
 
+  @spec expected_options(iodata()) :: map() | {atom(), iodata()}
+  def expected_options(action) do
+    case Map.fetch(@actions, action) do
+      :error ->
+        {:error, "Unrecognised action \"#{action}\""}
+
+      {:ok, module_name} ->
+        module_name |> (&apply(String.to_existing_atom("Elixir.#{&1}"), :expected_options, [])).()
+    end
+  end
+
   @spec description(iodata()) :: iodata() | {atom(), iodata()}
   def description(action) do
     case Map.fetch(@actions, action) do

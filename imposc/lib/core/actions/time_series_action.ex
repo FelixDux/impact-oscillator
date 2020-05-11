@@ -25,6 +25,14 @@ defmodule TimeSeriesAction do
   end
 
   @doc """
+  Specifies the options available for the action
+  """
+  @impl Action
+  def expected_options() do
+    %{"outfile" => nil}
+  end
+
+  @doc """
   Returns a description of the action
   """
   @impl Action

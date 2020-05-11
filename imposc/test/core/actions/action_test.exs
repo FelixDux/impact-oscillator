@@ -11,14 +11,16 @@ defmodule ActionTest do
     assert is_list(Action.module_info())
   end
 
-  test "validation succeeds on valid arguments" do
+  test "validation succeeds on valid arguments and options" do
     args = %{
       "initial_point" => %{"phi" => 0.5, "v" => 0.15},
       "params" => %{"omega" => 2.8, "sigma" => 0, "r" => 0.8},
       "num_iterations" => 10000
     }
 
-    assert {:ok, nil} == Action.validate_args(ScatterAction, args)
+    options = %{"outfile" => "png"}
+
+    assert {:ok, ""} == Action.validate(ScatterAction, args, options)
   end
 
   test "validation fails on missing arguments" do
@@ -28,8 +30,35 @@ defmodule ActionTest do
       "num_iterationZ" => 10000
     }
 
+    options = %{}
+
     assert {:error, "Missing arguments: num_iterations\ninitial_point: Missing arguments: phi"} =
-             Action.validate_args(ScatterAction, args)
+             Action.validate(ScatterAction, args, options)
+  end
+
+  test "validation fails on unrecognised options" do
+    args = %{
+      "initial_point" => %{"phi" => 0.5, "v" => 0.15},
+      "params" => %{"omega" => 2.8, "sigma" => 0, "r" => 0.8},
+      "num_iterations" => 10000
+    }
+
+    options = %{"infile" => "png"}
+
+    assert {:error, "Unrecognised options: infile"} ==
+             Action.validate(ScatterAction, args, options)
+  end
+
+  test "validation fails on arguments and options" do
+    args = %{
+      "params" => %{"omega" => 2.8, "sigma" => 0, "r" => 0.8},
+      "num_iterations" => 10000
+    }
+
+    options = %{"infile" => "png"}
+
+    assert {:error, "Missing arguments: initial_point\nUnrecognised options: infile"} ==
+             Action.validate(ScatterAction, args, options)
   end
 
   test "Action requirements correctly retrieved" do

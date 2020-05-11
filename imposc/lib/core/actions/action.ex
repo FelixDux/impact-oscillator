@@ -3,7 +3,23 @@ defmodule Action do
 
   @callback requirements() :: map()
 
+  @callback expected_options() :: map()
+
   @callback description() :: iodata()
+
+  @doc """
+  Validates `:args` and `:options` for the action
+  """
+  @spec validate(module(), map(), map()) :: {atom(), nil | iodata()}
+  def validate(implementation, args, options) do
+    {args_outcome, args_message} = validate_args(implementation, args)
+    {options_outcome, options_message} = validate_options(implementation, options)
+
+    {[args_outcome, options_outcome]
+     |> Enum.all?(fn a -> a == :ok end)
+     |> (&if(&1, do: :ok, else: :error)).(),
+     [args_message, options_message] |> Enum.filter(fn s -> s != nil end) |> Enum.join("\n")}
+  end
 
   @doc """
   Validates `:args` against `:requirements`
@@ -13,14 +29,26 @@ defmodule Action do
     implementation.requirements() |> validate_against_template(args)
   end
 
-  @spec validate_against_template(map(), map()) :: {atom(), nil | iodata()}
-  defp validate_against_template(template, args) do
+  @doc """
+  Validates `:options` against `:expected_options`
+  """
+  @spec validate_options(module(), map()) :: {atom(), nil | iodata()}
+  def validate_options(implementation, options) do
+    options
+    |> validate_against_template(
+      implementation.expected_options(),
+      "Unrecognised options"
+    )
+  end
+
+  @spec validate_against_template(map(), map(), iodata()) :: {atom(), nil | iodata()}
+  defp validate_against_template(template, args, error_prompt \\ "Missing arguments") do
     missing_keys = Map.keys(template) -- Map.keys(args)
 
     case missing_keys do
       # recurse for values which are maps
       [] -> {:ok, nil}
-      _ -> missing_keys |> Enum.join(", ") |> (&{:error, "Missing arguments: #{&1}"}).()
+      _ -> missing_keys |> Enum.join(", ") |> (&{:error, "#{error_prompt}: #{&1}"}).()
     end
     |> (fn result ->
           Enum.filter(args, fn {_k, v} -> is_map(v) end)
