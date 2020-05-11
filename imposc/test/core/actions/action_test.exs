@@ -65,6 +65,10 @@ defmodule ActionTest do
     assert %{} = "ellipse" |> ActionMap.requirements()
   end
 
+  test "Action options correctly retrieved" do
+    assert %{} = "ellipse" |> ActionMap.expected_options()
+  end
+
   test "Action description correctly retrieved" do
     assert Regex.match?(
              ~r/.*sigma.*$/i,
@@ -76,6 +80,12 @@ defmodule ActionTest do
     action = "sdfh"
 
     assert {:error, "Unrecognised action" <> _a} = action |> ActionMap.requirements()
+  end
+
+  test "Bad options request correctly handled" do
+    action = "sdfh"
+
+    assert {:error, "Unrecognised action" <> _a} = action |> ActionMap.expected_options()
   end
 
   test "Bad description request correctly handled" do

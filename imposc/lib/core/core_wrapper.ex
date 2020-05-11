@@ -10,7 +10,7 @@ defmodule CoreWrapper do
   Taken from https://groups.google.com/forum/#!msg/elixir-lang-talk/6geXOLUeIpI/L9einu4EEAAJ
   """
   @spec to_struct(module(), map()) :: struct()
-  def to_struct(kind, attrs) do
+  defp to_struct(kind, attrs) do
     kind
     |> struct
     |> (fn struct ->
