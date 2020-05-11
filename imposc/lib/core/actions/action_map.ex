@@ -17,15 +17,15 @@ defmodule ActionMap do
     Enum.map(Map.keys(@actions), fn action -> {action, description(action)} end)
   end
 
-  @spec execute(iodata(), map(), iodata()) :: atom() | {atom(), iodata()}
-  def execute(action, args, outfile) do
+  @spec execute(iodata(), map(), map()) :: atom() | {atom(), iodata()}
+  def execute(action, args, options) do
     case Map.fetch(@actions, action) do
       :error ->
         {:error, "Unrecognised action \"#{action}\""}
 
       {:ok, module_name} ->
         module_name
-        |> (&apply(String.to_existing_atom("Elixir.#{&1}"), :execute, [args, outfile])).()
+        |> (&apply(String.to_existing_atom("Elixir.#{&1}"), :execute, [args, options])).()
     end
   end
 

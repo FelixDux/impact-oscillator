@@ -9,8 +9,8 @@ defmodule TimeSeriesAction do
   Generates a time-series plot using arguments initialised from `:args`.
   """
   @impl Action
-  def execute(args, outfile) do
-    PlotCommands.draw(TimeSeries, [args], "Time Series", outfile)
+  def execute(args, options) do
+    PlotCommands.draw(TimeSeries, [args], "Time Series", options)
   end
 
   @doc """

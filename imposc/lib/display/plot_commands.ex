@@ -22,11 +22,19 @@ defmodule PlotCommands do
     end
   end
 
-  def outfile_commands(outfile) do
+  def outfile_commands(options) do
     command_lookup = %{"png" => :pngcairo, "svg" => :svg}
 
-    if outfile do
-      case String.downcase(outfile)
+    file_format =
+      (fn ->
+         case Map.fetch(options, "outfile") do
+           {:ok, result} -> result
+           _ -> nil
+         end
+       end).()
+
+    if file_format do
+      case String.downcase(file_format)
            |> (&{&1, Map.fetch(command_lookup, &1)}).() do
         {_, :error} ->
           {"", []}
@@ -34,8 +42,11 @@ defmodule PlotCommands do
         {extension, {:ok, terminal}} ->
           ImageCache.offer_new_file(%ImageCache{}, extension)
           |> (&(case &1 do
-                  {:ok, filename} -> {filename, [[:set, :term, terminal], [:set, :output, filename]]}
-                  _ -> {"", []}
+                  {:ok, filename} ->
+                    {filename, [[:set, :term, terminal], [:set, :output, filename]]}
+
+                  _ ->
+                    {"", []}
                 end)).()
       end
     else
@@ -135,11 +146,11 @@ defmodule PlotCommands do
     data |> flatten_plot_data_list |> slice_plot_data
   end
 
-  @spec draw(module(), [map()], iodata(), iodata()) :: {atom(), iodata()} | atom()
-  def draw(implementation, arg_list, title, file_format \\ "") do
+  @spec draw(module(), [map()], iodata(), map()) :: {atom(), iodata()} | atom()
+  def draw(implementation, arg_list, title, options \\ %{}) do
     {labels, datasets} = collate_data(implementation, arg_list)
-    
-    {image_file, image_file_commands} = outfile_commands(file_format) 
+
+    {image_file, image_file_commands} = outfile_commands(options)
 
     commands =
       labels

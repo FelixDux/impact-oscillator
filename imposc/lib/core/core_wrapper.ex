@@ -47,8 +47,8 @@ defmodule CoreWrapper do
           ImpactPoint ->
             attrs
             |> (&to_struct(ImpactPoint, &1)).()
-            # We just expect the phase and velocity from the input and initialise
-            # the time to the phase
+            # We just expect the phase and velocity from the input and 
+            # initialise the time to the phase
             |> (&%ImpactPoint{phi: &1.phi, v: &1.v, t: &1.phi}).()
 
           SystemParameters ->
@@ -86,12 +86,12 @@ defmodule CoreWrapper do
         {:error, _} ->
           input
 
-        %{"action" => action, "args" => args, "outfile" => outfile} ->
-          ActionMap.execute(action, args, outfile)
+        %{"action" => action, "args" => args, "options" => options} ->
+          ActionMap.execute(action, args, options)
           |> (&%{"action" => action, "args" => args, "result" => &1}).()
 
         %{"action" => action, "args" => args} ->
-          ActionMap.execute(action, args, "")
+          ActionMap.execute(action, args, %{})
           |> (&%{"action" => action, "args" => args, "result" => &1}).()
 
         _ ->
