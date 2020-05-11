@@ -29,17 +29,17 @@ defmodule PlotCommands do
       case String.downcase(outfile)
            |> (&{&1, Map.fetch(command_lookup, &1)}).() do
         {_, :error} ->
-          []
+          {"", []}
 
         {extension, {:ok, terminal}} ->
           ImageCache.offer_new_file(%ImageCache{}, extension)
           |> (&(case &1 do
-                  {:ok, filename} -> [[:set, :term, terminal], [:set, :output, filename]]
-                  _ -> []
+                  {:ok, filename} -> {filename, [[:set, :term, terminal], [:set, :output, filename]]}
+                  _ -> {"", []}
                 end)).()
       end
     else
-      []
+      {"", []}
     end
   end
 
@@ -136,8 +136,10 @@ defmodule PlotCommands do
   end
 
   @spec draw(module(), [map()], iodata(), iodata()) :: {atom(), iodata()} | atom()
-  def draw(implementation, arg_list, title, outfile \\ "") do
+  def draw(implementation, arg_list, title, file_format \\ "") do
     {labels, datasets} = collate_data(implementation, arg_list)
+    
+    {image_file, image_file_commands} = outfile_commands(file_format) 
 
     commands =
       labels
@@ -146,12 +148,12 @@ defmodule PlotCommands do
             [chart_title(title)] ++
               implementation.commands_for_axes() ++
               legend_commands() ++
-              outfile_commands(outfile) ++
+              image_file_commands ++
               [Gnuplot.plots(command)]
           end).()
 
     case Gnuplot.plot(commands, datasets) do
-      {:ok, _cmd} -> :ok
+      {:ok, _cmd} -> {:ok, image_file}
       {:error, message} -> {:error, message}
       _ -> {:error, "Unknown error generating chart"}
     end
