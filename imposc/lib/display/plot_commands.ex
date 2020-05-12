@@ -139,7 +139,8 @@ defmodule PlotCommands do
     data =
       arg_list
       |> Enum.map(fn args -> collate_for_plot(implementation, args) end)
-      |> Enum.map(&Task.await(&1))
+      # TODO: make fault-tolerant
+      |> Enum.map(&Task.await(&1, :infinity))
 
     # We now have a list of tuples, which we convert into a tuple of lists
     # as the labels and the data have to be passed to difference arguments
@@ -256,15 +257,13 @@ defmodule PlotCommands do
            %{
              "initial_point" => %{"phi" => 0.5, "v" => 0.15},
              "params" => %{"omega" => 2.8, "sigma" => 0, "r" => 0.8},
-             "num_iterations" => 1000
+             "num_iterations" => 10000
+           },
+           %{
+             "initial_point" => %{"phi" => 0.5, "v" => 0.15},
+             "params" => %{"omega" => 2.8, "sigma" => 0.2, "r" => 0.8},
+             "num_iterations" => 10000
            }
-
-           # ,
-           # %{
-           #  "initial_point" => %{"phi" => 0.5, "v" => 0.15},
-           #  "params" => %{"omega" => 2.8, "sigma" => 0.2, "r" => 0.8},
-           #  "num_iterations" => 1000
-           # }
          ]},
         {TimeSeries,
          [

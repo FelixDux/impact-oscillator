@@ -47,5 +47,6 @@ defmodule ImpactMap do
     {"{/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}, ({/Symbol f}_0 / (2{/Symbol p}/{/Symbol w}), v_0) = #{
        initial_point
      }", dataset}
+    |> IO.inspect()
   end
 end
