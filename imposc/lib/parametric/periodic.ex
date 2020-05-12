@@ -76,29 +76,32 @@ defmodule OneNParams do
   end
 
   def derive(omega, r, n) do
-    with {:ok, forcing_period} <- ForcingPhase.forcing_period(omega), do: (fn ->
-           period = n * forcing_period
-           cn = :math.cos(period)
-           sn = :math.sin(period)
-           gamma = ForcingPhase.gamma(omega)
+    with {:ok, forcing_period} <- ForcingPhase.forcing_period(omega),
+         do:
+           (fn ->
+              period = n * forcing_period
+              cn = :math.cos(period)
+              sn = :math.sin(period)
+              gamma = ForcingPhase.gamma(omega)
 
-           result = %OneNParams{
-             omega: omega,
-             r: r,
-             gamma2: gamma * gamma,
-             r_minus: (1 - r) / omega,
-             cs: derive_cs(cn, sn, r)
-           }
+              result = %OneNParams{
+                omega: omega,
+                r: r,
+                gamma2: gamma * gamma,
+                r_minus: (1 - r) / omega,
+                cs: derive_cs(cn, sn, r)
+              }
 
-           result = %OneNParams{
-             result
-             | sigma_s: :math.sqrt(result.gamma2 * (1 + :math.pow(result.cs / result.r_minus, 2)))
-           }
+              result = %OneNParams{
+                result
+                | sigma_s:
+                    :math.sqrt(result.gamma2 * (1 + :math.pow(result.cs / result.r_minus, 2)))
+              }
 
-           result = %OneNParams{result | period: period, gamma: gamma}
+              result = %OneNParams{result | period: period, gamma: gamma}
 
-           {:ok, result}
-         end).()
+              {:ok, result}
+            end).()
   end
 
   @spec discriminant(number(), %OneNParams{}) :: number()
@@ -271,36 +274,38 @@ defmodule OneNLoci do
           {atom(), iodata() | [{number() | nil, number() | nil}]}
   def curves_for_fixed_omega(n, omega, r, num_points \\ 1000) do
     # Initialise parameters
-      with {:ok, params} <- OneNParams.derive(omega, r, n), do: (fn ->
-           # Compute (1, n) velocities over range of offsets
-           delta_s = 2 * params.sigma_s / num_points
+    with {:ok, params} <- OneNParams.derive(omega, r, n),
+         do:
+           (fn ->
+              # Compute (1, n) velocities over range of offsets
+              delta_s = 2 * params.sigma_s / num_points
 
-           pairs =
-             0..num_points
-             |> Stream.map(&(&1 * delta_s - params.sigma_s))
-             |> Stream.map(&{&1, OneNParams.velocities(&1, params)})
+              pairs =
+                0..num_points
+                |> Stream.map(&(&1 * delta_s - params.sigma_s))
+                |> Stream.map(&{&1, OneNParams.velocities(&1, params)})
 
-           # Filter out unphysical (nullified) velocities
-           filter_pairs = fn n ->
-             pairs
-             |> Enum.map(&{elem(&1, 0), elem(elem(&1, 1), n)})
-             |> Enum.filter(&(!is_nil(elem(&1, 1))))
-           end
+              # Filter out unphysical (nullified) velocities
+              filter_pairs = fn n ->
+                pairs
+                |> Enum.map(&{elem(&1, 0), elem(elem(&1, 1), n)})
+                |> Enum.filter(&(!is_nil(elem(&1, 1))))
+              end
 
-           0..1 |> Enum.map(&filter_pairs.(&1)) |> (&{:ok, &1}).()
-         end).()
+              0..1 |> Enum.map(&filter_pairs.(&1)) |> (&{:ok, &1}).()
+            end).()
   end
 
   @spec vs(integer(), number(), number()) :: {atom(), iodata()} | {number() | nil, number() | nil}
   def vs(n, omega, r) do
-      with {:ok, params} <- OneNParams.derive(omega, r, n), do:
-        OneNParams.velocities(-params.sigma_s, params)
+    with {:ok, params} <- OneNParams.derive(omega, r, n),
+         do: OneNParams.velocities(-params.sigma_s, params)
   end
 
   @spec orbits_for_params(%SystemParameters{}, integer()) ::
           {atom(), iodata()} | [{number() | nil, number() | nil}]
   def orbits_for_params(%SystemParameters{} = params, n) do
-      with {:ok, parameters} <- OneNParams.derive(params.omega, params.r, n), do:
-        OneNParams.orbits(params.sigma, parameters)
+    with {:ok, parameters} <- OneNParams.derive(params.omega, params.r, n),
+         do: OneNParams.orbits(params.sigma, parameters)
   end
 end

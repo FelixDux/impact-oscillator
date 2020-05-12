@@ -21,8 +21,8 @@ defmodule ImageCache do
   """
   @spec new_file_name(ImageCache, iodata()) :: {atom(), atom() | iodata()}
   def new_file_name(%ImageCache{} = image_cache, extension \\ "png") do
-      with {:ok, directory} <- create_cache_dir(image_cache), do:
-        unique_file_name(extension) |> (&Path.join(directory, &1)).() |> (&{:ok, &1}).()
+    with {:ok, directory} <- create_cache_dir(image_cache),
+         do: unique_file_name(extension) |> (&Path.join(directory, &1)).() |> (&{:ok, &1}).()
   end
 
   def unique_file_name(extension) do
@@ -38,20 +38,21 @@ defmodule ImageCache do
     # get absolute path
     image_cache
     |> cache_path
-    |> (fn response -> with {:ok, dir_name} <- response, do:
-      dir_name |> (fn dir_name ->
-              # check if it exists
-              if File.dir?(dir_name) do
-                {:ok, dir_name}
-              else
-                # if not, create directory
-                dir_name
-                |> File.mkdir()
-                |> (&(with :ok <- &1, do:
-                        {:ok, dir_name}
-                      )).()
-              end
-        end).()
+    |> (fn response ->
+          with {:ok, dir_name} <- response,
+               do:
+                 dir_name
+                 |> (fn dir_name ->
+                       # check if it exists
+                       if File.dir?(dir_name) do
+                         {:ok, dir_name}
+                       else
+                         # if not, create directory
+                         dir_name
+                         |> File.mkdir()
+                         |> (&with(:ok <- &1, do: {:ok, dir_name})).()
+                       end
+                     end).()
         end).()
   end
 
@@ -63,9 +64,9 @@ defmodule ImageCache do
     # TODO: need to do better than just cwd
     File.cwd()
     |> (fn cwd_reason ->
-            with {:ok, path_name} <- cwd_reason, do:
-            # create absolute path
-              path_name |> Path.join(image_cache.directory) |> (&{:ok, &1}).()
+          with {:ok, path_name} <- cwd_reason,
+               # create absolute path
+               do: path_name |> Path.join(image_cache.directory) |> (&{:ok, &1}).()
         end).()
   end
 

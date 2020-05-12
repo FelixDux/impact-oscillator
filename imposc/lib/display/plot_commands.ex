@@ -85,6 +85,11 @@ defmodule PlotCommands do
 
   @callback commands_for_axes() :: [[any()]]
 
+  defp unset_commands_for_axes() do
+    [:xlabel, :ylabel, :xrange, :yrange, :xtics, :ytics]
+    |> Enum.map(&[:unset, &1])
+  end
+
   defp flatten_plot_data(data) do
     # In some cases `:data_for_plot` may generate multiple datasets
     {label, data_points} = data
@@ -143,27 +148,139 @@ defmodule PlotCommands do
     data |> flatten_plot_data_list |> slice_plot_data
   end
 
-  @spec draw(module(), [map()], iodata(), map()) :: {atom(), iodata()} | atom()
-  def draw(implementation, arg_list, title, options \\ %{}) do
+  def collate_for_chart(implementation, arg_list) do
     {labels, datasets} = collate_data(implementation, arg_list)
-
-    {image_file, image_file_commands} = outfile_commands(options)
 
     commands =
       labels
       |> Enum.map(&implementation.command_for_plot(&1))
       |> (fn command ->
-            [chart_title(title)] ++
-              implementation.commands_for_axes() ++
+            implementation.commands_for_axes() ++
               legend_commands() ++
-              image_file_commands ++
-              [Gnuplot.plots(command)]
+              [Gnuplot.plots(command)] ++
+              unset_commands_for_axes()
           end).()
+
+    {commands, datasets}
+  end
+
+  def collate_for_image(chart_specs) do
+    chart_specs
+    |> Enum.reduce(
+      {[], []},
+      fn {implementation, arg_list}, {commands, datasets} ->
+        {new_commands, new_datasets} = collate_for_chart(implementation, arg_list)
+
+        {commands ++ new_commands, datasets ++ new_datasets}
+      end
+    )
+  end
+
+  defp multi_plot_layout(n_charts, n_rows \\ 1, n_columns \\ 1)
+
+  defp multi_plot_layout(n_charts, n_rows, n_columns) when n_rows * n_columns >= n_charts do
+    {n_rows, n_columns}
+  end
+
+  defp multi_plot_layout(n_charts, n_rows, n_columns) when n_rows < n_columns do
+    multi_plot_layout(n_charts, n_rows + 1, n_columns)
+  end
+
+  defp multi_plot_layout(n_charts, n_rows, n_columns) do
+    multi_plot_layout(n_charts, n_rows, n_columns + 1)
+  end
+
+  def commands_for_image(title, options, n_charts \\ 1) do
+    {image_file, image_file_commands} = outfile_commands(options)
+
+    multiplot_command =
+      if n_charts > 1 do
+        [
+          [
+            :set,
+            :multiplot,
+            :layout,
+            n_charts
+            |> multi_plot_layout
+            |> (fn {n_rows, n_columns} ->
+                  '#{n_rows}, #{n_columns}'
+                end).()
+          ]
+        ]
+      else
+        []
+      end
+
+    commands = multiplot_command ++ [chart_title(title)] ++ image_file_commands
+    {image_file, commands}
+  end
+
+  # def draw_commands(implementation, arg_list, title, options \\ %{}) do
+  #  {chart_commands, datasets} = collate_for_chart(implementation, arg_list)
+  def draw_commands(chart_specs, title, options \\ %{}) do
+    {chart_commands, datasets} = collate_for_image(chart_specs)
+
+    {image_file, image_commands} = commands_for_image(title, options, Enum.count(chart_specs))
+
+    {image_file, image_commands ++ chart_commands, datasets}
+  end
+
+  @spec draw(module(), [map()], iodata(), map()) :: {atom(), iodata()} | atom()
+  def draw(implementation, arg_list, title, options \\ %{}) do
+    {image_file, commands, datasets} = draw_commands([{implementation, arg_list}], title, options)
 
     case Gnuplot.plot(commands, datasets) do
       {:ok, _cmd} -> {:ok, image_file}
       {:error, message} -> {:error, message}
       _ -> {:error, "Unknown error generating chart"}
     end
+  end
+
+  def draw_multi(chart_specs, title, options \\ %{}) do
+    {image_file, commands, datasets} = draw_commands(chart_specs, title, options)
+
+    commands |> IO.inspect()
+
+    case Gnuplot.plot(commands, datasets) do
+      {:ok, _cmd} -> {:ok, image_file}
+      {:error, message} -> {:error, message}
+      _ -> {:error, "Unknown error generating chart"}
+    end
+  end
+
+  def glab() do
+    draw_multi(
+      [
+        {ImpactMap,
+         [
+           %{
+             "initial_point" => %{"phi" => 0.5, "v" => 0.15},
+             "params" => %{"omega" => 2.8, "sigma" => 0, "r" => 0.8},
+             "num_iterations" => 1000
+           }
+
+           # ,
+           # %{
+           #  "initial_point" => %{"phi" => 0.5, "v" => 0.15},
+           #  "params" => %{"omega" => 2.8, "sigma" => 0.2, "r" => 0.8},
+           #  "num_iterations" => 1000
+           # }
+         ]},
+        {TimeSeries,
+         [
+           %{
+             "start_impact" => %{"phi" => 0.5, "v" => 0.15},
+             "params" => %{"omega" => 2.8, "sigma" => 0, "r" => 0.8}
+           }
+
+           # ,
+           # %{
+           #  "start_impact" => %{"phi" => 0.5, "v" => 0.15},
+           #  "params" => %{"omega" => 2.8, "sigma" => 0.2, "r" => 0.8}
+           # }
+         ]}
+      ],
+      "test"
+    )
   end
 end
