@@ -80,6 +80,7 @@ defmodule PlotCommands do
     [
       [:set, :key, :box],
       [:set, :key, :below]
+      #[:set, :key, :off]
     ]
   end
 
@@ -159,15 +160,17 @@ defmodule PlotCommands do
   def collate_for_chart(implementation, arg_list) do
     {labels, datasets} = collate_data(implementation, arg_list)
 
+    title = title_from_arglist(arg_list)
+
     commands =
       labels
       |> Enum.map(&implementation.command_for_plot(&1))
       |> (fn command ->
-            implementation.commands_for_axes() ++
+        implementation.commands_for_axes() ++ 
+          [chart_title(title)]  ++
               legend_commands() ++
                 [Gnuplot.plots(command)] ++
               unset_commands_for_axes()
-#++ [chart_title(title)] 
           end).()
 
     {commands, datasets}
@@ -250,13 +253,40 @@ defmodule PlotCommands do
   def draw_multi(chart_specs, title, options \\ %{}) do
     {image_file, commands, datasets} = draw_commands(chart_specs, title, options)
 
-    commands |> IO.inspect()
+    #commands |> IO.inspect()
 
     case Gnuplot.plot(commands, datasets) do
       {:ok, _cmd} -> {:ok, image_file}
       {:error, message} -> {:error, message}
       _ -> {:error, "Unknown error generating chart"}
     end
+  end
+
+  def args_to_label(args) do
+    formatter = fn {key, value} ->
+      symbols = %{"omega"=>"{/Symbol w}",
+        "sigma"=>"{/Symbol s}",
+        "v"=>"v_0",
+        "phi"=>"{/Symbol f}_0/(2{/Symbol p}/{/Symbol w})"}
+
+      key_string = if Map.has_key?(symbols, key) do
+        Map.fetch!(symbols, key)
+      else
+        key
+      end
+
+      cond do
+        ["num_", "start_", "initial_"] |> Enum.any?(& String.starts_with?(key, &1 )) -> nil
+        is_map(value) -> args_to_label(value)
+        true -> "#{key_string}=#{value}"
+      end
+    end
+
+    Enum.map(args, formatter) |> Enum.filter(& &1 != nil) |> Enum.join(", ")
+  end
+
+  def title_from_arglist(arglist) do
+    arglist |> CoreWrapper.intersect_arglist |> args_to_label
   end
 
   def glab() do
