@@ -86,8 +86,15 @@ defmodule PlotCommands do
   @callback commands_for_axes() :: [[any()]]
 
   defp unset_commands_for_axes() do
+    (fn ->
     [:xlabel, :ylabel, :xrange, :yrange, :xtics, :ytics]
     |> Enum.map(&[:unset, &1])
+    end).()
+    ++
+    (fn ->
+    [:xtics, :ytics]
+    |> Enum.map(&[:set, &1])
+    end).()
   end
 
   defp flatten_plot_data(data) do
@@ -158,8 +165,9 @@ defmodule PlotCommands do
       |> (fn command ->
             implementation.commands_for_axes() ++
               legend_commands() ++
-              [Gnuplot.plots(command)] ++
+                [Gnuplot.plots(command)] ++
               unset_commands_for_axes()
+#++ [chart_title(title)] 
           end).()
 
     {commands, datasets}
@@ -205,14 +213,16 @@ defmodule PlotCommands do
             |> multi_plot_layout
             |> (fn {n_rows, n_columns} ->
                   '#{n_rows}, #{n_columns}'
-                end).()
+            end).(),
+            :title,
+            title
           ]
         ]
       else
         []
       end
 
-    commands = multiplot_command ++ [chart_title(title)] ++ image_file_commands
+    commands = multiplot_command ++ image_file_commands
     {image_file, commands}
   end
 

@@ -16,8 +16,6 @@ defmodule Mix.Tasks.Scatter do
       }
     ]
 
-    # |> (fn l -> with [h|_t] <- l, do: [h] end).()
-
     PlotCommands.draw(ImpactMap, args, "Impact Map")
   end
 end
