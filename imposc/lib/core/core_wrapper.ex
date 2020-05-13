@@ -123,4 +123,64 @@ defmodule CoreWrapper do
   def process_input() do
     IO.read(:all) |> process_input_string |> IO.puts()
   end
+
+  @doc """
+  Returns a `:Map` with only the values which are shared identically by
+  two maps.
+
+  ## Example
+      iex> x=%{"cars" => %{"Ford"=>"Cortina", "Renault"=>"Clio"}}
+      %{"cars" => %{"Ford" => "Cortina", "Renault" => "Clio"}}
+      iex> y=%{"cars" => %{"Ford"=>"Cortina", "Renault"=>"Laguna"}}
+      %{"cars" => %{"Ford" => "Cortina", "Renault" => "Laguna"}}
+      iex> CoreWrapper.intersect_args(x,y)
+      %{"cars" => %{"Ford" => "Cortina"}}
+
+  """
+  def intersect_args(args1, args2) do
+    keys_in_common = MapSet.intersection(MapSet.new(args1|>Map.keys), MapSet.new(args2|> Map.keys))
+
+    keys_in_common |> Enum.reduce([],
+      fn key, collection ->
+        value1 = Map.fetch!(args1, key)
+        value2 = Map.fetch!(args2, key)
+        cond do
+          is_map(value1) and is_map(value2) ->
+          intersect_args(value1, value2) |>
+          (fn sub_collection -> 
+            case sub_collection do
+              [] -> collection
+
+              _ -> collection ++ [{key, sub_collection}]
+            end
+          end).()
+
+          value1 == value2 -> collection ++ [{key, value1}]
+          true -> collection
+        end
+      end 
+    )
+    |> Map.new
+  end
+
+  @doc """
+  Returns a `:Map` with only the values which are shared identically by
+  two maps.
+
+  ## Example
+      iex> x=%{"cars" => %{"Ford"=>"Cortina", "Renault"=>"Clio"}}
+      %{"cars" => %{"Ford" => "Cortina", "Renault" => "Clio"}}
+      iex> y=%{"cars" => %{"Ford"=>"Cortina", "Renault"=>"Laguna"}}
+      %{"cars" => %{"Ford" => "Cortina", "Renault" => "Laguna"}}
+      iex> z=%{"cars" => %{"Ford"=>"Cortina", "Renault"=>"Megane"}}
+      %{"cars" => %{"Ford" => "Cortina", "Renault" => "Megane"}}
+      iex> CoreWrapper.intersect_arglist([x, y, z])
+      %{"cars" => %{"Ford" => "Cortina"}}
+
+  """
+  def intersect_arglist(arglist) do
+    [head | tail] = arglist
+
+    Enum.reduce(tail, head, fn args1, args2 -> intersect_args(args1, args2) end)
+  end
 end
