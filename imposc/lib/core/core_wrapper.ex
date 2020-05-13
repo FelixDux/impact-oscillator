@@ -31,7 +31,7 @@ defmodule CoreWrapper do
     attrs
   end
 
-  defp from_attrs(kind, attrs) when Float == kind and is_float(attrs) or is_integer(attrs) do
+  defp from_attrs(kind, attrs) when (Float == kind and is_float(attrs)) or is_integer(attrs) do
     attrs
   end
 
@@ -138,41 +138,54 @@ defmodule CoreWrapper do
 
   """
   def intersect_args(args1, args2, complement \\ false, exclude \\ []) do
-    keys_in_common = if complement do
-      args2|> Map.keys
-    else
-      MapSet.intersection(MapSet.new(args1|>Map.keys), 
-        MapSet.new(args2|> Map.keys))
-    end
-    |> MapSet.new
-        |> MapSet.difference(MapSet.new(exclude))
+    keys_in_common =
+      if complement do
+        args2 |> Map.keys()
+      else
+        MapSet.intersection(
+          MapSet.new(args1 |> Map.keys()),
+          MapSet.new(args2 |> Map.keys())
+        )
+      end
+      |> MapSet.new()
+      |> MapSet.difference(MapSet.new(exclude))
 
-    keys_in_common |> Enum.reduce([],
+    keys_in_common
+    |> Enum.reduce(
+      [],
       fn key, collection ->
-        value1 = if Map.has_key?(args1, key) do
-          Map.fetch!(args1, key)
-        else 
-          nil
-        end
+        value1 =
+          if Map.has_key?(args1, key) do
+            Map.fetch!(args1, key)
+          else
+            nil
+          end
+
         value2 = Map.fetch!(args2, key)
+
         cond do
-          is_map(value2) -> if(value1==nil, do: %{}, else: value1) |>
-          intersect_args(value2, complement, exclude) |>
-          (fn sub_collection -> 
-            cond do
-              map_size(sub_collection) == 0 -> collection
+          is_map(value2) ->
+            if(value1 == nil, do: %{}, else: value1)
+            |> intersect_args(value2, complement, exclude)
+            |> (fn sub_collection ->
+                  cond do
+                    map_size(sub_collection) == 0 -> collection
+                    true -> collection ++ [{key, sub_collection}]
+                  end
+                end).()
 
-              true -> collection ++ [{key, sub_collection}]
-            end
-          end).()
+          complement == false and value1 == value2 ->
+            collection ++ [{key, value2}]
 
-          complement == false and value1 == value2 -> collection ++ [{key, value2}]
-          complement == true and value1 != value2 -> collection ++ [{key, value2}]
-          true -> collection
+          complement == true and value1 != value2 ->
+            collection ++ [{key, value2}]
+
+          true ->
+            collection
         end
-      end 
+      end
     )
-    |> Map.new
+    |> Map.new()
   end
 
   @doc """
@@ -197,6 +210,6 @@ defmodule CoreWrapper do
   end
 
   def arglist_complements(template, arg_list, exclude \\ []) do
-    arg_list |> Enum.map(& intersect_args(template, &1, true, exclude))
+    arg_list |> Enum.map(&intersect_args(template, &1, true, exclude))
   end
 end

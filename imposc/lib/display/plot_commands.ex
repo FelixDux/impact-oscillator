@@ -80,7 +80,7 @@ defmodule PlotCommands do
     [
       [:set, :key, :box],
       [:set, :key, :below]
-      #[:set, :key, :off]
+      # [:set, :key, :off]
     ]
   end
 
@@ -88,14 +88,13 @@ defmodule PlotCommands do
 
   defp unset_commands_for_axes() do
     (fn ->
-    [:xlabel, :ylabel, :xrange, :yrange, :xtics, :ytics]
-    |> Enum.map(&[:unset, &1])
-    end).()
-    ++
-    (fn ->
-    [:xtics, :ytics]
-    |> Enum.map(&[:set, &1])
-    end).()
+       [:xlabel, :ylabel, :xrange, :yrange, :xtics, :ytics]
+       |> Enum.map(&[:unset, &1])
+     end).() ++
+      (fn ->
+         [:xtics, :ytics]
+         |> Enum.map(&[:set, &1])
+       end).()
   end
 
   defp flatten_plot_data(data) do
@@ -158,9 +157,11 @@ defmodule PlotCommands do
   end
 
   def collate_for_chart(implementation, arg_list) do
-    title_args = arg_list |> 
-    CoreWrapper.intersect_arglist(["start_point", "initial_point"]) 
-    title = title_args|> args_to_label
+    title_args =
+      arg_list
+      |> CoreWrapper.intersect_arglist(["start_point", "initial_point"])
+
+    title = title_args |> args_to_label
 
     {labels, datasets} = collate_data(implementation, arg_list, title_args)
 
@@ -168,10 +169,10 @@ defmodule PlotCommands do
       labels
       |> Enum.map(&implementation.command_for_plot(&1))
       |> (fn command ->
-        implementation.commands_for_axes() ++ 
-          [chart_title(title)]  ++
-              legend_commands() ++
-                [Gnuplot.plots(command)] ++
+            implementation.commands_for_axes() ++
+              [chart_title(title)] ++
+              if(Enum.count(labels) <= 1, do: [[:set, :key, :off]], else: legend_commands()) ++
+              [Gnuplot.plots(command)] ++
               unset_commands_for_axes()
           end).()
 
@@ -218,7 +219,7 @@ defmodule PlotCommands do
             |> multi_plot_layout
             |> (fn {n_rows, n_columns} ->
                   '#{n_rows}, #{n_columns}'
-            end).(),
+                end).(),
             :title,
             title
           ]
@@ -255,7 +256,7 @@ defmodule PlotCommands do
   def draw_multi(chart_specs, title, options \\ %{}) do
     {image_file, commands, datasets} = draw_commands(chart_specs, title, options)
 
-    #commands |> IO.inspect()
+    # commands |> IO.inspect()
 
     case Gnuplot.plot(commands, datasets) do
       {:ok, _cmd} -> {:ok, image_file}
@@ -271,29 +272,33 @@ defmodule PlotCommands do
 
   def args_to_label(args) do
     formatter = fn {key, value} ->
-      symbols = %{"omega"=>"{/Symbol w}",
-        "sigma"=>"{/Symbol s}",
-        "v"=>"v_0",
-        "phi"=>"{/Symbol f}_0/(2{/Symbol p}/{/Symbol w})"}
+      symbols = %{
+        "omega" => "{/Symbol w}",
+        "sigma" => "{/Symbol s}",
+        "v" => "v_0",
+        "phi" => "{/Symbol f}_0/(2{/Symbol p}/{/Symbol w})"
+      }
 
-      key_string = if Map.has_key?(symbols, key) do
-        Map.fetch!(symbols, key)
-      else
-        key
-      end
+      key_string =
+        if Map.has_key?(symbols, key) do
+          Map.fetch!(symbols, key)
+        else
+          key
+        end
 
       cond do
-        ["num_"] |> Enum.any?(& String.starts_with?(key, &1 )) -> nil
+        ["num_"] |> Enum.any?(&String.starts_with?(key, &1)) -> nil
         is_map(value) -> args_to_label(value)
         true -> "#{key_string}=#{value}"
       end
     end
 
-    Enum.map(args, formatter) |> Enum.filter(& &1 != nil) |> Enum.join(", ")
+    Enum.map(args, formatter) |> Enum.filter(&(&1 != nil)) |> Enum.join(", ")
   end
 
   def title_from_arglist(arglist) do
-    arglist |> CoreWrapper.intersect_arglist
+    arglist
+    |> CoreWrapper.intersect_arglist()
     |> args_to_label
   end
 
@@ -327,27 +332,26 @@ defmodule PlotCommands do
            # }
          ]},
         {SigmaCurves,
-          [
-            %{
-              "n" => 1,
-              "omega"=> 2.1,
-              "r" => 0.8,
-              "num_points" => 100
-            },
-            %{
-              "n" => 1,
-              "omega"=> 2,
-              "r" => 0.8,
-              "num_points" => 100
-            },
-            %{
-              "n" => 1,
-              "omega"=> 1.9,
-              "r" => 0.8,
-              "num_points" => 100
-            }
-          ]
-        }
+         [
+           %{
+             "n" => 1,
+             "omega" => 2.1,
+             "r" => 0.8,
+             "num_points" => 100
+           },
+           %{
+             "n" => 1,
+             "omega" => 2,
+             "r" => 0.8,
+             "num_points" => 100
+           },
+           %{
+             "n" => 1,
+             "omega" => 1.9,
+             "r" => 0.8,
+             "num_points" => 100
+           }
+         ]}
       ],
       "test"
     )
