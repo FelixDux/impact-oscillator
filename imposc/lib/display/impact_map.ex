@@ -44,8 +44,6 @@ defmodule ImpactMap do
       elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
       |> Stream.map(&ImpactPoint.point_to_list(&1))
 
-    title_args  |> IO.inspect
-    args  |> IO.inspect
     {PlotCommands.label_from_args(title_args, args), dataset}
   end
 end

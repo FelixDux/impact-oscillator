@@ -137,12 +137,15 @@ defmodule CoreWrapper do
       %{"cars" => %{"Ford" => "Cortina"}}
 
   """
-  def intersect_args(args1, args2, complement \\ false) do
+  def intersect_args(args1, args2, complement \\ false, exclude \\ []) do
     keys_in_common = if complement do
       args2|> Map.keys
     else
-      MapSet.intersection(MapSet.new(args1|>Map.keys), MapSet.new(args2|> Map.keys))
+      MapSet.intersection(MapSet.new(args1|>Map.keys), 
+        MapSet.new(args2|> Map.keys))
     end
+    |> MapSet.new
+        |> MapSet.difference(MapSet.new(exclude))
 
     keys_in_common |> Enum.reduce([],
       fn key, collection ->
@@ -153,11 +156,11 @@ defmodule CoreWrapper do
         end
         value2 = Map.fetch!(args2, key)
         cond do
-          is_map(value2) ->
-          intersect_args(value1, value2, complement) |>
+          is_map(value2) -> if(value1==nil, do: %{}, else: value1) |>
+          intersect_args(value2, complement, exclude) |>
           (fn sub_collection -> 
             cond do
-              Map.size(sub_collection) == 0 -> collection
+              map_size(sub_collection) == 0 -> collection
 
               true -> collection ++ [{key, sub_collection}]
             end
@@ -187,13 +190,13 @@ defmodule CoreWrapper do
       %{"cars" => %{"Ford" => "Cortina"}}
 
   """
-  def intersect_arglist(arglist) do
+  def intersect_arglist(arglist, exclude \\ []) do
     [head | tail] = arglist
 
-    Enum.reduce(tail, head, fn args1, args2 -> intersect_args(args1, args2) end)
+    Enum.reduce(tail, head, fn args1, args2 -> intersect_args(args1, args2, false, exclude) end)
   end
 
-  def arglist_complements(template, arg_list) do
-    arg_list |> Enum.map(& intersect_args(template, &1, true))
+  def arglist_complements(template, arg_list, exclude \\ []) do
+    arg_list |> Enum.map(& intersect_args(template, &1, true, exclude))
   end
 end

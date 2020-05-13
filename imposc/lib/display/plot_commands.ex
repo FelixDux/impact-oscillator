@@ -158,7 +158,8 @@ defmodule PlotCommands do
   end
 
   def collate_for_chart(implementation, arg_list) do
-    title_args = arg_list |> CoreWrapper.intersect_arglist 
+    title_args = arg_list |> 
+    CoreWrapper.intersect_arglist(["start_point", "initial_point"]) 
     title = title_args|> args_to_label
 
     {labels, datasets} = collate_data(implementation, arg_list, title_args)
@@ -282,7 +283,7 @@ defmodule PlotCommands do
       end
 
       cond do
-        ["num_", "start_", "initial_"] |> Enum.any?(& String.starts_with?(key, &1 )) -> nil
+        ["num_"] |> Enum.any?(& String.starts_with?(key, &1 )) -> nil
         is_map(value) -> args_to_label(value)
         true -> "#{key_string}=#{value}"
       end
@@ -292,7 +293,8 @@ defmodule PlotCommands do
   end
 
   def title_from_arglist(arglist) do
-    arglist |> CoreWrapper.intersect_arglist |> args_to_label
+    arglist |> CoreWrapper.intersect_arglist
+    |> args_to_label
   end
 
   def glab() do
