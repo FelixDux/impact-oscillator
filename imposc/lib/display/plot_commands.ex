@@ -287,7 +287,29 @@ defmodule PlotCommands do
            #  "start_impact" => %{"phi" => 0.5, "v" => 0.15},
            #  "params" => %{"omega" => 2.8, "sigma" => 0.2, "r" => 0.8}
            # }
-         ]}
+         ]},
+        {SigmaCurves,
+          [
+            %{
+              "n" => 1,
+              "omega"=> 2.1,
+              "r" => 0.8,
+              "num_points" => 100
+            },
+            %{
+              "n" => 1,
+              "omega"=> 2,
+              "r" => 0.8,
+              "num_points" => 100
+            },
+            %{
+              "n" => 1,
+              "omega"=> 1.9,
+              "r" => 0.8,
+              "num_points" => 100
+            }
+          ]
+        }
       ],
       "test"
     )
