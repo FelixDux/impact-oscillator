@@ -30,15 +30,15 @@ defmodule SigmaCurves do
   end
 
   @impl PlotCommands
-  def data_for_plot(args) do
+  def data_for_plot(args, title_args) do
     [n, omega, r, num_points] = from_args(args)
 
     case OneNLoci.curves_for_fixed_omega(n, omega, r, num_points) do
       {:ok, dataset} ->
         {
           [
-            "{/Symbol w} = #{omega}, r = #{r}, n = #{n}, stable",
-            "{/Symbol w} = #{omega}, r = #{r}, n = #{n}, unstable"
+            "#{PlotCommands.label_from_args(title_args, args)}, stable",
+            "#{PlotCommands.label_from_args(title_args, args)}, unstable"
           ],
           dataset
         }

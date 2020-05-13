@@ -24,7 +24,7 @@ defmodule TimeSeries do
   end
 
   @impl PlotCommands
-  def data_for_plot(args) do
+  def data_for_plot(args, title_args) do
     [start_impact, params] = from_args(args)
 
     {initial_points, _} = MotionBetweenImpacts.iterate_impacts(start_impact, params, 1)
@@ -35,8 +35,6 @@ defmodule TimeSeries do
 
     dataset = Stream.map(states, &[&1.t, &1.x])
 
-    {"{/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}, ({/Symbol f}_0, v_0) = #{
-       start_impact
-     }", dataset}
+    {PlotCommands.label_from_args(title_args, args), dataset}
   end
 end

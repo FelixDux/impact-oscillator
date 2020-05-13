@@ -37,16 +37,15 @@ defmodule ImpactMap do
   end
 
   @impl PlotCommands
-  def data_for_plot(args) do
+  def data_for_plot(args, title_args) do
     [initial_point, params, num_iterations] = from_args(args)
 
     dataset =
       elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
       |> Stream.map(&ImpactPoint.point_to_list(&1))
 
-    {"{/Symbol w} = #{params.omega}, {/Symbol s} = #{params.sigma}, r = #{params.r}, ({/Symbol f}_0 / (2{/Symbol p}/{/Symbol w}), v_0) = #{
-       initial_point
-     }", dataset}
-    |> IO.inspect()
+    title_args  |> IO.inspect
+    args  |> IO.inspect
+    {PlotCommands.label_from_args(title_args, args), dataset}
   end
 end

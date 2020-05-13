@@ -7,7 +7,7 @@ defmodule PlotCommands do
 
   @callback from_args(map()) :: [any()]
 
-  @callback data_for_plot(map()) :: {iodata(), [any()]} | {[iodata()], [[any()]]}
+  @callback data_for_plot(map(), map()) :: {iodata(), [any()]} | {[iodata()], [[any()]]}
 
   @spec axis_label_command(boolean(), iodata()) :: [any()]
   def axis_label_command(x_axis, text) do
@@ -133,20 +133,20 @@ defmodule PlotCommands do
     |> List.to_tuple()
   end
 
-  def collate_for_plot(implementation, args) do
+  def collate_for_plot(implementation, args, title_args) do
     Task.async(fn ->
       args
-      |> (&implementation.data_for_plot(&1)).()
+      |> (&implementation.data_for_plot(&1, title_args)).()
       |> (&{elem(&1, 0), elem(&1, 1)}).()
     end)
   end
 
-  def collate_data(implementation, arg_list) do
+  def collate_data(implementation, arg_list, title_args) do
     # For each set of arguments get the plot data, which be a tuple
     # comprising the label and the data points.
     data =
       arg_list
-      |> Enum.map(fn args -> collate_for_plot(implementation, args) end)
+      |> Enum.map(fn args -> collate_for_plot(implementation, args, title_args) end)
       # TODO: make fault-tolerant
       |> Enum.map(&Task.await(&1, :infinity))
 
@@ -158,9 +158,10 @@ defmodule PlotCommands do
   end
 
   def collate_for_chart(implementation, arg_list) do
-    {labels, datasets} = collate_data(implementation, arg_list)
+    title_args = arg_list |> CoreWrapper.intersect_arglist 
+    title = title_args|> args_to_label
 
-    title = title_from_arglist(arg_list)
+    {labels, datasets} = collate_data(implementation, arg_list, title_args)
 
     commands =
       labels
@@ -260,6 +261,11 @@ defmodule PlotCommands do
       {:error, message} -> {:error, message}
       _ -> {:error, "Unknown error generating chart"}
     end
+  end
+
+  def label_from_args(title_args, args) do
+    CoreWrapper.intersect_args(title_args, args, true)
+    |> args_to_label
   end
 
   def args_to_label(args) do
