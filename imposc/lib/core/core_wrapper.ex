@@ -31,7 +31,7 @@ defmodule CoreWrapper do
     attrs
   end
 
-  defp from_attrs(kind, attrs) when Float == kind and is_float(attrs) do
+  defp from_attrs(kind, attrs) when Float == kind and is_float(attrs) or is_integer(attrs) do
     attrs
   end
 
