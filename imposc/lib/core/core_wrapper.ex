@@ -105,7 +105,7 @@ defmodule CoreWrapper do
     case input do
       {:ok, _} -> input |> elem(1) |> process
       [_ | _] -> input |> Enum.map(&process(&1))
-      _ -> input |> execute_action |> Task.await()
+      _ -> input |> execute_action |> Task.await(:infinity)
     end
   end
 
