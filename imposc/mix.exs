@@ -20,7 +20,8 @@ defmodule Imposc.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger],
+      mod: {Imposc.Application, []}
     ]
   end
 
@@ -31,7 +32,11 @@ defmodule Imposc.MixProject do
       # ,
       {:json, "~> 1.3"},
       #      {:yamerl, "~> 0.8"}
-      {:dialyxir, "~> 0.4", only: [:dev]}
+      {:dialyxir, "~> 0.4", only: [:dev]},
+      # {:poison, "~> 3.0"},
+      {:plug, "~> 1.6"},
+      {:cowboy, "~> 2.4"},
+      {:plug_cowboy, "~> 2.0"}
     ]
   end
 end
