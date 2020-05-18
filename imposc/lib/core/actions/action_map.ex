@@ -4,6 +4,7 @@ defmodule ActionMap do
   """
 
   @actions %{
+    "multiplot" => "MultiplotAction",
     "scatter" => "ScatterAction",
     "ellipse" => "EllipseAction",
     "timeseries" => "TimeSeriesAction"
@@ -17,22 +18,35 @@ defmodule ActionMap do
     Enum.map(Map.keys(@actions), fn action -> {action, description(action)} end)
   end
 
-  @spec execute(iodata(), map(), map()) :: atom() | {atom(), iodata()}
-  def execute(action, args, options) do
-    case Map.fetch(@actions, action) do
-      :error ->
-        {:error, "Unrecognised action \"#{action}\""}
-
-      {:ok, module_name} ->
-        with {:ok, _} <-
-               module_name
-               |> (&Action.validate(String.to_existing_atom("Elixir.#{&1}"), args, options)).(),
-             do: module_name |> (&run_for_module(&1, :execute, [args, options])).()
+  def module_for_action(action) do
+    with :error <- Map.fetch(@actions, action) do
+      {:error, "Unrecognised action \"#{action}\""}
     end
   end
 
-  defp run_for_module(module_name, function_name, arg_list) do
-    apply(String.to_existing_atom("Elixir.#{module_name}"), function_name, arg_list)
+  def get_module(module_name) do
+    module_name |> (&String.to_existing_atom("Elixir.#{&1}")).()
+  end
+
+  @spec execute(iodata(), map() | [map()], map()) :: atom() | {atom(), iodata()}
+  def execute(action, args, options) do
+    with {:ok, module_name} <- module_for_action(action), module = module_name |> get_module do
+      if is_list(args) and false == run_for_module(module, :expects_list?, []) do
+        args |> Enum.map(&execute(action, &1, options))
+      else
+        with {:ok, _} <-
+               module |> (&Action.validate(&1, args, options)).(),
+             do: module |> (&run_for_module(&1, :execute, [args, options])).()
+      end
+    end
+  end
+
+  defp run_for_module(module, function_name, arg_list) when is_binary(module) do
+    module |> get_module |> run_for_module(function_name, arg_list)
+  end
+
+  defp run_for_module(module, function_name, arg_list) do
+    module |> apply(function_name, arg_list)
   end
 
   @spec requirements(iodata()) :: map() | {atom(), iodata()}

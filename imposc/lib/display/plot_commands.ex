@@ -1,4 +1,14 @@
 defmodule PlotCommands do
+  @multiplot_commands %{
+    "scatter" => "ImpactMap",
+    "ellipse" => "SigmaCurves",
+    "timeseries" => "TimeSeries"
+  }
+
+  def multiplot_implementation(action) do
+    Map.fetch(@multiplot_commands, action)
+  end
+
   def chart_title(title) do
     [:set, :title, title]
   end
@@ -135,7 +145,7 @@ defmodule PlotCommands do
   def collate_for_plot(implementation, args, title_args) do
     Task.async(fn ->
       args
-      |> (&implementation.data_for_plot(&1, title_args)).()
+      |> implementation.data_for_plot(title_args)
       |> (&{elem(&1, 0), elem(&1, 1)}).()
     end)
   end
@@ -154,6 +164,14 @@ defmodule PlotCommands do
     # in `:Gnuplot.plot`
 
     data |> flatten_plot_data_list |> slice_plot_data
+  end
+
+  def collate_for_chart(implementation, arg_list) when is_binary(implementation) do
+    with {:ok, implementation_name} <- multiplot_implementation(implementation) do
+      implementation_name
+      |> (&String.to_existing_atom("Elixir.#{&1}")).()
+      |> collate_for_chart(arg_list)
+    end
   end
 
   def collate_for_chart(implementation, arg_list) do
@@ -179,14 +197,18 @@ defmodule PlotCommands do
     {commands, datasets}
   end
 
+  def collate_for_image(chart_specs) when is_map(chart_specs) do
+    chart_specs |> Map.to_list() |> collate_for_image
+  end
+
   def collate_for_image(chart_specs) do
     chart_specs
     |> Enum.reduce(
       {[], []},
       fn {implementation, arg_list}, {commands, datasets} ->
-        {new_commands, new_datasets} = collate_for_chart(implementation, arg_list)
-
-        {commands ++ new_commands, datasets ++ new_datasets}
+        with {new_commands, new_datasets} <- collate_for_chart(implementation, arg_list) do
+          {commands ++ new_commands, datasets ++ new_datasets}
+        end
       end
     )
   end
@@ -232,14 +254,12 @@ defmodule PlotCommands do
     {image_file, commands}
   end
 
-  # def draw_commands(implementation, arg_list, title, options \\ %{}) do
-  #  {chart_commands, datasets} = collate_for_chart(implementation, arg_list)
   def draw_commands(chart_specs, title, options \\ %{}) do
-    {chart_commands, datasets} = collate_for_image(chart_specs)
-
-    {image_file, image_commands} = commands_for_image(title, options, Enum.count(chart_specs))
-
-    {image_file, image_commands ++ chart_commands, datasets}
+    with {chart_commands, datasets} <- collate_for_image(chart_specs),
+         {image_file, image_commands} <-
+           commands_for_image(title, options, Enum.count(chart_specs)) do
+      {image_file, image_commands ++ chart_commands, datasets}
+    end
   end
 
   @spec draw(module(), [map()], iodata(), map()) :: {atom(), iodata()} | atom()
@@ -253,15 +273,20 @@ defmodule PlotCommands do
     end
   end
 
-  def draw_multi(chart_specs, title, options \\ %{}) do
-    {image_file, commands, datasets} = draw_commands(chart_specs, title, options)
+  def draw_multi(chart_specs, options \\ %{}) do
+    title =
+      Map.fetch(options, "title")
+      |> (&(case &1 do
+              {:ok, title} -> title
+              _ -> ""
+            end)).()
 
-    # commands |> IO.inspect()
-
-    case Gnuplot.plot(commands, datasets) do
-      {:ok, _cmd} -> {:ok, image_file}
-      {:error, message} -> {:error, message}
-      _ -> {:error, "Unknown error generating chart"}
+    with {image_file, commands, datasets} <- draw_commands(chart_specs, title, options) do
+      case Gnuplot.plot(commands, datasets) do
+        {:ok, _cmd} -> {:ok, image_file}
+        {:error, message} -> {:error, message}
+        _ -> {:error, "Unknown error generating chart"}
+      end
     end
   end
 
@@ -323,13 +348,11 @@ defmodule PlotCommands do
            %{
              "start_impact" => %{"phi" => 0.5, "v" => 0.15},
              "params" => %{"omega" => 2.8, "sigma" => 0, "r" => 0.8}
+           },
+           %{
+             "start_impact" => %{"phi" => 0.5, "v" => 0.15},
+             "params" => %{"omega" => 2.8, "sigma" => 0.2, "r" => 0.8}
            }
-
-           # ,
-           # %{
-           #  "start_impact" => %{"phi" => 0.5, "v" => 0.15},
-           #  "params" => %{"omega" => 2.8, "sigma" => 0.2, "r" => 0.8}
-           # }
          ]},
         {SigmaCurves,
          [
@@ -353,7 +376,7 @@ defmodule PlotCommands do
            }
          ]}
       ],
-      "test"
+      %{"title" => "test"}
     )
   end
 end

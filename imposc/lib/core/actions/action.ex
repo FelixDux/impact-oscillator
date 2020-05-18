@@ -1,7 +1,9 @@
 defmodule Action do
-  @callback execute(map(), map()) :: atom() | {atom(), iodata()}
+  @callback execute(map() | [map()], map()) :: atom() | {atom(), iodata()}
 
-  @callback requirements() :: map()
+  @callback expects_list?() :: boolean()
+
+  @callback requirements() :: map() | [map()]
 
   @callback expected_options() :: map()
 
@@ -24,7 +26,7 @@ defmodule Action do
   @doc """
   Validates `:args` against `:requirements`
   """
-  @spec validate_args(module(), map()) :: {atom(), nil | iodata()}
+  @spec validate_args(module(), map() | [map()]) :: {atom(), nil | iodata()}
   def validate_args(implementation, args) do
     implementation.requirements() |> validate_against_template(args)
   end
@@ -41,8 +43,31 @@ defmodule Action do
     )
   end
 
-  @spec validate_against_template(map(), map(), iodata()) :: {atom(), nil | iodata()}
-  defp validate_against_template(template, args, error_prompt \\ "Missing arguments") do
+  @spec validate_against_template(map() | [map()], map() | [map()], iodata()) ::
+          {atom(), nil | iodata()}
+  defp validate_against_template(template, args, error_prompt \\ "Missing arguments")
+
+  defp validate_against_template(template, args, error_prompt) when is_list(template) do
+    template
+    |> Enum.reduce({:error, nil}, fn template_map, result ->
+      validate_against_template(template_map, args, error_prompt)
+      |> (&(with {:error, _} <- &1, {:error, _} <- result do
+              &1
+            end)).()
+    end)
+  end
+
+  defp validate_against_template(template, args, error_prompt) when is_list(args) do
+    args
+    |> Enum.reduce({:error, nil}, fn args_map, result ->
+      validate_against_template(template, args_map, error_prompt)
+      |> (&(with {:error, _} <- &1, {:error, _} <- result do
+              &1
+            end)).()
+    end)
+  end
+
+  defp validate_against_template(template, args, error_prompt) do
     missing_keys = Map.keys(template) -- Map.keys(args)
 
     case missing_keys do

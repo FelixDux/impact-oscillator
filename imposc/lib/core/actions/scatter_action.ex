@@ -5,8 +5,15 @@ defmodule ScatterAction do
   Generates a scatter plot
   """
 
+  @impl Action
+  def expects_list?() do
+    false
+  end
+
   @doc """
   Generates a scatter plot using arguments initialised from `:args`.
+
+  `:options` specifies available options, including whether output is to be directed to a file instead of to the terminal.
   """
   @impl Action
   def execute(args, options) do
