@@ -2,13 +2,12 @@ defmodule CLI do
   @moduledoc """
   Interface for launching a command line application.
 
-  The CLI application receives JSON input and, depending on command line options, launches the application in one of 
-  three modes:
+  The CLI application receives JSON input and, depending on command line options, launches the application in one of the following modes:
 
    - a one_shot mode which accepts JSON from the standard input, interprets it into commands, generates any graphics and
      returns any text output (e.g. JSON) to the standard output and exits.
    - a mode which launches a console interface
-   - a mode which launches a REST server
+   - a mode which launches a REST server (not yet implemented)
   """
 
   @const_options %{
@@ -19,7 +18,7 @@ defmodule CLI do
       one_shot:
         "Accepts JSON from the standard input, interprets it into commands, generates any graphics and returns any text output (e.g. JSON) to the standard output and exits",
       console: "Launches as a console application",
-      rest: "Launches as a REST server"
+      rest: "Launches as a REST server (not yet implemented)"
     ]
   }
 

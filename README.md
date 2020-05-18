@@ -1,7 +1,15 @@
-# impact-oscillator
-This project is an opportunity for me to gain experience of functional programming in Elixir, while at the same time indulging in a bit of nostalgia by revisiting the research I did for my PhD. I have not kept up to date with research developments in the field since I left academia and so nothing in this project is likely to contribute to current research. Instead my aim is to reproduce the programming aspect of the work I did then, but with the benefit of 3 decades of software engineering experience and using a language and programming techniques which were not available back then.
+# Impact Oscillator
+This project is an opportunity for me to gain experience of functional programming in [Elixir](https://elixir-lang.org/), while at the same time indulging in a bit of nostalgia by revisiting the research I did for my PhD. I have not kept up to date with research developments in the field since I left academia and so nothing in this project is likely to contribute to current research. Instead my aim is to reproduce the programming aspects of the work I did then, but with the benefit of 3 decades of software engineering experience and using a language and programming techniques which were not available back then.
 
-# Mathematical Background
+- [Mathematical background](maths.md)
+- [Architectural overview](architecture.md)
+
+## Installing and Running
+- TBD mix deps
+
+The charting functions use [Gnuplot Elixir](https://github.com/devstopfix/gnuplot-elixir). While this will be installed by `mix deps.get`, [Gnuplot](http://www.gnuplot.info/) itself must be installed separately.
+
+## Mathematical Background
 I completed my PhD in 1992 and have not followed academic developments since that time, so the work described here is probably outdated and makes no reference to more recent research.
 
 Most of my thesis was devoted to a simple mathematical model comprising a simple harmonic oscillator whose motion is constrained by a hard obstacle, from which it rebounds instantaneously:
@@ -33,3 +41,9 @@ Because a coefficient of restitution of less than 1 is sufficient to introduce d
 
 
 ![equation](https://latex.codecogs.com/svg.latex?%5Cdot%7Bx%7D%20%5Cmapsto%20-r%20%5Cdot%7Bx%7D%2C%20x%20%3D%20%5Csigma)
+
+###TBD
+- impact map
+- (1, n) orbits
+- overview of behaviours
+- references
