@@ -30,7 +30,6 @@ defmodule Console do
                  |> CoreWrapper.process_decoded()
                  |> IO.puts()
 
-                 # IO.inspect
                  run()
                end).()
           end)).()
@@ -86,6 +85,8 @@ defmodule Console do
     IO.puts("help:\tthis help\n")
 
     ActionMap.list_actions()
+    # Console can't handle the multiplot case yet
+    |> Enum.filter(fn {action, _} -> action != "multiplot" end)
     |> Enum.map(fn {action, description} ->
       IO.puts("#{action}: #{description}")
     end)
