@@ -81,4 +81,18 @@ defmodule ActionMap do
         module_name |> (&run_for_module(&1, :description, [])).()
     end
   end
+
+  @spec action_info(iodata()) :: map() | {atom(), iodata()}
+  def action_info(action) do
+    case Map.fetch(@actions, action) do
+      :error ->
+        {:error, "Unrecognised action \"#{action}\""}
+
+      {:ok, module_name} ->
+        [:requirements, :description, :expected_options]
+        |> Enum.map(&{&1, run_for_module(module_name, &1, [])})
+        |> (&([{:action, action}] ++ &1)).()
+        |> Map.new()
+    end
+  end
 end
