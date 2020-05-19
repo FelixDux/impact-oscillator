@@ -12,12 +12,29 @@ defmodule Imposc.Router do
 
   get "/info/:action" do
     if Map.has_key?(actions() |> Map.new(), action) do
-      conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(200, JSON.encode!(action_info(action)))
+      # conn
+      # |> put_resp_content_type("application/json")
+      # |> send_resp(200, JSON.encode!(action_info(action)))
+      action_info(action) |> send_json(conn)
     else
       conn |> report_unmatched("/info/#{action}")
     end
+  end
+
+  post "/action" do
+    json_key = "_json"
+
+    if Map.has_key?(conn.body_params, json_key) do
+      content = Map.fetch!(conn.body_params, json_key) |> CoreWrapper.process() |> send_json(conn)
+    else
+      send_resp(conn, 422, "Could not retrieve JSON from POST request")
+    end
+  end
+
+  defp send_json(json, conn) do
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, JSON.encode!(json))
   end
 
   defp actions do
