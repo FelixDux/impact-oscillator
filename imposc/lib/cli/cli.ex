@@ -4,21 +4,20 @@ defmodule CLI do
 
   The CLI application receives JSON input and, depending on command line options, launches the application in one of the following modes:
 
-   - a one_shot mode which accepts JSON from the standard input, interprets it into commands, generates any graphics and
-     returns any text output (e.g. JSON) to the standard output and exits.
+   - a one_shot mode which accepts JSON from the standard input, interprets it
+     into commands, generates any graphics and returns any text output (e.g. 
+     JSON) to the standard output and exits.
    - a mode which launches a console interface
-   - a mode which launches a REST server (not yet implemented)
   """
 
   @const_options %{
-    switches: [help: :boolean, one_shot: :boolean, console: :boolean, rest: :boolean],
+    switches: [help: :boolean, one_shot: :boolean, console: :boolean],
     aliases: [h: :help, o: :one_shot, c: :console, r: :rest],
     help: [
       help: "Returns this help message",
       one_shot:
         "Accepts JSON from the standard input, interprets it into commands, generates any graphics and returns any text output (e.g. JSON) to the standard output and exits",
-      console: "Launches as a console application",
-      rest: "Launches as a REST server (not yet implemented)"
+      console: "Launches as a console application"
     ]
   }
 

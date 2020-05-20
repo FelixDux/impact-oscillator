@@ -10,13 +10,12 @@ directing the output where appropriate to charts calls
 via the core wrapper
 - **REST server** REST API which accepts requests, which it interprets into core and charts commands via the core 
 wrapper
-- **Command line interface**: CLI which launches the application in one of three modes:
+- **Command line interface**: CLI which launches the application in one of two modes:
 
    - a one-shot mode which accepts JSON from the standard input, interprets it into core and charts commands via the core 
      wrapper, returns any text output (e.g. JSON) to the standard output and exits.
    - a mode which launches the console interface
-   - a mode which launches the REST server
    
-## Web Client
-A web application which sends requests to the REST server. It provides froms for constructing requests (using the core 
+## Web Client (not yet implemented)
+A web application which sends requests to the REST server. It provides forms for constructing requests (using the core 
 wrapper) and renders the responses.
