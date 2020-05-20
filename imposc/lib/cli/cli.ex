@@ -71,6 +71,7 @@ defmodule CLI do
   end
 
   def main(args) do
+    Application.put_env(:imposc, :default_outfile, nil)
     args |> parse_args |> process
   end
 end

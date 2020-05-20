@@ -21,6 +21,7 @@ defmodule Imposc.MixProject do
   def application do
     [
       extra_applications: [:logger],
+      env: [default_outfile: "png"],
       mod: {Imposc.Application, []}
     ]
   end
@@ -29,11 +30,9 @@ defmodule Imposc.MixProject do
   defp deps do
     [
       {:gnuplot, "~> 1.19"},
-      # ,
       {:json, "~> 1.3"},
-      #      {:yamerl, "~> 0.8"}
+      #      {:yamerl, "~> 0.8"},
       {:dialyxir, "~> 0.4", only: [:dev]},
-      # {:poison, "~> 3.0"},
       {:plug, "~> 1.6"},
       {:cowboy, "~> 2.4"},
       {:plug_cowboy, "~> 2.0"}

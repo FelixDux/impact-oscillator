@@ -35,8 +35,14 @@ defmodule PlotCommands do
     file_format =
       (fn ->
          case Map.fetch(options, "outfile") do
-           {:ok, result} -> result
-           _ -> nil
+           {:ok, result} ->
+             result
+
+           _ ->
+             case Application.fetch_env(:imposc, :default_outfile) do
+               {:ok, value} -> value
+               _ -> nil
+             end
          end
        end).()
 

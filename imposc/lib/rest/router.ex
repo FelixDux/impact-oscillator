@@ -41,7 +41,7 @@ defmodule Imposc.Router do
     json_key = "_json"
 
     if Map.has_key?(conn.body_params, json_key) do
-      content = Map.fetch!(conn.body_params, json_key) |> CoreWrapper.process() |> send_json(conn)
+      Map.fetch!(conn.body_params, json_key) |> CoreWrapper.process() |> send_json(conn)
     else
       send_resp(conn, 422, "Could not retrieve JSON from POST request")
     end

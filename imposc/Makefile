@@ -1,3 +1,6 @@
+# Makefule for building and running docker container
+# Adapted from https://hexdocs.pm/distillery/guides/working_with_docker.html
+#
 .PHONY: help
 
 APP_NAME ?= `grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'`
