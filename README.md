@@ -7,14 +7,6 @@ I completed my PhD in 1992 and have not followed academic developments since tha
 
 Most of my thesis was devoted to a simple mathematical model comprising a simple harmonic oscillator whose motion is constrained by a hard obstacle, from which it rebounds instantaneously:
 
-\begin{equation}
-M\frac{\mathrm{d}^2 X}{\mathrm{d} T^2} + 2D\frac{\mathrm{d} X}{\mathrm{d} T}+KX=F\cos \left ( \omega T \right ), X<S
-\end{equation}
-
-\begin{equation}
-\frac{\mathrm{d} X}{\mathrm{d} T} \mapsto -r\frac{\mathrm{d} X}{\mathrm{d} T}, X = S
-\end{equation}
-
 ![equation](https://latex.codecogs.com/svg.latex?M%5Cfrac%7B%5Cmathrm%7Bd%5E%7B2%7D%7D%20X%7D%7B%5Cmathrm%7Bd%7D%20T%5E%7B2%7D%7D&plus;2D%5Cfrac%7B%5Cmathrm%7Bd%7D%20X%7D%7B%5Cmathrm%7Bd%7D%20T%7D&plus;KX%3DF%5Ccos%20%5Cleft%20%28%20%5COmega%20T%20%5Cright%20%29%2C%20X%20%3C%20S)
 
 ![equation](https://latex.codecogs.com/svg.latex?%5Cfrac%7B%5Cmathrm%7Bd%7D%20X%7D%7B%5Cmathrm%7Bd%7D%20T%7D%20%5Cmapsto%20-r%5Cfrac%7B%5Cmathrm%7Bd%7D%20X%7D%7B%5Cmathrm%7Bd%7D%20T%7D%2C%20X%20%3D%20S)
@@ -45,10 +37,20 @@ Because a coefficient of restitution of less than 1 is sufficient to introduce d
 
 The impact introduces a discontinuity into the system which makes it strongly nonlinear, so that it exhibits many of the complex behaviours associated with nonlinear dynamical systems.
 
+### The Impact Map
+A *Poincar&#233; map* is a useful way of reducing a continuous dynamical system to a discrete system with one fewer dimensions. In this case the from of a problem naturally induces a map - which we call the *impact map* - which takes the phase (time modulo the forcing period) and velocity at one impact to the phase and velocity at the next impact. What makes it interesting is that it does not strictly conform to the textbook definition of a Poincar&#233; map, because when impacts occur with zero velocity the trajectory in phase space is tangential to the surface ![equation](https://latex.codecogs.com/svg.latex?x%3D%5Csigma). At points which map to zero-velocity impacts, the impact map is not only discontinuous but singular. This underlies many of the complex dynamics which are observed for some parameter ranges.
+
+### Periodic Orbits
+Periodic motions can be classified by labelling them with two numbers, the number of impacts in a cycle and the number of forcing periods, so that a $(m,n)$ orbit repeats itself after *m* impacts and *n* forcing cycles. The simplest of these are $(1,n)$ orbits, which correspond to fixed points of the impact map. These can be extensively studied analytically and formulas can be obtained for the impact velocity $V_{n}$ as the parameters $\omega$, $\sigma$ and *r* are varied.
+
+This reveals that, as $\sigma$ is varied while $\omega$ and *r* and held fixed, the $V_{n}$-response curve is an ellipse (or rather half an ellipse as negative $V_{n}$ is of no interest), centred on the origin. As $\omega$ is varied, this ellipse rotates, so that its major axis is vertical for $\omega=2n$, is tilted into the negative $\sigma$ quadrant (for positive $V_{n}$) for $\omega < 2n$ and into the positive $\sigma$ quadrant for $\omega > 2n$. In the tilted cases, the lower branch of the half-ellipse always corresponds to dynamically unstable orbits. The point where the upper and lower branches meet corresponds to a *saddle-node* or *fold* bifurcation. As we vary $\sigma$ and move away from this point, the orbit corresponding to the upper branch will remain stable until it either
+(i) it loses stability to a period-doubling bifurcation and is replaced by a $(2, 2n)$ orbit or (ii) it is destroyed by the occurence of an intervening impact, which makes the analytically-derived $(1,n)$ orbit unphysical. Case (i) is typically the prelude to a period-doubling cascade of a kind familiar to anyone who has studied chaotic dynamical systems.
+
+It turns out that, at least for small values of $\sigma$, forcing frequencies near the 'resonant' values $\omega=2n, n=1,2,3, ...$ are associated with comparatively simple dynamics dominated by globally attracting $(1,n)$ orbits, while the intervening regions of parameter spaces are characterised by much more complex behaviour, including chaotic attractors and multiple competing periodic orbits.
+
 ###TBD
-- impact map
-- (1, n) orbits
-- overview of behaviours
+- grazing
+- singularity sets and grazing
 - references
 
 ## Functionality
