@@ -25,7 +25,11 @@ defmodule Mix.Tasks.Ellipse do
 
   @spec run(any) :: {atom(), iodata()} | atom()
   def run(_) do
-    args = [%{"n" => 2, "omega" => 3.8, "r" => 0.8, "num_points" => 100}]
+    args = [
+      %{"n" => 1, "omega" => 2.2, "r" => 0.8, "num_points" => 100},
+      %{"n" => 1, "omega" => 2, "r" => 0.8, "num_points" => 100},
+      %{"n" => 1, "omega" => 1.8, "r" => 0.8, "num_points" => 100}
+    ]
 
     PlotCommands.draw(SigmaCurves, args, "{/Symbol s}-ellipse")
   end

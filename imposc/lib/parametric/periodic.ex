@@ -16,6 +16,7 @@ defmodule OneNParams do
   `:cs`: a coefficient used in the analysis
   `:sigma_s`: The positive intercept with the sigma-axis
   `:period`: The period between impacts
+  `:v_pd`: The value of the impact velocity at which a period-doubling bifurcation occurs on the upper branch
   """
 
   defstruct omega: 2,
@@ -26,7 +27,8 @@ defmodule OneNParams do
             n: 1,
             cs: 0,
             sigma_s: 0,
-            period: :math.pi()
+    period: :math.pi(),
+    v_pd: 0
 
   @type t :: %OneNParams{
           omega: number(),
@@ -37,7 +39,8 @@ defmodule OneNParams do
           n: integer(),
           cs: number(),
           sigma_s: number(),
-          period: number()
+          period: number(),
+          v_pd: number()
         }
 
   @spec derive_cs(number(), number(), number()) :: number()
@@ -100,8 +103,30 @@ defmodule OneNParams do
 
               result = %OneNParams{result | period: period, gamma: gamma}
 
+              result = %OneNParams{result | v_pd: derive_v_pd(r, cn, sn, result)}
+
               {:ok, result}
             end).()
+  end
+
+  @spec derive_v_pd(number(), number(), number(), %OneNParams{}) :: number()
+  defp derive_v_pd(r, cn, sn, params) do
+    r_1_2 = (1+r*r)
+
+
+    c2 = params.cs*params.cs
+
+    b = 4*r*cn - 2*r_1_2 - (params.omega*params.omega-1)*c2
+
+    divisor_2 = cond do
+      sn*sn < 1.0e-16 -> b*b
+
+        cn*cn < 1.0e-16 -> (1+r)*params.omega |> (& &1*&1).() |> (& b*b + &1 * (&1 + params.omega*params.omega*params.r_minus*params.r_minus -2*b)).()
+
+         true-> (1+r)*params.omega*sn |> (& b*b + &1*&1*(params.omega*params.omega*(c2 + params.r_minus*params.r_minus) - 2*b/(1-cn))).()
+
+            end
+    2*(1+r)*params.omega*params.omega*params.gamma/:math.sqrt(divisor_2) |> abs
   end
 
   @spec discriminant(number(), %OneNParams{}) :: number()
@@ -288,6 +313,9 @@ defmodule OneNLoci do
           {atom(), iodata() | [{number() | nil, number() | nil}]}
   def curves_for_fixed_omega(n, omega, r, num_points \\ 1000) do
     # Initialise parameters
+    reverse_subcritical = fn points -> if(omega < 2*n, do: Enum.reverse(points), else: points) end
+    reverse_supercritical = fn points -> if(omega >= 2*n, do: Enum.reverse(points), else: points) end
+
     with {:ok, params} <- OneNParams.derive(omega, r, n),
          do:
            (fn ->
@@ -304,7 +332,7 @@ defmodule OneNLoci do
                   unphysical = (fn ->
               unphysical_upper = Enum.map(unphysical_pairs, fn {sigma, {v, _w}} -> {sigma, v} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
               unphysical_lower = Enum.map(unphysical_pairs, fn {sigma, {_v, w}} -> {sigma, w} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
-              unphysical_upper ++ Enum.reverse(unphysical_lower)
+              reverse_supercritical.(unphysical_upper) ++ reverse_subcritical.(unphysical_lower)
                   end).()
 
               # Get the filtered ellipse which excludes unphysical orbits
@@ -313,10 +341,12 @@ defmodule OneNLoci do
 
               physical_upper = Enum.map(physical_pairs, fn {sigma, {v, _w}} -> {sigma, v} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
               physical_lower = Enum.map(physical_pairs, fn {sigma, {_v, w}} -> {sigma, w} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
-              physical = physical_upper ++ Enum.reverse(physical_lower)
+              physical = reverse_supercritical.(physical_upper) ++ reverse_subcritical.(physical_lower)
 
-              {:ok, [unphysical, physical, physical_upper]}
-              #0..1 |> Enum.map(&filter_pairs.(&1)) |> (&{:ok, [unphysical] ++ &1}).()
+
+              stable =  physical_upper |> Enum.filter(fn {_sigma, v} -> v>= params.v_pd end)
+
+              {:ok, [unphysical, physical, stable]}
             end).()
   end
 
