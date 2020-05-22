@@ -10,12 +10,12 @@ defmodule SigmaCurves do
   end
 
   defp pointtype_for_label(label) do
-  cond do
-  label =~ "unphysical" -> [:dashtype, "."]
-  label =~ "unstable" -> [:dt, "-"]
-    true -> []
-end
-end
+    cond do
+      label =~ "unphysical" -> [:dashtype, "."]
+      label =~ "unstable" -> [:dt, "-"]
+      true -> []
+    end
+  end
 
   @impl PlotCommands
   def commands_for_axes() do

@@ -27,8 +27,8 @@ defmodule OneNParams do
             n: 1,
             cs: 0,
             sigma_s: 0,
-    period: :math.pi(),
-    v_pd: 0
+            period: :math.pi(),
+            v_pd: 0
 
   @type t :: %OneNParams{
           omega: number(),
@@ -111,22 +111,31 @@ defmodule OneNParams do
 
   @spec derive_v_pd(number(), number(), number(), %OneNParams{}) :: number()
   defp derive_v_pd(r, cn, sn, params) do
-    r_1_2 = (1+r*r)
+    if abs(sn) > 1.0e-16 do
+      r_1_2 = 1 + r * r
 
+      c2 = params.cs * params.cs
 
-    c2 = params.cs*params.cs
+      b = 4 * r * cn - 2 * r_1_2 + (params.omega * params.omega - 1) * c2 * (1 - cn)
 
-    b = 4*r*cn - 2*r_1_2 - (params.omega*params.omega-1)*c2
+      divisor_2 =
+        cond do
+          abs(sn) < 1.0e-16 ->
+            b * b
 
-    divisor_2 = cond do
-      sn*sn < 1.0e-16 -> b*b
+          true ->
+            ((1 + r) * params.omega * sn)
+            |> (&(b * b +
+                    &1 * &1 *
+                      (params.omega * params.omega * (c2 + params.r_minus * params.r_minus) -
+                         2 * b / (1 - cn)))).()
+        end
 
-        cn*cn < 1.0e-16 -> (1+r)*params.omega |> (& &1*&1).() |> (& b*b + &1 * (&1 + params.omega*params.omega*params.r_minus*params.r_minus -2*b)).()
-
-         true-> (1+r)*params.omega*sn |> (& b*b + &1*&1*(params.omega*params.omega*(c2 + params.r_minus*params.r_minus) - 2*b/(1-cn))).()
-
-            end
-    2*(1+r)*params.omega*params.omega*params.gamma/:math.sqrt(divisor_2) |> abs
+      (2 * (1 + r) * sn * params.omega * params.omega * params.gamma / :math.sqrt(divisor_2))
+      |> abs
+    else
+      0
+    end
   end
 
   @spec discriminant(number(), %OneNParams{}) :: number()
@@ -313,38 +322,64 @@ defmodule OneNLoci do
           {atom(), iodata() | [{number() | nil, number() | nil}]}
   def curves_for_fixed_omega(n, omega, r, num_points \\ 1000) do
     # Initialise parameters
-    reverse_subcritical = fn points -> if(omega < 2*n, do: Enum.reverse(points), else: points) end
-    reverse_supercritical = fn points -> if(omega >= 2*n, do: Enum.reverse(points), else: points) end
+    reverse_subcritical = fn points ->
+      if(omega < 2 * n, do: Enum.reverse(points), else: points)
+    end
+
+    reverse_supercritical = fn points ->
+      if(omega >= 2 * n, do: Enum.reverse(points), else: points)
+    end
 
     with {:ok, params} <- OneNParams.derive(omega, r, n),
          do:
            (fn ->
               # Compute (1, n) velocities over range of offsets
               delta_s = 2 * params.sigma_s / num_points
+
               sigma_points =
-                0..num_points
-                |> Stream.map(&(if(&1==num_points, do: params.sigma_s, else: &1 * delta_s - params.sigma_s)))
+                1..(num_points - 1)
+                |> Enum.map(&(&1 * delta_s - params.sigma_s))
+                |> (&([-params.sigma_s] ++ &1 ++ [params.sigma_s])).()
 
               # Get the unfiltered ellipse which includes unphysical orbits
-              unphysical_pairs =
+              general_pairs =
                 sigma_points |> Stream.map(&{&1, OneNParams.velocities_unfiltered(&1, params)})
 
-                  unphysical = (fn ->
-              unphysical_upper = Enum.map(unphysical_pairs, fn {sigma, {v, _w}} -> {sigma, v} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
-              unphysical_lower = Enum.map(unphysical_pairs, fn {sigma, {_v, w}} -> {sigma, w} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
-              reverse_supercritical.(unphysical_upper) ++ reverse_subcritical.(unphysical_lower)
-                  end).()
+              general =
+                (fn ->
+                   general_upper =
+                     Enum.map(general_pairs, fn {sigma, {v, _w}} -> {sigma, v} end)
+                     |> Enum.filter(fn {_sigma, v} -> not is_nil(v) and v >= 0 end)
+
+                   general_lower =
+                     Enum.map(general_pairs, fn {sigma, {_v, w}} -> {sigma, w} end)
+                     |> Enum.filter(fn {_sigma, v} -> not is_nil(v) and v >= 0 end)
+
+                   reverse_supercritical.(general_upper) ++
+                     reverse_subcritical.(general_lower)
+                 end).()
 
               # Get the filtered ellipse which excludes unphysical orbits
               physical_pairs =
-                sigma_points|> Stream.map(&{&1, OneNParams.velocities(&1, params)})
+                sigma_points |> Stream.map(&{&1, OneNParams.velocities(&1, params)})
 
-              physical_upper = Enum.map(physical_pairs, fn {sigma, {v, _w}} -> {sigma, v} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
-              physical_lower = Enum.map(physical_pairs, fn {sigma, {_v, w}} -> {sigma, w} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
-              physical = reverse_supercritical.(physical_upper) ++ reverse_subcritical.(physical_lower)
+              physical_upper =
+                Enum.map(physical_pairs, fn {sigma, {v, _w}} -> {sigma, v} end)
+                |> Enum.filter(fn {_sigma, v} -> not is_nil(v) and v >= 0 end)
 
+              physical_lower =
+                Enum.map(physical_pairs, fn {sigma, {_v, w}} -> {sigma, w} end)
+                |> Enum.filter(fn {_sigma, v} -> not is_nil(v) and v >= 0 end)
 
-              stable =  physical_upper |> Enum.filter(fn {_sigma, v} -> v>= params.v_pd end)
+              physical =
+                reverse_supercritical.(physical_upper) ++ reverse_subcritical.(physical_lower)
+
+              stable =
+                physical_upper
+                |> Enum.filter(fn {_sigma, v} -> v >= params.v_pd or omega === 2 * n end)
+
+              [_physical_head | physical_tail] = physical |> (&reverse_supercritical.(&1)).()
+              unphysical = general -- physical_tail
 
               {:ok, [unphysical, physical, stable]}
             end).()
