@@ -297,7 +297,7 @@ defmodule OneNLoci do
                 0..num_points
                 |> Stream.map(&(if(&1==num_points, do: params.sigma_s, else: &1 * delta_s - params.sigma_s)))
 
-                # Get the unfiltered ellipse which includes unphysical orbits
+              # Get the unfiltered ellipse which includes unphysical orbits
               unphysical_pairs =
                 sigma_points |> Stream.map(&{&1, OneNParams.velocities_unfiltered(&1, params)})
 
@@ -307,17 +307,16 @@ defmodule OneNLoci do
               unphysical_upper ++ Enum.reverse(unphysical_lower)
                   end).()
 
-              pairs =
+              # Get the filtered ellipse which excludes unphysical orbits
+              physical_pairs =
                 sigma_points|> Stream.map(&{&1, OneNParams.velocities(&1, params)})
 
-              # Filter out unphysical (nullified) velocities
-              filter_pairs = fn n ->
-                pairs
-                |> Enum.map(&{elem(&1, 0), elem(elem(&1, 1), n)})
-                |> Enum.filter(&(!is_nil(elem(&1, 1))))
-              end
+              physical_upper = Enum.map(physical_pairs, fn {sigma, {v, _w}} -> {sigma, v} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
+              physical_lower = Enum.map(physical_pairs, fn {sigma, {_v, w}} -> {sigma, w} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
+              physical = physical_upper ++ Enum.reverse(physical_lower)
 
-              0..1 |> Enum.map(&filter_pairs.(&1)) |> (&{:ok, [unphysical] ++ &1}).()
+              {:ok, [unphysical, physical, physical_upper]}
+              #0..1 |> Enum.map(&filter_pairs.(&1)) |> (&{:ok, [unphysical] ++ &1}).()
             end).()
   end
 

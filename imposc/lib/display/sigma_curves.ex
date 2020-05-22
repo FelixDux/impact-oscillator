@@ -6,8 +6,16 @@ defmodule SigmaCurves do
 
   @impl PlotCommands
   def command_for_plot(label) do
-    ["-", :title, label, :with, :lines]
+    ["-", :title, label, :with, :lines] ++ pointtype_for_label(label)
   end
+
+  defp pointtype_for_label(label) do
+  cond do
+  label =~ "unphysical" -> [:dashtype, "."]
+  label =~ "unstable" -> [:dt, "-"]
+    true -> []
+end
+end
 
   @impl PlotCommands
   def commands_for_axes() do
@@ -38,13 +46,11 @@ defmodule SigmaCurves do
         {
           [
             "#{PlotCommands.label_from_args(title_args, args)} unphysical",
-            "#{PlotCommands.label_from_args(title_args, args)} stable",
-            "#{PlotCommands.label_from_args(title_args, args)} unstable"
+            "#{PlotCommands.label_from_args(title_args, args)} unstable",
+            "#{PlotCommands.label_from_args(title_args, args)} stable"
           ],
           dataset
         }
-
-      # |> IO.inspect
 
       {:error, reason} ->
         {:error, "Error #{reason} encountered generating chart"}
