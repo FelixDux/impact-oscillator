@@ -37,8 +37,9 @@ defmodule SigmaCurves do
       {:ok, dataset} ->
         {
           [
-            "#{PlotCommands.label_from_args(title_args, args)}, stable",
-            "#{PlotCommands.label_from_args(title_args, args)}, unstable"
+            "#{PlotCommands.label_from_args(title_args, args)} unphysical",
+            "#{PlotCommands.label_from_args(title_args, args)} stable",
+            "#{PlotCommands.label_from_args(title_args, args)} unstable"
           ],
           dataset
         }

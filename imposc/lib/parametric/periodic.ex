@@ -191,6 +191,20 @@ defmodule OneNParams do
   end
 
   @doc """
+  Returns impact velocities corresponding to physical or unphysical (1, n) orbits for a given obstacle offset. There will be
+  either zero, one (in the case of a double root) or two such velocities.
+
+  `:sigma`: the obstacle offset
+  `:params`: parameters held fixed as the offset varies for a specified (1, n) orbit
+  """
+
+  @spec velocities_unfiltered(number(), %OneNParams{}) :: {nil | number(), nil | number()}
+  def velocities_unfiltered(sigma, %OneNParams{} = params) do
+    velocities_for_discr(sigma, discriminant(sigma, params), params)
+    |> List.to_tuple()
+  end
+
+  @doc """
   Returns points on the impact surface corresponding to physical (1, n) orbits for a given obstacle offset. There
   will be either zero, one (in the case of a double root) or two such points.
 
@@ -279,11 +293,22 @@ defmodule OneNLoci do
            (fn ->
               # Compute (1, n) velocities over range of offsets
               delta_s = 2 * params.sigma_s / num_points
+              sigma_points =
+                0..num_points
+                |> Stream.map(&(if(&1==num_points, do: params.sigma_s, else: &1 * delta_s - params.sigma_s)))
+
+                # Get the unfiltered ellipse which includes unphysical orbits
+              unphysical_pairs =
+                sigma_points |> Stream.map(&{&1, OneNParams.velocities_unfiltered(&1, params)})
+
+                  unphysical = (fn ->
+              unphysical_upper = Enum.map(unphysical_pairs, fn {sigma, {v, _w}} -> {sigma, v} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
+              unphysical_lower = Enum.map(unphysical_pairs, fn {sigma, {_v, w}} -> {sigma, w} end) |>Enum.filter(fn {_sigma, v} -> not is_nil(v) and v>=0 end)
+              unphysical_upper ++ Enum.reverse(unphysical_lower)
+                  end).()
 
               pairs =
-                0..num_points
-                |> Stream.map(&(&1 * delta_s - params.sigma_s))
-                |> Stream.map(&{&1, OneNParams.velocities(&1, params)})
+                sigma_points|> Stream.map(&{&1, OneNParams.velocities(&1, params)})
 
               # Filter out unphysical (nullified) velocities
               filter_pairs = fn n ->
@@ -292,7 +317,7 @@ defmodule OneNLoci do
                 |> Enum.filter(&(!is_nil(elem(&1, 1))))
               end
 
-              0..1 |> Enum.map(&filter_pairs.(&1)) |> (&{:ok, &1}).()
+              0..1 |> Enum.map(&filter_pairs.(&1)) |> (&{:ok, [unphysical] ++ &1}).()
             end).()
   end
 
