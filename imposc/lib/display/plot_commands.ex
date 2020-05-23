@@ -67,7 +67,7 @@ defmodule PlotCommands do
     end
   end
 
-  @spec range_command(boolean(), number(), number()) :: [any()]
+  @spec range_command(boolean(), number() | nil, number() | nil) :: [any()]
   def range_command(x_axis, min_value, max_value) when is_nil(min_value) do
     [
       :set,

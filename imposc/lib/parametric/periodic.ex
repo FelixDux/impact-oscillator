@@ -392,7 +392,7 @@ defmodule OneNLoci do
   end
 
   @spec orbits_for_params(%SystemParameters{}, integer()) ::
-          {atom(), iodata()} | [{number() | nil, number() | nil}]
+          {atom(), iodata()} | [{nil, %ImpactPoint{}}]
   def orbits_for_params(%SystemParameters{} = params, n) do
     with {:ok, parameters} <- OneNParams.derive(params.omega, params.r, n),
          do: OneNParams.orbits(params.sigma, parameters)
