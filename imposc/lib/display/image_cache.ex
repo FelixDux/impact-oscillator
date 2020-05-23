@@ -5,10 +5,13 @@ defmodule ImageCache do
 
   defstruct directory: "images", size_limit: 1024 * 1024 * 512
 
+  @type t :: %ImageCache{directory: binary(), size_limit: integer()}
+
   @doc """
   Ensures the cache specified in `:image_cache` is below the size limit and
   returns a new unique file name.
   """
+  @spec offer_new_file(ImageCache.t(), binary()) :: {atom(), binary()}
   def offer_new_file(%ImageCache{} = image_cache, extension \\ "png") do
     # TODO: put in its own process
     reduce_cache(image_cache)
@@ -19,12 +22,13 @@ defmodule ImageCache do
   Returns a path for a new file in the cache specified in `:image_cache` with 
   an extension specified in `:extension`.
   """
-  @spec new_file_name(ImageCache, iodata()) :: {atom(), atom() | iodata()}
+  @spec new_file_name(ImageCache.t(), binary()) :: {atom(), binary()}
   def new_file_name(%ImageCache{} = image_cache, extension \\ "png") do
     with {:ok, directory} <- create_cache_dir(image_cache),
          do: unique_file_name(extension) |> (&Path.join(directory, &1)).() |> (&{:ok, &1}).()
   end
 
+  @spec unique_file_name(binary()) :: binary()
   def unique_file_name(extension) do
     System.monotonic_time(:second)
     |> abs
@@ -34,6 +38,7 @@ defmodule ImageCache do
   @doc """
 
   """
+  @spec create_cache_dir(%ImageCache{}) :: {atom(), binary()}
   def create_cache_dir(%ImageCache{} = image_cache) do
     # get absolute path
     image_cache
@@ -59,6 +64,7 @@ defmodule ImageCache do
   @doc """
   Returns the absolute path to the cache directory.
   """
+  @spec cache_path(%ImageCache{}) :: {atom(), binary()}
   def cache_path(%ImageCache{} = image_cache) do
     # get application path
     # TODO: need to do better than just cwd
@@ -70,6 +76,7 @@ defmodule ImageCache do
         end).()
   end
 
+  @spec reduce_cache(ImageCache.t()) :: integer()
   def reduce_cache(%ImageCache{} = image_cache) do
     {:ok, directory_path} = cache_path(image_cache)
 
@@ -79,6 +86,10 @@ defmodule ImageCache do
 
     decrement_cache_size(size, files, directory_path, image_cache.size_limit)
   end
+
+  @spec decrement_cache_size(integer(), [{binary(), %File.Stat{}}], binary(), integer()) ::
+          integer()
+  defp decrement_cache_size(size, files, directory_path, size_limit)
 
   defp decrement_cache_size(size, _files, _directory_path, size_limit) when size <= size_limit do
     size
@@ -95,6 +106,7 @@ defmodule ImageCache do
     decrement_cache_size(new_size, tail, directory_path, size_limit)
   end
 
+  @spec cache_files(binary()) :: [{binary(), %File.Stat{}}]
   def cache_files(directory_path) do
     {:ok, files} = directory_path |> File.ls()
 
@@ -104,15 +116,15 @@ defmodule ImageCache do
     |> Enum.sort(&(Map.fetch!(elem(&1, 1), :mtime) <= Map.fetch!(elem(&2, 1), :mtime)))
   end
 
+  @spec files_size([{binary(), %File.Stat{}}]) :: integer()
   defp files_size(files) do
     files
     |> Enum.map(fn x -> elem(x, 1) end)
     |> Enum.reduce(0, fn x, acc -> acc + Map.fetch!(x, :size) end)
   end
 
+  @spec cache_size(binary()) :: integer()
   def cache_size(directory_path) do
     cache_files(directory_path) |> files_size
-
-    # Enum.map(fn x -> elem(x, 1) end) |> Enum.reduce(0, fn x, acc -> acc + Map.fetch!(x, :size) end)
   end
 end

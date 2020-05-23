@@ -14,13 +14,9 @@ defmodule CLITest do
   test "Parse switches" do
     assert {[help: true], [], []} = CLI.parse_args(["--help"])
 
-    assert {[rest: true], [], []} = CLI.parse_args(["--rest"])
-
     assert {[one_shot: true, console: true], [], []} = CLI.parse_args(["--one-shot", "--console"])
 
     assert {[help: true], [], []} = CLI.parse_args(["-h"])
-
-    assert {[rest: true], [], []} = CLI.parse_args(["-r"])
 
     assert {[one_shot: true, console: true], [], []} = CLI.parse_args(["-o", "-c"])
   end

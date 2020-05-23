@@ -10,7 +10,7 @@ defmodule CoreWrapper do
   Taken from https://groups.google.com/forum/#!msg/elixir-lang-talk/6geXOLUeIpI/L9einu4EEAAJ
   """
   @spec to_struct(module(), map()) :: struct()
-  defp to_struct(kind, attrs) do
+  def to_struct(kind, attrs) do
     kind
     |> struct
     |> (fn struct ->
@@ -26,7 +26,7 @@ defmodule CoreWrapper do
   # Extracts an input parameter of type `:kind` from `:attrs`. If `:attrs`
   # is a number we just return it, if it is a `:Map` we convert it to a 
   # struct type specified by `:kind`.
-  @spec from_attrs(module(), map()) :: struct()
+  @spec from_attrs(module(), map()) :: struct() | {atom(), binary()}
   defp from_attrs(kind, attrs) when Integer == kind and is_integer(attrs) do
     attrs
   end
@@ -55,18 +55,18 @@ defmodule CoreWrapper do
             attrs |> (&to_struct(SystemParameters, &1)).()
 
           _ ->
-            nil
+            {:error, "Unrecognised module type: #{module_type}"}
         end
 
       _ ->
-        nil
+        {:error, "No module type specified"}
     end
   end
 
   @doc """
   Extracts an input parameter of type `:kind` from `:args` using key `:key`.
   """
-  @spec from_args(module(), map(), iodata()) :: nil | number() | {atom(), iodata()} | struct()
+  @spec from_args(module(), map(), binary()) :: {atom(), binary()} | struct()
   def from_args(kind, args, key) do
     case Map.fetch(args, key) do
       {:ok, attrs} ->
@@ -79,7 +79,7 @@ defmodule CoreWrapper do
 
   # Determines which kind of action is required by a JSON-derived `:Map`
   # of `:input` and returns an async-ed `:Task` to execute it.
-  @spec execute_action(map() | {atom(), iodata()}) :: {atom(), iodata()} | Task.t()
+  @spec execute_action(map() | {atom(), String.t()}) :: {atom(), String.t()} | Task.t()
   defp execute_action(input) do
     Task.async(fn ->
       case input do
@@ -109,12 +109,12 @@ defmodule CoreWrapper do
     end
   end
 
-  @spec process_decoded(map() | {atom(), iodata()}) :: iodata()
+  @spec process_decoded(map() | {atom(), String.t()}) :: String.t()
   def process_decoded(input) do
     input |> process |> JSON.encode!()
   end
 
-  @spec process_input_string(iodata()) :: iodata()
+  @spec process_input_string(String.t()) :: String.t()
   def process_input_string(input) do
     input |> JSON.decode() |> process_decoded
   end

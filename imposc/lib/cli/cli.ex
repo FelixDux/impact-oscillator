@@ -21,7 +21,7 @@ defmodule CLI do
     ]
   }
 
-  @spec const_options() :: map()
+  @spec const_options() :: %{(atom() | String.t()) => [{atom(), atom() | String.t()}]}
   def const_options(), do: @const_options
 
   @spec parse_args([String]) :: {[], [], []}
@@ -31,7 +31,7 @@ defmodule CLI do
     OptionParser.parse(args, strict: switches, aliases: aliases)
   end
 
-  @spec usage() :: iodata()
+  @spec usage() :: String.t()
   defp usage() do
     "#{
       :application.get_application(__MODULE__)
