@@ -1,0 +1,10 @@
+<h2>My Charts</h2>
+<ul class="charts">
+  <li 
+	  *ngFor="let chart of charts" 
+	  [class.selected]="chart === selectedChart"
+	  (click)="onSelect(chart)">
+	    {{chart.name | titlecase}}
+  </li>
+</ul>
+<app-chart-detail [chart]="selectedChart"></app-chart-detail>
