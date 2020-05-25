@@ -1,0 +1,8 @@
+<h3>Charts</h3>
+<div class="grid grid-pad">
+	<a *ngFor="let chart of charts" class="col-1-4" routerLink="/detail/{{chart.name}}">
+    <div class="module chart">
+      <h4>{{chart.name}}</h4>
+    </div>
+  </a>
+</div>

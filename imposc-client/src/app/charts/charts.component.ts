@@ -10,21 +10,17 @@ import { MessageService } from '../message.service';
 })
 export class ChartsComponent implements OnInit {
 
-charts: Chart[]; 
+  charts: Chart[]; 
 
-  constructor(private chartService: ChartService, private messageService: MessageService) { }
+  constructor(private chartService: ChartService) { }
 
   ngOnInit(): void {
     this.getCharts();
   }
 
   getCharts(): void {
-  this.chartService.getCharts()
-  .subscribe(charts => this.charts = charts);  }
+    this.chartService.getCharts()
+    .subscribe(charts => this.charts = charts);
+  }
 
-  selectedChart: Chart;
-onSelect(chart: Chart): void {
-  this.selectedChart = chart;
-    this.messageService.add('ChartService: Selected chart name=${chart.name}');
-}
 }
