@@ -12,7 +12,7 @@ defmodule CLI do
 
   @const_options %{
     switches: [help: :boolean, one_shot: :boolean, console: :boolean],
-    aliases: [h: :help, o: :one_shot, c: :console, r: :rest],
+    aliases: [h: :help, o: :one_shot, c: :console],
     help: [
       help: "Returns this help message",
       one_shot:
