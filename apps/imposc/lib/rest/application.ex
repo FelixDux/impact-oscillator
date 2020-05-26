@@ -9,7 +9,7 @@ defmodule Imposc.Application do
     children = [
       # Starts a worker by calling: Imposc.Worker.start_link(arg)
       # {Imposc.Worker, arg}
-      Imposc.Endpoint
+      {Plug.Cowboy, scheme: :http, plug: Imposc.Endpoint, options: [port: cowboy_port()]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -17,4 +17,6 @@ defmodule Imposc.Application do
     opts = [strategy: :one_for_one, name: Imposc.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
+  defp cowboy_port, do: Application.get_env(:imposc, :cowboy_port, 8080)
 end

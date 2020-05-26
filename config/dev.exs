@@ -7,7 +7,7 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
 config :imposc_ui, ImposcUi.Endpoint,
-  http: [port: 4000],
+  http: [port:  System.get_env("PORT") || 4001],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -55,3 +55,6 @@ config :imposc_ui, ImposcUi.Endpoint,
       ~r"lib/imposc_ui/templates/.*(eex)$"
     ]
   ]
+
+# Set port for imposc REST server
+config :imposc, cowboy_port: 8080
