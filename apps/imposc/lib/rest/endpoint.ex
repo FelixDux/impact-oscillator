@@ -13,10 +13,6 @@ defmodule Imposc.Endpoint do
 
   forward("/", to: Imposc.Router)
 
-  match _ do
-    send_resp(conn, 404, "Requested page not found!")
-  end
-
   def child_spec(opts) do
     %{
       id: __MODULE__,
@@ -25,5 +21,5 @@ defmodule Imposc.Endpoint do
   end
 
   def start_link(_opts),
-    do: Plug.Adapters.Cowboy2.http(__MODULE__, [])
+    do: Plug.Cowboy.http(__MODULE__, [])
 end
