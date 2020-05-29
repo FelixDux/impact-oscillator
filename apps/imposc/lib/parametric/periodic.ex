@@ -61,7 +61,11 @@ defmodule OneNParams do
   """
 
   @spec derive(number(), number(), integer()) :: {atom(), %OneNParams{}}
-  def derive(_omega, _r, n) when not is_integer(n) do
+  def derive(_omega, _r, n) when not is_number(n) do
+    {:error, "The multiple of the forcing period must be a number"}
+  end
+
+  def derive(_omega, _r, n) when not is_integer(n) and trunc(n) / 1 != n do
     {:error, "The multiple of the forcing period must be an integer"}
   end
 

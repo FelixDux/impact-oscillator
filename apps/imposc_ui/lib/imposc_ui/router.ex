@@ -17,6 +17,7 @@ defmodule ImposcUi.Router do
     pipe_through :browser
 
     get "/", PageController, :index
+    resources "/actions", ActionController, only: [:index, :show, :create]
   end
 
   # Other scopes may use custom stacks.

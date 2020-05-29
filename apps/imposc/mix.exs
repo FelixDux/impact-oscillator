@@ -11,9 +11,9 @@ defmodule Imposc.MixProject do
       escript: escript(),
       dialyzer: [flags: ["-Werror_handling", "-Wrace_conditions", "-Wunderspecs", "-Wno_match"]],
       build_path: "../../_build",
-config_path: "../../config/config.exs",
-deps_path: "../../deps",
-lockfile: "../../mix.lock",
+      config_path: "../../config/config.exs",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock"
     ]
   end
 
