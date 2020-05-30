@@ -10,9 +10,11 @@ defmodule ImposcUi.Application do
       # Start the Telemetry supervisor
       ImposcUi.Telemetry,
       # Start the Endpoint (http/https)
-      ImposcUi.Endpoint
+      ImposcUi.Endpoint,
       # Start a worker by calling: ImposcUi.Worker.start_link(arg)
       # {ImposcUi.Worker, arg}
+      # Start the PubSub system
+      {Phoenix.PubSub, name: ImposcUi.PubSub}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
