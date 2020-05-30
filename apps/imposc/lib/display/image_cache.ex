@@ -74,17 +74,32 @@ defmodule ImageCache do
                # create absolute path
                do: path_name |> Path.join(image_cache.directory) |> (&{:ok, &1}).()
         end).()
+
+    # {:ok, Application.app_dir(:imposc, image_cache.directory)}
   end
 
   @spec reduce_cache(ImageCache.t()) :: integer()
   def reduce_cache(%ImageCache{} = image_cache) do
-    {:ok, directory_path} = cache_path(image_cache)
+    case cache_path(image_cache) do
+      {:ok, directory_path} ->
+        case cache_files(directory_path) do
+          # Not created yet
+          {:error, _} ->
+            0
 
-    files = cache_files(directory_path)
+          files ->
+            files
+            |> (fn files ->
+                  size = files_size(files)
 
-    size = files_size(files)
+                  decrement_cache_size(size, files, directory_path, image_cache.size_limit)
+                end).()
+        end
 
-    decrement_cache_size(size, files, directory_path, image_cache.size_limit)
+      # Not created yet
+      _ ->
+        0
+    end
   end
 
   @spec decrement_cache_size(integer(), [{binary(), %File.Stat{}}], binary(), integer()) ::
@@ -108,12 +123,16 @@ defmodule ImageCache do
 
   @spec cache_files(binary()) :: [{binary(), %File.Stat{}}]
   def cache_files(directory_path) do
-    {:ok, files} = directory_path |> File.ls()
+    case directory_path |> File.ls() do
+      {:ok, files} ->
+        Enum.map(files, fn x -> Path.join(directory_path, x) end)
+        |> Enum.map(fn x -> File.stat(x) |> (&{x, elem(&1, 1)}).() end)
+        |> Enum.filter(fn x -> Map.fetch(elem(x, 1), :type) == {:ok, :regular} end)
+        |> Enum.sort(&(Map.fetch!(elem(&1, 1), :mtime) <= Map.fetch!(elem(&2, 1), :mtime)))
 
-    Enum.map(files, fn x -> Path.join(directory_path, x) end)
-    |> Enum.map(fn x -> File.stat(x) |> (&{x, elem(&1, 1)}).() end)
-    |> Enum.filter(fn x -> Map.fetch(elem(x, 1), :type) == {:ok, :regular} end)
-    |> Enum.sort(&(Map.fetch!(elem(&1, 1), :mtime) <= Map.fetch!(elem(&2, 1), :mtime)))
+      {:error, _reason} ->
+        {:error, "Could not open image cache directory #{directory_path}"}
+    end
   end
 
   @spec files_size([{binary(), %File.Stat{}}]) :: integer()
