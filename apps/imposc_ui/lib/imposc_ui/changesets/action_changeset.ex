@@ -39,8 +39,8 @@ defmodule ActionChangeset do
     case t do
       "omega" -> "ω"
       "sigma" -> "σ"
-      "phi" -> "φ<sub>0</sub>"
-      "v" -> "v<sub>0</sub>"
+      "phi" -> "φ#{List.to_string([8320])}"
+      "v" -> "v#{List.to_string([8320])}"
       "r" -> "r"
       _ -> f |> String.split("_") |> Enum.join(" ")
     end
