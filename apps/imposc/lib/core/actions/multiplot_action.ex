@@ -18,7 +18,6 @@ defmodule MultiplotAction do
   @impl Action
   def execute(args, options) do
     args
-    |> IO.inspect()
     |> Enum.map(fn arg ->
       Map.to_list(arg)
       |> (&(with [head | _] <- &1,
@@ -27,7 +26,6 @@ defmodule MultiplotAction do
               {ActionMap.get_module(module), arg_list}
             end)).()
     end)
-    |> IO.inspect()
     |> PlotCommands.draw_multi(options)
   end
 

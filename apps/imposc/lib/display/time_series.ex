@@ -25,16 +25,28 @@ defmodule TimeSeries do
 
   @impl PlotCommands
   def data_for_plot(args, title_args) do
-    [start_impact, params] = from_args(args)
+    case from_args(args) do
+      [{:error, message}, {:error, message_2}] ->
+        {:error, "#{message}\n#{message_2}"}
 
-    {initial_points, _} = MotionBetweenImpacts.iterate_impacts(start_impact, params, 1)
+      [{:error, message}, _params] ->
+        {:error, message}
 
-    new_impact = Enum.at(initial_points, -1)
+      [_start_impact, {:error, message}] ->
+        {:error, message}
 
-    {_points, states} = MotionBetweenImpacts.iterate_impacts(new_impact, params, 50, true)
+      [start_impact, params] ->
+        (fn ->
+           {initial_points, _} = MotionBetweenImpacts.iterate_impacts(start_impact, params, 1)
 
-    dataset = Stream.map(states, &[&1.t, &1.x])
+           new_impact = Enum.at(initial_points, -1)
 
-    {PlotCommands.label_from_args(title_args, args), dataset}
+           {_points, states} = MotionBetweenImpacts.iterate_impacts(new_impact, params, 50, true)
+
+           dataset = Stream.map(states, &[&1.t, &1.x])
+
+           {PlotCommands.label_from_args(title_args, args), dataset}
+         end).()
+    end
   end
 end

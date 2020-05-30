@@ -34,16 +34,33 @@ defmodule ImpactMap do
           CoreWrapper.from_args(SystemParameters, &1, "params"),
           CoreWrapper.from_args(Integer, &1, "num_iterations")
         ]).()
+    |> Enum.reduce([], fn x, acc ->
+      case x do
+        {:error, message} ->
+          case acc do
+            {:error, acc_message} -> {:error, "#{acc_message}\n#{message}"}
+            _ -> {:error, message}
+          end
+
+        _ ->
+          case acc do
+            {:error, _} -> acc
+            _ -> acc ++ [x]
+          end
+      end
+    end)
   end
 
   @impl PlotCommands
   def data_for_plot(args, title_args) do
-    [initial_point, params, num_iterations] = from_args(args)
+    case from_args(args) do
+      {:error, message} ->
+        {:error, message}
 
-    dataset =
-      elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
-      |> Stream.map(&ImpactPoint.point_to_list(&1))
-
-    {PlotCommands.label_from_args(title_args, args), dataset}
+      [initial_point, params, num_iterations] ->
+        elem(MotionBetweenImpacts.iterate_impacts(initial_point, params, num_iterations), 0)
+        |> Stream.map(&ImpactPoint.point_to_list(&1))
+        |> (&{PlotCommands.label_from_args(title_args, args), &1}).()
+    end
   end
 end

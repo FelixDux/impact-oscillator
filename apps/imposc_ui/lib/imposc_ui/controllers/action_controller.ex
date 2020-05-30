@@ -27,19 +27,27 @@ defmodule ImposcUi.ActionController do
             end
           end).()
 
-    {:ok, image} = Map.fetch!(response, "result")
-
-    image_type = image |> Path.extname() |> String.replace(".", "")
-    content_type = "image/#{image_type}"
-
-    case File.read(image) do
-      {:ok, image_stream} ->
+    case Map.fetch!(response, "result") do
+      {:error, message} ->
         conn
-        |> put_resp_content_type(content_type)
-        |> send_resp(200, image_stream)
+        |> put_resp_content_type("text/html")
+        |> send_resp(200, "<h1>Error generating image</h1><p>#{message}</p>")
 
-      _ ->
-        conn |> send_resp(404, "Image not found")
+      {:ok, image} ->
+        (fn ->
+           image_type = image |> Path.extname() |> String.replace(".", "")
+           content_type = "image/#{image_type}"
+
+           case File.read(image) do
+             {:ok, image_stream} ->
+               conn
+               |> put_resp_content_type(content_type)
+               |> send_resp(200, image_stream)
+
+             _ ->
+               conn |> send_resp(404, "Image not found")
+           end
+         end).()
     end
   end
 end

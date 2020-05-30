@@ -21,12 +21,22 @@ defmodule CoreWrapper do
             end
           end)
         end).()
+    |> InputValidator.validate()
   end
 
   # Extracts an input parameter of type `:kind` from `:attrs`. If `:attrs`
   # is a number we just return it, if it is a `:Map` we convert it to a 
   # struct type specified by `:kind`.
   @spec from_attrs(module(), map()) :: struct() | {atom(), binary()}
+  defp from_attrs(kind, attrs) when Integer == kind and is_binary(attrs) do
+    Integer.parse(attrs)
+  end
+
+  defp from_attrs(kind, attrs) when Float == kind and is_binary(attrs) do
+    if(String.starts_with?(attrs, "."), do: "0#{attrs}", else: attrs)
+    |> Float.parse()
+  end
+
   defp from_attrs(kind, attrs) when Integer == kind and is_integer(attrs) do
     attrs
   end
@@ -47,9 +57,18 @@ defmodule CoreWrapper do
           ImpactPoint ->
             attrs
             |> (&to_struct(ImpactPoint, &1)).()
-            # We just expect the phase and velocity from the input and 
-            # initialise the time to the phase
-            |> (&%ImpactPoint{phi: &1.phi, v: &1.v, t: &1.phi}).()
+            |> (fn point ->
+                  case point do
+                    {:error, message} ->
+                      {:error, message}
+
+                    _ ->
+                      point
+                      # We just expect the phase and velocity from the input and 
+                      # initialise the time to the phase
+                      |> (&%ImpactPoint{phi: &1.phi, v: &1.v, t: &1.phi}).()
+                  end
+                end).()
 
           SystemParameters ->
             attrs |> (&to_struct(SystemParameters, &1)).()
@@ -212,4 +231,9 @@ defmodule CoreWrapper do
   def arglist_complements(template, arg_list, exclude \\ []) do
     arg_list |> Enum.map(&intersect_args(template, &1, true, exclude))
   end
+end
+
+defprotocol InputValidator do
+  @spec validate(t) :: t | {atom(), binary()}
+  def validate(instance)
 end

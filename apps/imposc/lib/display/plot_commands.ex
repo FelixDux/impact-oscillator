@@ -17,7 +17,8 @@ defmodule PlotCommands do
 
   @callback from_args(map()) :: [any()]
 
-  @callback data_for_plot(map(), map()) :: {iodata(), [any()]} | {[iodata()], [[any()]]}
+  @callback data_for_plot(map(), map()) ::
+              {iodata(), [any()]} | {[iodata()], [[any()]]} | {atom(), binary()}
 
   @spec axis_label_command(boolean(), iodata()) :: [any()]
   def axis_label_command(x_axis, text) do
@@ -152,7 +153,10 @@ defmodule PlotCommands do
     Task.async(fn ->
       args
       |> implementation.data_for_plot(title_args)
-      |> (&{elem(&1, 0), elem(&1, 1)}).()
+      |> (&(case &1 do
+              {:error, message} -> {:error, message}
+              _ -> {elem(&1, 0), elem(&1, 1)}
+            end)).()
     end)
   end
 
@@ -165,11 +169,17 @@ defmodule PlotCommands do
       # TODO: make fault-tolerant
       |> Enum.map(&Task.await(&1, :infinity))
 
-    # We now have a list of tuples, which we convert into a tuple of lists
-    # as the labels and the data have to be passed to difference arguments
-    # in `:Gnuplot.plot`
+    case data do
+      [error: message] ->
+        {:error, message}
 
-    data |> flatten_plot_data_list |> slice_plot_data
+      _ ->
+        # We now have a list of tuples, which we convert into a tuple of lists
+        # as the labels and the data have to be passed to difference arguments
+        # in `:Gnuplot.plot`
+
+        data |> flatten_plot_data_list |> slice_plot_data
+    end
   end
 
   def collate_for_chart(implementation, arg_list) when is_binary(implementation) do
@@ -187,20 +197,22 @@ defmodule PlotCommands do
 
     title = title_args |> args_to_label
 
-    {labels, datasets} = collate_data(implementation, arg_list, title_args)
+    case collate_data(implementation, arg_list, title_args) do
+      {:error, message} ->
+        {:error, message}
 
-    commands =
-      labels
-      |> Enum.map(&implementation.command_for_plot(&1))
-      |> (fn command ->
-            implementation.commands_for_axes() ++
-              [chart_title(title)] ++
-              if(Enum.count(labels) <= 1, do: [[:set, :key, :off]], else: legend_commands()) ++
-              [Gnuplot.plots(command)] ++
-              unset_commands_for_axes()
-          end).()
-
-    {commands, datasets}
+      {labels, datasets} ->
+        labels
+        |> Enum.map(&implementation.command_for_plot(&1))
+        |> (fn command ->
+              implementation.commands_for_axes() ++
+                [chart_title(title)] ++
+                if(Enum.count(labels) <= 1, do: [[:set, :key, :off]], else: legend_commands()) ++
+                [Gnuplot.plots(command)] ++
+                unset_commands_for_axes()
+            end).()
+        |> (&{&1, datasets}).()
+    end
   end
 
   def collate_for_image(chart_specs) when is_map(chart_specs) do
@@ -261,21 +273,30 @@ defmodule PlotCommands do
   end
 
   def draw_commands(chart_specs, title, options \\ %{}) do
-    with {chart_commands, datasets} <- collate_for_image(chart_specs),
-         {image_file, image_commands} <-
-           commands_for_image(title, options, Enum.count(chart_specs)) do
-      {image_file, image_commands ++ chart_commands, datasets}
+    case collate_for_image(chart_specs) do
+      {:error, message} ->
+        {:error, message}
+
+      {chart_commands, datasets} ->
+        with {image_file, image_commands} <-
+               commands_for_image(title, options, Enum.count(chart_specs)) do
+          {image_file, image_commands ++ chart_commands, datasets}
+        end
     end
   end
 
   @spec draw(module(), [map()], iodata(), map()) :: {atom(), iodata()} | atom()
   def draw(implementation, arg_list, title, options \\ %{}) do
-    {image_file, commands, datasets} = draw_commands([{implementation, arg_list}], title, options)
+    case draw_commands([{implementation, arg_list}], title, options) do
+      {:error, message} ->
+        {:error, message}
 
-    case Gnuplot.plot(commands, datasets) do
-      {:ok, _cmd} -> {:ok, image_file}
-      {:error, message} -> {:error, message}
-      _ -> {:error, "Unknown error generating chart"}
+      {image_file, commands, datasets} ->
+        case Gnuplot.plot(commands, datasets) do
+          {:error, message} -> {:error, message}
+          {:ok, _cmd} -> {:ok, image_file}
+          _ -> {:error, "Unknown error generating chart"}
+        end
     end
   end
 

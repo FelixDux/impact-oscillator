@@ -149,16 +149,19 @@ defmodule ActionChangeset do
   end
 
   def numberfy_if_poss(value) when is_binary(value) do
-    case Integer.parse(value) do
-      {v, ""} ->
-        v
+    if(String.starts_with?(value, "."), do: "0#{value}", else: value)
+    |> (fn value ->
+          case Integer.parse(value) do
+            {v, ""} ->
+              v
 
-      _ ->
-        case Float.parse(value) do
-          {f, ""} -> f
-          _ -> value
-        end
-    end
+            _ ->
+              case Float.parse(value) do
+                {f, ""} -> f
+                _ -> value
+              end
+          end
+        end).()
   end
 
   def numberfy_if_poss(value) do
