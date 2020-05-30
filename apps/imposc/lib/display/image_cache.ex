@@ -80,19 +80,18 @@ defmodule ImageCache do
 
   @spec reduce_cache(ImageCache.t()) :: integer()
   def reduce_cache(%ImageCache{} = image_cache) do
-      with {:ok, directory_path} <- cache_path(image_cache), 
-           true <- File.dir?(directory_path) 
-      do
-        cache_files(directory_path) 
-            |> (fn files ->
-                  size = files_size(files)
+    with {:ok, directory_path} <- cache_path(image_cache),
+         true <- File.dir?(directory_path) do
+      cache_files(directory_path)
+      |> (fn files ->
+            size = files_size(files)
 
-                  decrement_cache_size(size, files, directory_path, image_cache.size_limit)
-                end).()
-      else 
-        # Not created yet
-        {:error, _} -> 0
-        false -> 0
+            decrement_cache_size(size, files, directory_path, image_cache.size_limit)
+          end).()
+    else
+      # Not created yet
+      {:error, _} -> 0
+      false -> 0
     end
   end
 

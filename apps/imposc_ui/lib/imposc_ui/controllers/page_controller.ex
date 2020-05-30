@@ -3,7 +3,7 @@ defmodule ImposcUi.PageController do
 
   def index(conn, _params) do
     actions =
-      ActionMap.list_actions()
+      ActionMap.list_actions(["multiplot"])
       |> Enum.map(fn {name, description} -> %{name: name, description: description} end)
 
     render(conn, "index.html", actions: actions)

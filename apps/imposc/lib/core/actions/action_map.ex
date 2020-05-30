@@ -13,9 +13,16 @@ defmodule ActionMap do
   @doc """
   Lists the available actions with their descriptions.
   """
-  @spec list_actions() :: [{iodata(), iodata()}, ...]
-  def list_actions() do
+  @spec list_actions([String.t(), ...]) :: [{iodata(), iodata()}, ...]
+  def list_actions(filter \\ []) do
     Enum.map(Map.keys(@actions), fn action -> {action, description(action)} end)
+    |> (fn actions ->
+          if Enum.empty?(filter) do
+            actions
+          else
+            actions |> Enum.filter(fn {action, _description} -> action not in filter end)
+          end
+        end).()
   end
 
   def module_for_action(action) do
