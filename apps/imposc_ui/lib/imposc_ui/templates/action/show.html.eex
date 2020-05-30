@@ -1,8 +1,13 @@
-<%= form_for @action, Routes.action_path(@conn, :create), fn f -> %>
+<table><tr><td>
+<%= form_for @action, Routes.action_path(@conn, :create), [target: "image_frame"], fn f -> %>
   <%= for field <- ActionChangeset.form_fields(@action) do %>
     <label><%= ActionChangeset.field_label(field) %></label>
     <%= ActionChangeset.input_field(f, field) %>
   <% end %>
 
-  <%= submit "Submit" %>
+  <%= submit "Show" %>
+
 <% end %>
+    </td><td>
+  <iframe name="image_frame"></iframe>
+    </td></tr></table>
