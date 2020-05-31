@@ -11,6 +11,7 @@
   <body>
     <header>
       <section class="container">
+      <h2>Impact Oscillator</h2>
         <nav role="navigation">
           <ul>
             <li><a href="/">Actions</a></li>

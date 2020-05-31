@@ -1,4 +1,4 @@
-defmodule Imposc.Application do
+defmodule ImposcRapi.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -7,14 +7,14 @@ defmodule Imposc.Application do
 
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: Imposc.Worker.start_link(arg)
-      # {Imposc.Worker, arg}
-      {Plug.Cowboy, scheme: :http, plug: Imposc.Endpoint, options: [port: cowboy_port()]}
+      # Starts a worker by calling: ImposcRapi.Worker.start_link(arg)
+      # {ImposcRapi.Worker, arg}
+      {Plug.Cowboy, scheme: :http, plug: ImposcRapi.Endpoint, options: [port: cowboy_port()]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Imposc.Supervisor]
+    opts = [strategy: :one_for_one, name: ImposcRapi.Supervisor]
     Supervisor.start_link(children, opts)
   end
 

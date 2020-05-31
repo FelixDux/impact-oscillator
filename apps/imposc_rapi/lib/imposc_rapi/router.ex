@@ -1,4 +1,4 @@
-defmodule Imposc.Router do
+defmodule ImposcRapi.Router do
   use Plug.Router
 
   plug(:match)

@@ -1,4 +1,4 @@
-defmodule Imposc.Endpoint do
+defmodule ImposcRapi.Endpoint do
   use Plug.Router
 
   plug(:match)
@@ -11,7 +11,7 @@ defmodule Imposc.Endpoint do
 
   plug(:dispatch)
 
-  forward("/", to: Imposc.Router)
+  forward("/", to: ImposcRapi.Router)
 
   def child_spec(opts) do
     %{
