@@ -15,7 +15,7 @@ The [Elixir](https://elixir-lang.org/) project is in the subdirectory `./apps/im
 - Inside `iex -S mix`:
     - `iex> Console.run()` launches the console
     - `iex> File.read!(file_name) |> CoreWrapper.process_input_string` runs a one-shot mode from the specified file
-- A REST server launched by `mix run --no-halt` (see the **Architecture** section below)
+- A REST server launched by `mix run --no-halt` (see the **Architecture** section below) and accessible at [http://localhost:8080](http://localhost:8080)
 
 ## Mathematical Background
 I completed my PhD in 1992 and have not followed academic developments since that time, so the work described here is probably outdated and makes no reference to more recent research.
