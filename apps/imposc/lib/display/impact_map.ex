@@ -7,7 +7,7 @@ defmodule ImpactMap do
 
   @impl PlotCommands
   def command_for_plot(label) do
-    ["-", :title, label, :with, :points, :pointtype, 7, :ps, 0.1]
+    ["-", :title, label, :with, :dots]
   end
 
   @impl PlotCommands
