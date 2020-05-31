@@ -3,29 +3,19 @@
 This project is an opportunity for me to gain experience of functional programming in [Elixir](https://elixir-lang.org/), while at the same time indulging in a bit of nostalgia by revisiting the research I did for my PhD. I have not kept up to date with research developments in the field since I left academia and so nothing in this project is likely to contribute to current research. Instead my aim is to reproduce the programming aspects of the work I did then, but with the benefit of 3 decades of software engineering experience and using a language and programming techniques which were not available back then.
 
 ## Installing and Running
-### Main Application (Subdirectory `./imposc`)
+### Prerequisites
 The charting functions use [Gnuplot Elixir](https://github.com/devstopfix/gnuplot-elixir). While this will be installed by `mix deps.get`, [Gnuplot](http://www.gnuplot.info/) itself must be installed separately.
 
-The [Elixir](https://elixir-lang.org/) project is in the subdirectory `./imposc`. There are four ways of accessing the functionality:
+### Accessing the Functionality
+The [Elixir](https://elixir-lang.org/) project is in the subdirectory `./apps/imposc/`. There are four ways of accessing the functionality:
 
-- A REST server launched by `mix run --no-halt`
-- The same REST server inside a [Docker](https://hub.docker.com/) container, which can be built by `make build` and launched by `make run`
-- A command-line script, which can be built by `mix escript.build` and launched by `./imposc` and which has two modes, a one-shot mode which accepts a JSON string on the standard input and a console mode.
+- A very simple Web front-end launched by `mix phx.server` and accessible at [http://localhost:4000](http://localhost:4000)
+- The same Web front end inside a [Docker](https://hub.docker.com/) container, which can be built by `make build` and launched by `make run`
+- A command-line script, which can be built by `cd ./apps/imposc/; mix escript.build` and launched by `./apps/imposc/imposc` and which has two modes, a one-shot mode which accepts a JSON string on the standard input and a console mode.
 - Inside `iex -S mix`:
     - `iex> Console.run()` launches the console
     - `iex> File.read!(file_name) |> CoreWrapper.process_input_string` runs a one-shot mode from the specified file
-
-### Web Client (not yet implemented)
-All of the above is not very user-friendly because, with the exception of the console (which only has limited functionality) it requires inputs in JSON format.
-
-Next on the to-do list, therefore, is to implement a separate web application which will send requests to the REST server. It will provide forms for constructing requests and will render the responses.
-
-I have chosen this approach rather than, say, implementing a GUI in [Scenic](https://github.com/boydm/scenic) because:
-
-- I can easily wrap both client and server in Docker containers
-- It gave me an excuse to have a go at a REST API
-
-The Web client will have its own project in this repository and will probably not be written in Elixir, simply because I would like to mix things up a bit.
+- A REST server launched by `mix run --no-halt` (see the **Architecture** section below) and accessible at [http://localhost:8080](http://localhost:8080)
 
 ## Mathematical Background
 I completed my PhD in 1992 and have not followed academic developments since that time, so the work described here is probably outdated and makes no reference to more recent research.
@@ -63,7 +53,9 @@ Because a coefficient of restitution of less than 1 is sufficient to introduce d
 The impact introduces a discontinuity into the system which makes it strongly nonlinear, so that it exhibits many of the complex behaviours associated with nonlinear dynamical systems.
 
 ### The Impact Map
-A *Poincar&#233; map* is a useful way of reducing a continuous dynamical system to a discrete system with one fewer dimensions. In this case the form of the problem naturally induces a map - which we call the *impact map* - which takes the phase (time modulo the forcing period) and velocity at one impact to the phase and velocity at the next impact. What makes it interesting is that it does not strictly conform to the textbook definition of a Poincar&#233; map, because when impacts occur with zero velocity the trajectory in phase space is tangential to the surface ![equation](https://latex.codecogs.com/svg.latex?x%3D%5Csigma) . At points which map to zero-velocity impacts, the impact map is not only discontinuous but singular. This underlies many of the complex dynamics which are observed for some parameter ranges.
+A *Poincar&#233; map* is a useful way of reducing a continuous dynamical system to a discrete system with one fewer dimensions. In this case the form of the problem naturally induces a map - which we call the *impact map* - which takes the phase (time modulo the forcing period) and velocity at one impact to the phase and velocity at the next impact. What makes it interesting is that it does not strictly conform to the textbook definition of a Poincar&#233; map, because when impacts occur with zero velocity the trajectory in phase space is tangential to the surface ![equation](https://latex.codecogs.com/svg.latex?x%3D%5Csigma). At points which map to zero-velocity impacts, the impact map is not only discontinuous but singular. This underlies many of the complex dynamics which are observed for some parameter ranges.
+
+The domain (and range) of the impact map, the *impact surface*, is geometrically an infinite half-cylinder, since the impact velocities range over ![equation](https://latex.codecogs.com/gif.latex?%5B0%2C%20%5Cinfty%29), while the phase ranges over ![equation](https://latex.codecogs.com/gif.latex?%5B0%2C%202%5Cpi%20/%5Comega%20%29).
 
 ### Periodic Orbits
 Periodic motions can be classified by labelling them with two numbers, the number of impacts in a cycle and the number of forcing periods, so that a (*m*, *n*) orbit repeats itself after *m* impacts and *n* forcing cycles. The simplest of these are (1, *n*) orbits, which correspond to fixed points of the impact map. These can be extensively studied analytically and formulas can be obtained for the impact velocity *V<sub>n</sub>* as the parameters ![equation](https://latex.codecogs.com/svg.latex?%5Comega), ![equation](https://latex.codecogs.com/svg.latex?%5Csigma) and *r* are varied.
@@ -95,10 +87,22 @@ The software generates graphical plots of the following:
 - Time series plots of *x*(*t*) for a given set of parameter values and initial conditions
 - ![equation](https://latex.codecogs.com/svg.latex?V_%7Bn%7D%2C%20%5Csigma) response curves for (1, *n*) orbits for a given values of ![equation](https://latex.codecogs.com/svg.latex?%5Comega) and *r*, showing bifurcation points where orbits become dynamically unstable or unphysical (the latter established numerically)
 
-Various other interesting plots will come later, time permitting.
+If you access this functionality via the one-shot CLI (`./apps/imposc/imposc -o`) or via the REST API (i.e. by constructing your own JSON inputs), it is possible to have multiple plots on a single chart (e.g. several ![equation](https://latex.codecogs.com/svg.latex?V_%7Bn%7D%2C%20%5Csigma) response curves for for different values of ![equation](https://latex.codecogs.com/svg.latex?%5Comega), *n* and *r*). It is also possible to group multiple charts of different kinds onto a single image. Neither of these is yet possible via the Web front-end or the console. I hope to introduce this in the future.
+
+Various other interesting plots will come later, time permitting, including:
+
+- The 'stroboscopic' Poincar&#233; map, which samples the displacement and velocity at each forcing cycle
+- Plots of the velocity vs. the displacement
+- Domain of attraction plots on the impact surface for competing ![equation](https://latex.codecogs.com/svg.latex?%28%20m%20%2C%20n%29), ![equation](https://latex.codecogs.com/svg.latex?%28%5Cinfty%20%2C%20n%29) and chaotic orbits
+- Plots of the singularity set and its dual on the impact surface
+- ![equation](https://latex.codecogs.com/svg.latex?V_%7Bn%7D%2C%20%5Comega) response curves for (1, *n*) orbits for fixed ![equation](https://latex.codecogs.com/svg.latex?%5Csigma)
+- Numerically-generated sensitivity/bifurcation plots
 
 ## Architecture
-### Main Application
+
+The application is implemented in an [Elixir](https://elixir-lang.org/) umbrella project with three sub-projects:
+
+### Main Application (Subdirectory `./apps/imposc/`)
 - **Core**: this is the bit which does the maths. It comprises functions which return nested collections suitable for 
 JSON-ising.
 - **Charts**: this accepts nested collections as generated by core functions and generates charts, which are either 
@@ -107,13 +111,14 @@ directed to the display or to PNG files.
 directing the output where appropriate to charts calls
 - **Console interface**: runs in a terminal and accepts user commands, which it interprets into core and charts commands
 via the core wrapper
-- **REST server** a REST API which accepts requests, which it interprets into core and charts commands via the core 
-wrapper
 - **Command line interface**: CLI which launches the application in one of two modes:
     - a one-shot mode which accepts JSON from the standard input, interprets it into core and charts commands via the core 
      wrapper, returns any text output (e.g. JSON) to the standard output and exits.
     - a mode which launches the console interface
    
-### Web Client (not yet implemented)
-A web application which sends requests to the REST server. It provides forms for constructing requests (using the core 
-wrapper) and renders the responses.
+### Web UI (Subdirectory `./apps/imposc_ui/`)
+A simple Phoenix web application which provides forms for generating different kinds charts provided by the main application.
+
+### REST server (Subdirectory `./apps/imposc_rapi/`)
+A lightweight REST API which accepts requests, which it interprets into core and charts commands via the core 
+wrapper. This was implemented before the web UI, when I was considering implementing the latter as an entirely separate client application using a different technology.

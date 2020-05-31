@@ -1,0 +1,7 @@
+<%= form_for @action, Routes.action_path(@conn, :create), fn f -> %>
+  <label>
+    Name: <%= text_input f, :name %>
+  </label>
+
+  <%= submit "Submit" %>
+<% end %>
