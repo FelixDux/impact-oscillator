@@ -1,7 +1,7 @@
 <ul>
   <%= for action <- @actions do %>
     <li>
-      <strong><%= link(action.name, to: Routes.action_path(@conn, :show, action.name)) %></strong>: <%= action.description %>
+      <strong><%= link(action.description |> ActionChangeset.replace_symbols, to: Routes.action_path(@conn, :show, action.name)) %></strong>
     </li>
   <% end %>
 </ul>

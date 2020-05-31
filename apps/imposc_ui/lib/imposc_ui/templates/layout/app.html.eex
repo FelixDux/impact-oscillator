@@ -14,7 +14,7 @@
       <h2>Impact Oscillator</h2>
         <nav role="navigation">
           <ul>
-            <li><a href="/">Actions</a></li>
+            <li><strong><a href="/">Actions</a></strong></li>
           </ul>
         </nav>
       </section>

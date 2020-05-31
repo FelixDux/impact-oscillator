@@ -27,6 +27,20 @@ defmodule ActionChangeset do
 
   @integer_fields [:n, :num_points, :num_iterations]
 
+  @symbol_map %{
+      "omega" => "ω",
+      "sigma" => "σ",
+      "phi" => "φ#{List.to_string([8320])}",
+      "v" => "v#{List.to_string([8320])}",
+      "r" => "r"
+  }
+
+  def replace_symbols(text) do
+    Enum.reduce(@symbol_map, text, fn {k, v}, acc ->
+      acc |> String.replace(k, v)
+    end)
+  end
+
   def field_label(field) when field == :n or field == :r do
     Atom.to_string(field) |> String.downcase()
   end
@@ -36,12 +50,8 @@ defmodule ActionChangeset do
     tokens = f |> String.split("__")
     [t | _h] = Enum.reverse(tokens)
 
-    case t do
-      "omega" -> "ω"
-      "sigma" -> "σ"
-      "phi" -> "φ#{List.to_string([8320])}"
-      "v" -> "v#{List.to_string([8320])}"
-      "r" -> "r"
+    case Map.fetch(@symbol_map, t) do
+      {:ok, value} -> value
       _ -> f |> String.split("_") |> Enum.join(" ")
     end
   end
