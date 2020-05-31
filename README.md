@@ -53,7 +53,9 @@ Because a coefficient of restitution of less than 1 is sufficient to introduce d
 The impact introduces a discontinuity into the system which makes it strongly nonlinear, so that it exhibits many of the complex behaviours associated with nonlinear dynamical systems.
 
 ### The Impact Map
-A *Poincar&#233; map* is a useful way of reducing a continuous dynamical system to a discrete system with one fewer dimensions. In this case the form of the problem naturally induces a map - which we call the *impact map* - which takes the phase (time modulo the forcing period) and velocity at one impact to the phase and velocity at the next impact. What makes it interesting is that it does not strictly conform to the textbook definition of a Poincar&#233; map, because when impacts occur with zero velocity the trajectory in phase space is tangential to the surface ![equation](https://latex.codecogs.com/svg.latex?x%3D%5Csigma) . At points which map to zero-velocity impacts, the impact map is not only discontinuous but singular. This underlies many of the complex dynamics which are observed for some parameter ranges.
+A *Poincar&#233; map* is a useful way of reducing a continuous dynamical system to a discrete system with one fewer dimensions. In this case the form of the problem naturally induces a map - which we call the *impact map* - which takes the phase (time modulo the forcing period) and velocity at one impact to the phase and velocity at the next impact. What makes it interesting is that it does not strictly conform to the textbook definition of a Poincar&#233; map, because when impacts occur with zero velocity the trajectory in phase space is tangential to the surface ![equation](https://latex.codecogs.com/svg.latex?x%3D%5Csigma). At points which map to zero-velocity impacts, the impact map is not only discontinuous but singular. This underlies many of the complex dynamics which are observed for some parameter ranges.
+
+The domain (and range) of the impact map, the *impact surface*, is geometrically an infinite half-cylinder, since the impact velocities range over ![equation](https://latex.codecogs.com/gif.latex?%5B0%2C%20%5Cinfty%29), while the phase ranges over ![equation](https://latex.codecogs.com/gif.latex?%5B0%2C%202%5Cpi%20/%5Comega%20%29).
 
 ### Periodic Orbits
 Periodic motions can be classified by labelling them with two numbers, the number of impacts in a cycle and the number of forcing periods, so that a (*m*, *n*) orbit repeats itself after *m* impacts and *n* forcing cycles. The simplest of these are (1, *n*) orbits, which correspond to fixed points of the impact map. These can be extensively studied analytically and formulas can be obtained for the impact velocity *V<sub>n</sub>* as the parameters ![equation](https://latex.codecogs.com/svg.latex?%5Comega), ![equation](https://latex.codecogs.com/svg.latex?%5Csigma) and *r* are varied.
@@ -85,7 +87,16 @@ The software generates graphical plots of the following:
 - Time series plots of *x*(*t*) for a given set of parameter values and initial conditions
 - ![equation](https://latex.codecogs.com/svg.latex?V_%7Bn%7D%2C%20%5Csigma) response curves for (1, *n*) orbits for a given values of ![equation](https://latex.codecogs.com/svg.latex?%5Comega) and *r*, showing bifurcation points where orbits become dynamically unstable or unphysical (the latter established numerically)
 
-Various other interesting plots will come later, time permitting.
+If you access this functionality via the one-shot CLI (`./apps/imposc/imposc -o`) or via the REST API (i.e. by constructing your own JSON inputs), it is possible to have multiple plots on a single chart (e.g. several ![equation](https://latex.codecogs.com/svg.latex?V_%7Bn%7D%2C%20%5Csigma) response curves for for different values of ![equation](https://latex.codecogs.com/svg.latex?%5Comega), *n* and *r*). It is also possible to group multiple charts of different kinds onto a single image. Neither of these is yet possible via the Web front-end or the console. I hope to introduce this in the future.
+
+Various other interesting plots will come later, time permitting, including:
+
+- The 'stroboscopic' Poincar&#233; map, which samples the displacement and velocity at each forcing cycle
+- Plots of the velocity vs. the displacement
+- Domain of attraction plots on the impact surface for competing ![equation](https://latex.codecogs.com/svg.latex?%28%20m%20%2C%20n%29), ![equation](https://latex.codecogs.com/svg.latex?%28%5Cinfty%20%2C%20n%29) and chaotic orbits
+- Plots of the singularity set and its dual on the impact surface
+- ![equation](https://latex.codecogs.com/svg.latex?V_%7Bn%7D%2C%20%5Comega) response curves for (1, *n*) orbits for fixed ![equation](https://latex.codecogs.com/svg.latex?%5Csigma)
+- Numerically-generated sensitivity/bifurcation plots
 
 ## Architecture
 
