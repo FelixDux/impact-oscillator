@@ -3,7 +3,7 @@
 #
 .PHONY: help
 
-APP_NAME ?= `grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'`
+APP_NAME ?= impact_oscillator#`grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'`
 APP_VSN ?= `grep 'version:' mix.exs | cut -d '"' -f2`
 BUILD ?= `git rev-parse --short HEAD`
 
@@ -17,5 +17,4 @@ build: ## Build the Docker image
 	    -t $(APP_NAME):latest .
 
 run: ## Run the app in Docker
-	docker run --expose 4000 -p 4000:4000 \
-	    --rm -it $(APP_NAME):latest
+	docker run --expose 4000 -p 4000:4000 --rm -it $(APP_NAME):latest

@@ -19,4 +19,5 @@ ENV REPLACE_OS_VARS=true \
     PORT=4000
 
 #Set default entrypoint 
-ENTRYPOINT ["mix", "run", "--no-halt"]
+ENTRYPOINT ["mix", "phx.server"]
+#ENTRYPOINT ["mix", "run", "--no-halt"]
