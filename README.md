@@ -1,6 +1,6 @@
 # Impact Oscillator
 ## Overview
-This project is an opportunity for me to gain experience of functional programming in [Elixir](https://elixir-lang.org/), while at the same time indulging in a bit of nostalgia by revisiting the research I did for my PhD. I have not kept up to date with research developments in the field since I left academia and so nothing in this project is likely to contribute to current research. Instead my aim is to reproduce the programming aspects of the work I did then, but with the benefit of 3 decades of software engineering experience and using a language and programming techniques which were not available back then.
+This project is an opportunity for me to gain experience of functional programming in [Elixir](https://elixir-lang.org/), while at the same time indulging in a bit of nostalgia by revisiting the research I did for my PhD. I have not kept up to date with developments in the field since I left academia and so nothing in this project is likely to contribute to current research. Instead my aim is to reproduce the programming aspects of the work I did then, but with the benefit of 3 decades of software engineering experience and using a language and programming techniques which were not available back then.
 
 ## Installing and Running
 ### Prerequisites
@@ -20,7 +20,7 @@ The [Elixir](https://elixir-lang.org/) project is in the subdirectory `./apps/im
 ## Mathematical Background
 I completed my PhD in 1992 and have not followed academic developments since that time, so the work described here is probably outdated and makes no reference to more recent research.
 
-Most of my thesis was devoted to a simple mathematical model comprising a simple harmonic oscillator whose motion is constrained by a hard obstacle, from which it rebounds instantaneously:
+Most of my thesis was devoted to a simple mathematical model comprising a forced harmonic oscillator whose motion is constrained by a hard obstacle, from which it rebounds instantaneously:
 
 ![equation](https://latex.codecogs.com/svg.latex?M%5Cfrac%7B%5Cmathrm%7Bd%5E%7B2%7D%7D%20X%7D%7B%5Cmathrm%7Bd%7D%20T%5E%7B2%7D%7D&plus;2D%5Cfrac%7B%5Cmathrm%7Bd%7D%20X%7D%7B%5Cmathrm%7Bd%7D%20T%7D&plus;KX%3DF%5Ccos%20%5Cleft%20%28%20%5COmega%20T%20%5Cright%20%29%2C%20X%20%3C%20S)
 
