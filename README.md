@@ -15,7 +15,7 @@ The [Elixir](https://elixir-lang.org/) project is in the subdirectory `./apps/im
 - Inside `iex -S mix`:
     - `iex> Console.run()` launches the console
     - `iex> File.read!(file_name) |> CoreWrapper.process_input_string` runs a one-shot mode from the specified file
-- A REST server launched by `mix run --no-halt` (see the **Architecture** section below) and accessible at [http://localhost:8080](http://localhost:8080)
+- A microservice launched by `mix run --no-halt` (see the **Architecture** section below) and accessible at [http://localhost:8080](http://localhost:8080)
 
 ## Mathematical Background
 I completed my PhD in 1992 and have not followed academic developments since that time, so the work described here is probably outdated and makes no reference to more recent research.
@@ -119,6 +119,6 @@ via the core wrapper
 ### Web UI (Subdirectory `./apps/imposc_ui/`)
 A simple Phoenix web application which provides forms for generating different kinds charts provided by the main application.
 
-### REST server (Subdirectory `./apps/imposc_rapi/`)
-A lightweight REST API which accepts requests, which it interprets into core and charts commands via the core 
+### Web server (Subdirectory `./apps/imposc_rapi/`)
+A lightweight Web API which accepts requests, which it interprets into core and charts commands via the core 
 wrapper. This was implemented before the web UI, when I was considering implementing the latter as an entirely separate client application using a different technology.
