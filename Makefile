@@ -1,4 +1,4 @@
-# Makefule for building and running docker container
+# Makefile for building and running docker container
 # Adapted from https://hexdocs.pm/distillery/guides/working_with_docker.html
 #
 .PHONY: help
@@ -18,3 +18,6 @@ build: ## Build the Docker image
 
 run: ## Run the app in Docker
 	docker run --expose 4000 -p 4000:4000 --rm -it $(APP_NAME):latest
+
+test: #build
+	docker run --entrypoint mix $(APP_NAME):latest test
